@@ -218,23 +218,30 @@ void	ZeroVars(void);
 
 /*void	FillUpGap(int X, int Y, int LorR);*/
 
+int deltas_init    ( void );
+int deltas_run     ( void );
+int deltas_finalize( void );
 
-/* Lets's Go! - Main Program */
-
-int main(void)
+int
+main( void )
 {
+   deltas_init();
+   deltas_run();
+   deltas_finalize();
+
+   return EXIT_SUCCESS;
+}
+
+int
+deltas_init()
+{ /* Initialize Variables and Device */
 
 
-/* Initialize Variables and Device */
+    ShadowXMax = Xmax-5;
 
-    int	xx;			/* duration loop variable */
-    ShadowXMax =	Xmax-5;
-
-	
     srandom(seed);
 
-/* Start from file or not? */
-
+    /* Start from file or not? */
     if (PromptStart == 'y')
     {
 	printf("shall we start from a file (y or n)? \n");
@@ -312,8 +319,13 @@ int main(void)
     if(WaveIn) 
 	ReadWaveIn();
 
-/* ---------------------------------------    PRIMARY PROGRAM LOOP   ----------------- --------------- */
+    return TRUE;
+}
 
+int
+deltas_run( void )
+{ /* PRIMARY PROGRAM LOOP */
+    int	xx;			/* duration loop variable */
 
     while (CurrentTimeStep < StopAfter )
     {
@@ -483,12 +495,15 @@ GraphCells();*/
 	
     }
 
-/* --------------------------------------- END OF MAIN -------------------------------------------------- */
+    return TRUE;
+}
 
-    printf("Run Complete.  Output file: %s /n" , savefilename);
-
-} 
-
+int
+deltas_finalize( void )
+{
+    printf("Run Complete.  Output file: %s\n" , savefilename);
+    return TRUE;
+}
 
 float FindWaveAngle(void)
 
