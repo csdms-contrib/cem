@@ -14,8 +14,10 @@
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
+#ifdef WITH_OPENGL
 #include <GL/glx.h> 
 #include <GL/gl.h> 
+#endif
 #include <unistd.h>
 #include <ncurses.h>
 
@@ -274,8 +276,10 @@ int main(void)
 	}
     }	
 
+#ifdef WITH_OPENGL
     if (KeysOn)
 	ScreenInit();
+#endif
 
     /* Count Initial Mass */
 
@@ -289,7 +293,7 @@ int main(void)
       SaveSandToFile();*/
 
     /* Open Display*/
-
+#ifdef WITH_OPENGL
     if (DoGraphics)
     {
 	xcellwidth = 2.0 / (2.0 * (float) XPlotExtent) * (CellPixelSize)/2.0;
@@ -302,6 +306,7 @@ int main(void)
 	if(EveryPlotSpacing)
 	    GraphCells();
     }
+#endif
 
 
     if(WaveIn) 
@@ -441,8 +446,10 @@ int main(void)
 
 	    /* GRAPHING */		
 		
+#ifdef WITH_OPENGL
 	    if (DoGraphics && EveryPlotSpacing && (CurrentTimeStep%EveryPlotSpacing == 0))
 		GraphCells();
+#endif
 	    
 
 	    /* current_getch = getch();
@@ -3089,6 +3096,7 @@ void ReadWaveIn(void)
 }
 
 
+#ifdef WITH_OPENGL
 Bool WaitForNotify(Display *d, XEvent *e, char *arg)
 {
    return (e->type == MapNotify) && (e->xmap.window == (Window)arg);
@@ -3257,8 +3265,7 @@ void ScreenInit(void)
     screen = newwin(13, 27, 1, 1);
     box(screen, ACS_VLINE, ACS_HLINE);
 }
-
-
+#endif
 
 void	DeliverSediment(void)
 
@@ -3658,6 +3665,7 @@ void DoOverwash(int xfrom,int yfrom, int xto, int yto, float xintto, float yintt
 			DepthBB, BBneed,delShore,delBB );
 	/*if (DepthBB == DepthShoreface) PauseRun(xto,yto,-1);*/
 
+#ifdef WITH_OPENGL
 	if (debug10b && (DoGraphics == 'y'))	
 	{
 		/*bgnpolygon();
@@ -3677,6 +3685,7 @@ void DoOverwash(int xfrom,int yfrom, int xto, int yto, float xintto, float yintt
 			v2s(vertex);
 			endpolygon();*/
 	}
+#endif
 
 	PercentFull[xto][yto] += delBB;
 	PercentFull[xfrom][yfrom] -= delShore;

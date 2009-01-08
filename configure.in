@@ -27,29 +27,49 @@ PKG_PROG_PKG_CONFIG([0.20])
 ### X11
 ### --with-x11 turns on X11 and gives the location of X11 on your system
 ###
+AC_ARG_ENABLE(x11,
+   AC_HELP_STRING([--enable-x11], [Use X11 graphics]),,
+   [enable_x11=yes])
 AC_ARG_WITH(x11-dir,
    AC_HELP_STRING([--with-x11=PATH], [path to X11]))
 
 AC_ARG_VAR(X11_CFLAGS, [C compiler flags for X11, overriding pkg-config])
 AC_ARG_VAR(X11_LIBS, [linker flags for X11, overriding pkg-config])
 
-if test x$X11_CFLAGS == x && test x$X11_LIBS == x ; then
-   if test x$PKG_CONFIG != x ; then
+if test x$enable_x11 == xyes && \
+   test x$X11_CFLAGS == x && \
+   test x$X11_LIBS == x ; then
+
+   if test x$with_x11 != x ; then
       PKG_CONFIG_PATH_save=$PKG_CONFIG_PATH
       export PKG_CONFIG_PATH="${with_x11}/lib/pkgconfig:$PKG_CONFIG_PATH"
-      PKG_CHECK_MODULES(X11,x11)
-      export PKG_CONFIG_PATH=$PKG_CONFIG_PATH_save
-   else
       X11_CFLAGS="-I${with_x11}/include"
       X11_LIBS="-L${with_x11}/lib -lX11"
    fi
+   if test x$PKG_CONFIG != x ; then
+      PKG_CHECK_MODULES(X11,x11,,[disable_x11_silent=yes])
+   fi
+   if test x$with_x11 != x ; then
+      export PKG_CONFIG_PATH=$PKG_CONFIG_PATH_save
+   fi
+
 fi
 
-CFLAGS="${X11_CFLAGS} $CFLAGS"
-LIBS="${X11_LIBS} $LIBS"
+if test x$enable_x11 == xyes ; then
+   CFLAGS="${X11_CFLAGS} $CFLAGS"
+   LIBS="${X11_LIBS} $LIBS"
 
-if test x$PKG_CONFIG == x ; then
-   AC_CHECK_LIB(X11,[main],,[AC_MSG_ERROR(dnl
+   if test x$PKG_CONFIG == x ; then
+      AC_CHECK_LIB(X11,[main],,disable_x11_silent=yes)
+   fi
+   if test x$disable_x11_silent != xyes ; then
+      AC_CHECK_LIB(GL,[glXChooseVisual],,[AC_MSG_ERROR([libGL not found])])
+      AC_CHECK_LIB(ncurses,[main],,[AC_MSG_ERROR([libncurses not found])])
+   fi
+fi
+
+if test x$disable_x11_silent == xyes ; then
+   AC_MSG_WARN(dnl
 [libX11 not found.
 
 If pkg-config is installed on you system, consider adding it to you path
@@ -57,10 +77,17 @@ or setting the PKG_CONFIG environment variable.
 
 Alternatively, you may set the environment variables X11_CFLAGS and X11_LIBS
 to avoid the need to call pkg-config.
-])])
+])
 fi
-AC_CHECK_LIB(GL,[glXChooseVisual],,[AC_MSG_ERROR([libGL not found])])
-AC_CHECK_LIB(ncurses,[main],,[AC_MSG_ERROR([libncurses not found])])
+
+if test x$enable_x11 != xyes && \
+   test x$disable_x11_silent != xyes ; then
+   #AC_DEFINE([WITH_OPENGL],[],[Have OpenGL libraries])
+   CPPFLAGS="-UWITH_OPENGL $CPPFLAGS"
+else
+   CPPFLAGS="-DWITH_OPENGL $CPPFLAGS"
+fi
+
 AC_CHECK_LIB(m,[pow],,[AC_MSG_ERROR([libm not found])])
 
 AC_CONFIG_FILES([Makefile])
@@ -75,6 +102,7 @@ Configuration:
   Source code location:       ${srcdir}
   Install path:               ${prefix}
   Compiler:                   ${CC}
+  Preprocessor flags:         ${CPPFLAGS}
   Compiler flags:             ${CFLAGS}
   Linker flags:               ${LIBS}
 
