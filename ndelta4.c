@@ -30,25 +30,24 @@
 #define Asym            0.7    /*ractional portion of waves coming from positive (left) direction */
 #define Highness        0.1    /*ll New! .5 = even dist, > .5 high angle domination */
 #define Duration        1       /* Number of time steps calculations loop at same wave angle */
-#define StopAfter       250000 /* Stop after what number of time steps */
-int     seed = 44;               /* random seed  control value = 1 */
-int     StartSavingAt = 0;      /* time step to begin saving files */
-int     SaveSpacing = 2500 ;    /* space between saved files */
-int     SaveLineSpacing = 1000;/* space between saved line files */
-int     SaveFile = 1;           /* save full file? */
+#define StopAfter       2600 /* Stop after what number of time steps */
+
+/* init,finalize, SaveSandToFile...*/
 char            savefilename[24] = "fileout";
-int     SaveLine = 0;           /* Save line */
-char            savelinename[24] = "lineout";
-char    StartFromFile = 'n';    /* start from saved file? */
+/* init,ReadSandFromFile */
 char            readfilename[24] = "";
-int     WaveIn = 0;             /* Input Wave Distribution file? */
-char            readwavename[24] = "WIS_509_150.dat";
+/* init, FindWaveAngle */
+
+#define WAVE_IN (0) /* Input Wave Distribution file? */
+//int     WaveIn = 0;             /* Input Wave Distribution file? */
 
 
 /* Delta Info */
 
-#define NMouths         2       /* number of river mouths */
-float   QRiver[NMouths];
+
+/* Unused!!! */#define NMouths         2       /* number of river mouths */
+/* Unused!!! */float   QRiver[NMouths];
+
 #define SedRate 0.02
 #define StreamSpot Ymax
 
@@ -71,33 +70,43 @@ float   QRiver[NMouths];
 #define OWType        1         /* 0 = use depth array, 1 = use geometric rule */
 #define OWMinDepth	0.1	/*  littlest overwash of all */
 #define FindCellError	5	/* if we run off of array, how far over do we try again? */
-float   SedTansLimit =  90;	/* beyond what absolute slope don't do sed trans (degrees)*/
-float	OverwashLimit = 75;	/* beyond what angle don't do overwash */
 
 /* Plotting Controls */
-
-int CellPixelSize = 4;
-int XPlotExtent = Xmax;
-int YPlotExtent = Ymax;
-int 	AgeMax = 1000000;	/* Maximum 'age' of cells - loops back to zero */
-int	AgeUpdate = 10;		/* Time space for updating age of non-beach cells */
-int 	AgeShadeSpacing = 10000; /* For graphics - how many time steps means back to original shade */
+#define CELL_PIXEL_SIZE (4)
+#define XPlotExtent     (Xmax)
+#define YPlotExtent     (Ymax)
+//int CELL_PIXEL_SIZE = 4;
+//int XPlotExtent = Xmax;
+//int YPlotExtent = Ymax;
 
 /* DeBuggin Parameters */
 
-int     DoGraphics = 1;
-int     KeysOn = 0;
-int 	SaveAge = 1;		/* Save/update age of cells? */
-char	PromptStart = 'n';	/* ask prompts for file names, etc? */
-char 	OffArray = 'n';		/* Initializing this variable for later use */
-int	ScreenTextSpacing = 1000;/* Spacing of writing to screen in time steps */
-int	EveryPlotSpacing = 100;
-int	StartStop = 0;		/* Stop after every iteration 'Q' to move on */
-int	InterruptRun = 0;	/* Allow run to be paused by pressing the 'A' key */
-int	NoPauseRun = 1;		/* Disbale PauseRun subroutine */
-int	InitialPert = 0;	/* Start with a bump? */
-int	InitialSmooth = 0;	/* Smooth starting conditions */
-int	WaveAngleSign = 1;	/* used to change sign of wave angles */
+#define DO_GRAPHICS       (1)
+#define KeysOn            (0)
+#define SaveAge           (1)    /* Save/update age of cells? */
+#define PromptStart       ('n')  /* ask prompts for file names, etc? */
+#define ScreenTextSpacing (1000) /* Spacing of writing to screen in time steps */ 
+#define EveryPlotSpacing  (100)
+#define StartStop         (0)    /* Stop after every iteration 'Q' to move on */
+#define NoPauseRun        (1)    /* Disbale PauseRun subroutine */
+#define InitialPert       (0)    /* Start with a bump? */
+#define InitialSmooth     (0)    /* Smooth starting conditions */
+#define WaveAngleSign     (1)    /* used to change sign of wave angles */
+
+//int     DoGraphics = 1;
+//int     KeysOn = 0;
+//int 	SaveAge = 1;		/* Save/update age of cells? */
+//char	PromptStart = 'n';	/* ask prompts for file names, etc? */
+/* unused !!! */char 	OffArray = 'n';		/* Initializing this variable for later use */
+//int	ScreenTextSpacing = 1000;/* Spacing of writing to screen in time steps */
+//int	EveryPlotSpacing = 100;
+//int	StartStop = 0;		/* Stop after every iteration 'Q' to move on */
+/* unused */int	InterruptRun = 0;	/* Allow run to be paused by pressing the 'A' key */
+//int	NoPauseRun = 1;		/* Disbale PauseRun subroutine */
+//int	InitialPert = 0;	/* Start with a bump? */
+//int	InitialSmooth = 0;	/* Smooth starting conditions */
+//int	WaveAngleSign = 1;	/* used to change sign of wave angles */
+
 int	debug0 = 0;	/* Main program steps */
 int	debug1 = 0 ;	/* Find Next Cell */
 int 	debug2 = 0;	/* Shadow Routine */
@@ -114,11 +123,12 @@ int	debug10b = 0;	/* doing overwash (w/screen) */
 int	OWflag = 0;		/* debugger */
 
 /* Universal Constants */
-
-#define	pi		3.1415927
-#define	exp		2.7182818 /* e */
-float g =		9.80665;
-float radtodeg = 	180.0/pi; /* transform rads to degrees */
+//#define	pi		3.1415927
+//#define	exp		2.7182818 /* e */
+#define GRAV            (9.80665)
+#define radtodeg        (180.0/M_PI) /* transform rads to degrees */
+//float g =		9.80665;
+//float radtodeg = 	180.0/pi; /* transform rads to degrees */
 
 
 /* Overall Shoreface Configuration Arrays - Data file information */
@@ -127,9 +137,6 @@ char	AllBeach[Xmax][2*Ymax];		/* Flag indicating of cell is entirely beach */
 float	PercentFull[Xmax][2*Ymax];	/* Fractional amount of shore cell full of sediment */
 int	Age[Xmax][2*Ymax];		/* Age since cell was deposited */
 float	CellDepth[Xmax][2*Ymax];	/* Depth array (m) (ADA 6/3) */
-FILE	*SaveSandFile;
-FILE 	*ReadSandFile;
-FILE	*ReadWaveFile;
 
 
 /* Computational Arrays (determined for each time step) */
@@ -147,32 +154,44 @@ float 	VolumeOut[MaxBeachLength];	/* Sediment volume out of ith beach element */
 /* Miscellaneous Global Variables */
 
 int	CurrentTimeStep = 0;  	/* Time step of current calculation */ 
-int	NextX;			/* Global variables used to iterate FindNextCell in global array - */
-int	NextY;			/*	would've used pointer but wouldn't work	*/
+/*FindBeachCells,FindNextCell*/int	NextX;			/* Global variables used to iterate FindNextCell in global array - */
+/*FindBeachCells,FindNextCell*/int	NextY;			/*	would've used pointer but wouldn't work	*/
 int 	TotalBeachCells;	/* Number of cells describing beach at particular iteration */
 int 	ShadowXMax; 		/* used to determine maximum extent of beach cells */
 float 	WaveAngle;		/* wave angle for current time step */	
-int	FindStart;		/* Used to tell FindBeach at what Y value to start looking */
-char	FellOffArray;		/* Flag used to determine if accidentally went off array */
-float   MassInitial;		/* For conservation of mass calcs */
-float	MassCurrent;		/* " */
-int	device;			
-short	button;
-long	buttonback;
+/* run */int	FindStart;		/* Used to tell FindBeach at what Y value to start looking */
+/*run,FindBeachCells*/char	FellOffArray;		/* Flag used to determine if accidentally went off array */
+/* init,run */float   MassInitial;		/* For conservation of mass calcs */
+/* run */float	MassCurrent;		/* " */
+/* unused!!! */int	device;			
+/* unused!!! */short	button;
+/* unused!!! */long	buttonback;
 int	NumWaveBins;		/* For Input Wave - number of bins	*/
 float	WaveMax[36];		/* Max Angle for specific bin */
 float	WaveProb[36];		/* Probability of Certain Bin */
-float xcellwidth;
-float ycellwidth;
-static WINDOW *mainwnd;
-static WINDOW *screen;
-WINDOW *my_win;
-int current_getch;
-int xplotoff;
-int yplotoff;
 
+// Graphics variables???
+//float xcellwidth;
+//float ycellwidth;
+///*ScreenInit*/static WINDOW *mainwnd;
+///*ScreenInit*/static WINDOW *screen;
+/* unused!!! */WINDOW *my_win;
+/* unused!!! */int current_getch;
+//int xplotoff;
+//int yplotoff;
 
-int KEY_P = 93;
+typedef struct
+{
+   float xcellwidth;
+   float ycellwidth;
+   int   xplotoff;
+   int   yplotoff;
+}
+Deltas_graphics;
+
+Deltas_graphics _g;
+
+/*Unused!!! */int KEY_P = 93;
 
 
 /* Function Prototypes */
@@ -232,10 +251,16 @@ main( void )
    return EXIT_SUCCESS;
 }
 
+#define SEED             (44)  /* random seed  control value = 1 */
+#define START_FROM_FILE  ('n') /* start from saved file? */
+
+///* init */char    StartFromFile = 'n';    /* start from saved file? */
+
 int
 deltas_init()
 { /* Initialize Variables and Device */
-
+    int seed = 44;
+    char StartFromFile = 'n'; /* start from saved file? */
 
     ShadowXMax = Xmax-5;
 
@@ -301,12 +326,12 @@ deltas_init()
 
     /* Open Display*/
 #ifdef WITH_OPENGL
-    if (DoGraphics)
+    if ( DO_GRAPHICS )
     {
-	xcellwidth = 2.0 / (2.0 * (float) XPlotExtent) * (CellPixelSize)/2.0;
-	ycellwidth = 2.0 / (2.0 * (float) YPlotExtent) * (CellPixelSize)/2.0; 
-	xplotoff = 0;
-	yplotoff = Ymax/2;
+	_g.xcellwidth = 2.0 / (2.0 * (float) XPlotExtent) * (CELL_PIXEL_SIZE)/2.0;
+	_g.ycellwidth = 2.0 / (2.0 * (float) YPlotExtent) * (CELL_PIXEL_SIZE)/2.0; 
+	_g.xplotoff = 0;
+	_g.yplotoff = Ymax/2;
 
 	OpenWindow();
      	
@@ -316,18 +341,37 @@ deltas_init()
 #endif
 
 
-    if(WaveIn) 
+    if( WAVE_IN ) 
 	ReadWaveIn();
 
     return TRUE;
 }
 
+#define START_SAVING_AT   (0)    /* time step to begin saving files */
+#define SAVE_SPACING      (2500) /* space between saved files */
+#define SAVE_LINE_SPACING (1000) /* space between saved line files */
+#define SAVE_FILE         (1)    /* save full file? */
+#define SAVE_LINE         (0)    /* Save line */
+
+///* run */int     SaveSpacing = 2500 ;    /* space between saved files */
+///* run */int     SaveLineSpacing = 1000;/* space between saved line files */
+///* run */int     SaveFile = 1;           /* save full file? */
+///* run */int     SaveLine = 0;           /* Save line */
+
+#define AGE_UPDATE (10) /* Time space for updating age of non-beach cells */
+//int	AgeUpdate = 10;		/* Time space for updating age of non-beach cells */
 int
 deltas_run( void )
 { /* PRIMARY PROGRAM LOOP */
     int	xx;			/* duration loop variable */
+    int StartSavingAt   = START_SAVING_AT;
+    int SaveSpacing     = SAVE_SPACING;
+    int SaveLineSpacing = SAVE_LINE_SPACING;
+    int SaveFile        = SAVE_FILE;
+    int SaveLine        = SAVE_LINE;
+    int AgeUpdate       = AGE_UPDATE;
 
-    while (CurrentTimeStep < StopAfter )
+    while ( CurrentTimeStep < StopAfter )
     {
 	/*  Time Step iteration - compute same wave angle for Duration time steps */
 
@@ -344,7 +388,7 @@ deltas_run( void )
 
 	    if (CurrentTimeStep%ScreenTextSpacing == 0)
 	    {
-		printf("==== WaveAngle: %2.2f  MASS Percent: %1.4f  Time Step: %d\n", 180*(WaveAngle)/pi, 
+		printf("==== WaveAngle: %2.2f  MASS Percent: %1.4f  Time Step: %d\n", 180*(WaveAngle)/M_PI, 
 		       MassCurrent/MassInitial, CurrentTimeStep);
 	    }
 
@@ -459,7 +503,7 @@ deltas_run( void )
 	    /* GRAPHING */		
 		
 #ifdef WITH_OPENGL
-	    if (DoGraphics && EveryPlotSpacing && (CurrentTimeStep%EveryPlotSpacing == 0))
+	    if ( DO_GRAPHICS && EveryPlotSpacing && (CurrentTimeStep%EveryPlotSpacing == 0))
 		GraphCells();
 #endif
 	    
@@ -532,7 +576,7 @@ float FindWaveAngle(void)
     /* Method using input binned wave distribution - 					*/
     /* variables WaveProb[], WaveMax[], previously input from file using ReadWaveIn()	*/ 
 	
-    if (WaveIn)
+    if ( WAVE_IN )
     {
 	
 	RandBin = RandZeroToOne();
@@ -550,7 +594,7 @@ float FindWaveAngle(void)
 	    }
 	}
 
-	Angle = - ( RandAngle * (WaveMax[i] - WaveMax[i-1]) + WaveMax[i-1])*pi/180;
+	Angle = - ( RandAngle * (WaveMax[i] - WaveMax[i-1]) + WaveMax[i-1])*M_PI/180;
 
 	/*printf("i = %d WaveMAx[i] = %f WaveMax[i-1] = %f WaveProb[i] = %f Angle= %f\n",
 	  i,WaveMax[i],WaveMax[i-1],WaveProb[i], Angle*180/pi);*/
@@ -580,11 +624,11 @@ float FindWaveAngle(void)
 		
 	if (AngleRandom > Highness)
 	{
-	    Angle = Sign * ((AngleRandom-Highness)/(1-Highness)) * pi / 4.0;
+	    Angle = Sign * ((AngleRandom-Highness)/(1-Highness)) * M_PI / 4.0;
 	}
 	else
 	{
-	    Angle = Sign * ((AngleRandom/Highness)*pi/4.0 + pi/4.0);
+	    Angle = Sign * ((AngleRandom/Highness)*M_PI/4.0 + M_PI/4.0);
 	}
 
 	/*printf("Highness sub: %f AngleRandom: %f \n", Highness, AngleRandom);
@@ -1361,25 +1405,25 @@ void  DetermineAngles(void)
 	{
 	    ShorelineAngle[i] = atan((x2 - x1) / (y2 - y1));
 	    if (debug3) printf("(R) i = %d  X[i]: %d Y[i]: %d Percent %3f x: %f y: %f Angle:%f  Deg Angle: %f \n",
-			       i, X[i], Y[i], PercentFull[X[i]][Y[i]],x2,y2,ShorelineAngle[i], ShorelineAngle[i]*180/pi);
+			       i, X[i], Y[i], PercentFull[X[i]][Y[i]],x2,y2,ShorelineAngle[i], ShorelineAngle[i]*180/M_PI);
 	}
 	else if (y2 == y1)
 	{
-	    ShorelineAngle[i] = pi/2.0 * (x1 - x2) / fabs(x2 - x1);
+	    ShorelineAngle[i] = M_PI/2.0 * (x1 - x2) / fabs(x2 - x1);
 	    if (debug3) printf("(G) i = %d  X[i]: %d Y[i]: %d Percent %3f x: %f y: %f Angle:%f  Deg Angle: %f \n",
-			       i, X[i], Y[i], PercentFull[X[i]][Y[i]],x2,y2,ShorelineAngle[i], ShorelineAngle[i]*180/pi);
+			       i, X[i], Y[i], PercentFull[X[i]][Y[i]],x2,y2,ShorelineAngle[i], ShorelineAngle[i]*180/M_PI);
 	}
 	else 
 	    /* y2 < y1 */
 	{
-	    ShorelineAngle[i] = atan((x2 - x1) / (y2 - y1)) - pi;
+	    ShorelineAngle[i] = atan((x2 - x1) / (y2 - y1)) - M_PI;
 		
-	    if (ShorelineAngle[i] < - pi)
+	    if (ShorelineAngle[i] < - M_PI)
 	    {
-		ShorelineAngle[i] += 2.0 * pi;
+		ShorelineAngle[i] += 2.0 * M_PI;
 	    }
 	    if (debug3) printf("(U) i = %d  X[i]: %d Y[i]: %d Percent %3f x: %f y: %f Angle:%f  Deg Angle: %f \n",
-			       i, X[i], Y[i], PercentFull[X[i]][Y[i]],x2,y2,ShorelineAngle[i], ShorelineAngle[i]*180/pi);
+			       i, X[i], Y[i], PercentFull[X[i]][Y[i]],x2,y2,ShorelineAngle[i], ShorelineAngle[i]*180/M_PI);
 	}
 
     }
@@ -1393,10 +1437,10 @@ void  DetermineAngles(void)
 	if ((Y[k-1] - Y[k+1] == 2) && 
 	    (copysign(ShorelineAngle[k-1],ShorelineAngle[k]) != ShorelineAngle[k-1]))
 	{		
-	    SurroundingAngle[k] = (ShorelineAngle[k-1] + ShorelineAngle[k]) / 2 + pi;
-	    if (SurroundingAngle[k] > pi)
+	    SurroundingAngle[k] = (ShorelineAngle[k-1] + ShorelineAngle[k]) / 2 + M_PI;
+	    if (SurroundingAngle[k] > M_PI)
 	    {
-		SurroundingAngle[k] -= 2.0 * pi;
+		SurroundingAngle[k] -= 2.0 * M_PI;
 	    }
 	    if (debug4) printf("Under: %d\n",k);
 	}
@@ -1436,6 +1480,8 @@ void  DetermineAngles(void)
 
 }
 
+#define SED_TRANS_LIMIT (90) /* beyond what absolute slope don't do sed trans (degrees)*/
+//float   SedTansLimit =  90;	/* beyond what absolute slope don't do sed trans (degrees)*/
 
 void DetermineSedTransport(void)
 
@@ -1457,6 +1503,7 @@ void DetermineSedTransport(void)
     char UpWindLocal;	/* Local holder for upwind/downwind condition				*/
     char MaxTrans;		/* Do we need to compute using maximum transport ? 			*/
     int DoFlux;		/* Skip sed transport calcs (added 02/04 AA)				*/
+    float   SedTansLimit =  SED_TRANS_LIMIT;
 
 
     if (debug5) printf("\nSEDTRANS: %d  @  %f \n\n", CurrentTimeStep, WaveAngle * radtodeg);
@@ -1628,7 +1675,7 @@ void SedTrans(int From, int To, float ShoreAngle, char MaxT)
 
     /*  Don't do calculations if over 90 degrees, should be in shadow  */
 	
-    if (AngleDeep > 0.995*pi/2.0 || AngleDeep < -0.995*pi/2.0)
+    if (AngleDeep > 0.995*M_PI/2.0 || AngleDeep < -0.995*M_PI/2.0)
     {
 	return;
     }
@@ -1637,7 +1684,7 @@ void SedTrans(int From, int To, float ShoreAngle, char MaxT)
     {
 	/* Calculate Deep Water Celerity & Length, Komar 5.11 c = gT / pi, L = CT	*/
 		
-	CDeep = g * Period / (2.0 * pi);
+	CDeep = GRAV * Period / (2.0 * M_PI);
 	LDeep = CDeep * Period;
 	if (debug6) printf("CDeep = %2.2f LDeep = %2.2f \n",CDeep, LDeep);
 
@@ -1645,14 +1692,14 @@ void SedTrans(int From, int To, float ShoreAngle, char MaxT)
 	{
 	    /* non-iterative eqn for L, from Fenton & McKee 		*/	
 
-	    WaveLength = LDeep * Raise(tanh(Raise(Raise(2.0*pi/Period,2)*Depth/g,.75)),2.0/3.0);
+	    WaveLength = LDeep * Raise(tanh(Raise(Raise(2.0*M_PI/Period,2)*Depth/GRAV,.75)),2.0/3.0);
 	    C = WaveLength/Period;
 	    if (debug6) printf("DEPTH: %2.2f Wavelength = %2.2f C = %2.2f ", Depth, WaveLength,C);
 			
 	    /* Determine n = 1/2(1+2kh/tanh(kh)) Komar 5.21			*/
 	    /* First Calculate kh = 2 pi Depth/L  from k = 2 pi/L		*/
 
-	    kh =  pi * Depth / WaveLength;
+	    kh =  M_PI * Depth / WaveLength;
 	    n =0.5 * ( 1 + 2.0 * kh / sinh(2.0*kh));
 	    if (debug6) printf("kh: %2.3f  n: %2.3f ", kh, n);
 
@@ -1685,7 +1732,7 @@ void SedTrans(int From, int To, float ShoreAngle, char MaxT)
 	/* (especially with poorly constrained coefficients), 					*/
 	/* so no attempt made to make this a more perfect imperfection				*/
 		
-	VolumeAcrossBorder = 	fabs(1.1*rho*Raise(g,3.0/2.0)*Raise(WvHeight,2.5)*
+	VolumeAcrossBorder = 	fabs(1.1*rho*Raise(GRAV,3.0/2.0)*Raise(WvHeight,2.5)*
 				     cos(Angle)*sin(Angle)*TimeStep);
 				
 	VolumeOut[From] = VolumeOut[From] + VolumeAcrossBorder;
@@ -2725,6 +2772,7 @@ void ReadSandFromFile(void)
 
 {
     int x,y;
+    FILE *ReadSandFile;
 	
     ReadSandFile = fopen(readfilename,"r");printf("CHECK READ \n");
 
@@ -2775,6 +2823,7 @@ void SaveSandToFile(void)
 {
     int	x,y;
     char	savename[40];
+    FILE *SaveSandFile;
 
     printf("\n saving \n ");
 
@@ -2810,6 +2859,9 @@ void SaveSandToFile(void)
 }
 
 
+#define SAVE_LINE_NAME "lineout"
+///* SaveLineToFile */char            savelinename[24] = "lineout";
+
 void SaveLineToFile(void)
 
 /*  Saves data line of shoreline position rather than entire array 		*/
@@ -2820,7 +2872,9 @@ void SaveLineToFile(void)
 
     int	y,x,xtop,i;
     float   xsave;
-    char	savename[40];
+    char savename[40];
+    char savelinename[24] = SAVE_LINE_NAME;
+    FILE *SaveSandFile;
 
     printf("\n saving \n ");
 
@@ -3058,6 +3112,9 @@ void ButtonEnter(void)
 }
 
 
+#define AGE_MAX (1000000) /* Maximum 'age' of cells - loops back to zero */
+//int 	AgeMax = 1000000;	/* Maximum 'age' of cells - loops back to zero */
+
 void AgeCells(void)
 
 /* Age Cells */
@@ -3065,6 +3122,7 @@ void AgeCells(void)
 {
 	
     int x,y;
+    int	AgeMax = AGE_MAX;
 
     for (y = 0; y < 2*Ymax; y++)
 	for (x=0; x<Xmax; x++)
@@ -3075,14 +3133,17 @@ void AgeCells(void)
 				
 }
 
+#define READ_WAVE_NAME "WIS_509_150.dat"
+///* ReadWaveIn */char            readwavename[24] = "WIS_509_150.dat";
 
 void ReadWaveIn(void)
 
 /* Input Wave Distribution */
 
 {
-	
     int i;
+    char readwavename[24] = READ_WAVE_NAME;
+    FILE *ReadWaveFile;
 
     for (i=0 ; i<= 36; i++)
     {
@@ -3160,11 +3221,11 @@ if (vi == NULL) {
     swa.border_pixel = 0;
     swa.event_mask = StructureNotifyMask;
 
-    winwidth = CellPixelSize*Xmax;
-    winheight = CellPixelSize*Ymax;
+    winwidth = CELL_PIXEL_SIZE*Xmax;
+    winheight = CELL_PIXEL_SIZE*Ymax;
     
 
-    win = XCreateWindow(dpy, RootWindow(dpy, vi->screen),0, 0, YPlotExtent * CellPixelSize, XPlotExtent * CellPixelSize,
+    win = XCreateWindow(dpy, RootWindow(dpy, vi->screen),0, 0, YPlotExtent * CELL_PIXEL_SIZE, XPlotExtent * CELL_PIXEL_SIZE,
 			0, vi->depth, InputOutput, vi->visual,
 			CWBorderPixel|CWColormap|CWEventMask, &swa);
     XMapWindow(dpy, win);
@@ -3191,15 +3252,17 @@ void PutPixel(float x, float y, float R, float G, float B)
     glColor3f (R, G, B);
     glBegin(GL_POLYGON);
     glVertex3f (ystart, xstart, 0.0);
-    glVertex3f (ystart, xstart+xcellwidth, 0.0);
-    glVertex3f (ystart + ycellwidth, xstart + xcellwidth, 0.0);
-    glVertex3f (ystart + ycellwidth, xstart, 0.0);
+    glVertex3f (ystart, xstart+_g.xcellwidth, 0.0);
+    glVertex3f (ystart + _g.ycellwidth, xstart + _g.xcellwidth, 0.0);
+    glVertex3f (ystart + _g.ycellwidth, xstart, 0.0);
     glEnd();
 
 }
 
 
 
+#define AGE_SHADE_SPACING (10000) /* For graphics - how many time steps means back to original shade */
+//int 	AgeShadeSpacing = 10000; /* For graphics - how many time steps means back to original shade */
 void GraphCells(void)
 
 /* Plots entire Array */ 
@@ -3209,11 +3272,12 @@ void GraphCells(void)
     float Red,Green,Blue,backRed,backGreen,backBlue;
     float AgeFactorRed,AgeFactorGreen,AgeFactorBlue,DepthBlue;
     float DepthFactorX;
+    int AgeShadeSpacing = AGE_SHADE_SPACING; /* For graphics - how many time steps means back to original shade */
 	
     DepthFactorX = XPlotExtent;
-    for (y=yplotoff; y <= YPlotExtent+yplotoff; y++)
+    for (y=_g.yplotoff; y <= YPlotExtent+_g.yplotoff; y++)
 
-	for (x= xplotoff; x <= XPlotExtent+xplotoff; x++)
+	for (x= _g.xplotoff; x <= XPlotExtent+_g.xplotoff; x++)
 	{
 
 	    backRed = 0;
@@ -3221,7 +3285,7 @@ void GraphCells(void)
 	    backGreen = (165 - 125 * (x/DepthFactorX));
 
 	    DepthBlue =  floor( (.8 - (float)x/(XPlotExtent*3)) * 255)/255.0; 
-	    /*	PutPixel( CellPixelSize*(y-yplotoff), CellPixelSize*x,0,0, DepthBlue);*/
+	    /*	PutPixel( CELL_PIXEL_SIZE*(y-yplotoff), CELL_PIXEL_SIZE*x,0,0, DepthBlue);*/
  
 	    AgeFactorRed = (float)((Age[x][y])%AgeShadeSpacing)/AgeShadeSpacing;
 	    AgeFactorGreen = (float)((Age[x][y]+AgeShadeSpacing/3)%AgeShadeSpacing)/AgeShadeSpacing;
@@ -3247,7 +3311,7 @@ void GraphCells(void)
 		Green = backGreen/255.0;
 	    }
 
-	    PutPixel(x-xplotoff,y-yplotoff,Red,Green,Blue);
+	    PutPixel(x-_g.xplotoff,y-_g.yplotoff,Red,Green,Blue);
 
 	}
 
@@ -3257,7 +3321,7 @@ void GraphCells(void)
 
     while (AllBeach[x][y] == 'y')
     {
-	PutPixel(x-xplotoff, y-yplotoff, 1,0,0);
+	PutPixel(x-_g.xplotoff, y-_g.yplotoff, 1,0,0);
 	x += 1;
     }
 
@@ -3270,6 +3334,9 @@ void ScreenInit(void)
 /* this is for the keyboard thingies to work */
 
 {
+    WINDOW *mainwnd;
+    WINDOW *screen;
+
     mainwnd = initscr();
 /*noecho();*/
     cbreak();
@@ -3303,6 +3370,8 @@ void	DeliverSediment(void)
 
 	}
 
+#define OVERWASH_LIMIT (75) /* beyond what angle don't do overwash */
+//float	OverwashLimit = 75;	/* beyond what angle don't do overwash */
 
 void CheckOverwashSweep(void)
 
@@ -3311,6 +3380,7 @@ void CheckOverwashSweep(void)
 
 
 	{
+   float OverwashLimit = OVERWASH_LIMIT;
 
 	int i,ii;		/* local loop variable */	
 	int sweepsign;
@@ -3478,7 +3548,7 @@ void CheckOverwash(int icheck)
 				/*if (debug10a) printf(" side ");*/
 		}
 		
-		/*if ((debug10a) && (DoGraphics == 'y'))PutPixel(ytest*CellPixelSize,xtest*CellPixelSize,0,0,200);*/
+		/*if ((debug10a) && (DoGraphics == 'y'))PutPixel(ytest*CELL_PIXEL_SIZE,xtest*CELL_PIXEL_SIZE,0,0,200);*/
 
 		checkdistance = Raise(((x - xin)*(x - xin) +  (y - yin)*(y - yin)),.5) * CellWidth;	
 		if (AllBeach[xtest][ytest] == 'y')
@@ -3681,22 +3751,22 @@ void DoOverwash(int xfrom,int yfrom, int xto, int yto, float xintto, float yintt
 	/*if (DepthBB == DepthShoreface) PauseRun(xto,yto,-1);*/
 
 #ifdef WITH_OPENGL
-	if (debug10b && (DoGraphics == 'y'))	
+	if (debug10b && ( DO_GRAPHICS == 'y'))	
 	{
 		/*bgnpolygon();
 			RGBcolor(250,0,0);
-			vertex[0] = (yfrom+0.2)*CellPixelSize;
-			vertex[1] = (xfrom+.5)*CellPixelSize;
+			vertex[0] = (yfrom+0.2)*CELL_PIXEL_SIZE;
+			vertex[1] = (xfrom+.5)*CELL_PIXEL_SIZE;
 			v2s(vertex);
-			vertex[0] = (yfrom+0.8)*CellPixelSize;
+			vertex[0] = (yfrom+0.8)*CELL_PIXEL_SIZE;
 			v2s(vertex);
-			vertex[0] = (yto+0.8)*CellPixelSize;
-			vertex[1] = (xto+0.5)*CellPixelSize;
+			vertex[0] = (yto+0.8)*CELL_PIXEL_SIZE;
+			vertex[1] = (xto+0.5)*CELL_PIXEL_SIZE;
 			v2s(vertex);
-			vertex[0] = (yto+0.3)*CellPixelSize;;
+			vertex[0] = (yto+0.3)*CELL_PIXEL_SIZE;;
 			v2s(vertex);
-			vertex[0] = (yfrom+0.2)*CellPixelSize;
-			vertex[1] = (xfrom+.5)*CellPixelSize;
+			vertex[0] = (yfrom+0.2)*CELL_PIXEL_SIZE;
+			vertex[1] = (xfrom+.5)*CELL_PIXEL_SIZE;
 			v2s(vertex);
 			endpolygon();*/
 	}
@@ -3882,14 +3952,14 @@ float GetOverwashDepth(int xin, int yin, float xinfl, float yinfl, int ishore)
 				}
 				AngleUsed = AngleUsed/5;
 
-				if (fabs(AngleUsed) > pi/4.0)
+				if (fabs(AngleUsed) > M_PI/4.0)
 				{
-					AngleUsed = pi/4.0;
+					AngleUsed = M_PI/4.0;
 					if (debug10b) printf("Big Angle");
 					/*PauseRun(X[Backi],Y[Backi],Backi);*/
 				}
 
-				AngleSin = sin(pi/2.0 - fabs(SurroundingAngle[ishore] + AngleUsed));
+				AngleSin = sin(M_PI/2.0 - fabs(SurroundingAngle[ishore] + AngleUsed));
 
 				Depth = BBDistance * AngleSin / (1 + AngleSin);
 		
