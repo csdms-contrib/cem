@@ -33,10 +33,21 @@
 #define StopAfter       2600 /* Stop after what number of time steps */
 
 /* init,finalize, SaveSandToFile...*/
-char            savefilename[24] = "fileout";
+//char            savefilename[24] = "fileout";
 /* init,ReadSandFromFile */
-char            readfilename[24] = "";
+//char            readfilename[24] = "";
 /* init, FindWaveAngle */
+#define SAVE_FILENAME "fileout"
+#define READ_FILENAME ""
+
+typedef struct
+{
+   char savefilename[24];
+   char readfilename[24];
+}
+Deltas_io;
+
+Deltas_io _io = { SAVE_FILENAME, READ_FILENAME };
 
 #define WAVE_IN (0) /* Input Wave Distribution file? */
 //int     WaveIn = 0;             /* Input Wave Distribution file? */
@@ -275,9 +286,9 @@ deltas_init()
 	if (StartFromFile == 'y')
 	{
 	    printf("Starting Filename? \n");
-	    scanf("%24s", readfilename);
+	    scanf("%24s", _io.readfilename);
 	    printf("Saving Filename? \n");
-	    scanf("%s", savefilename);
+	    scanf("%s", _io.savefilename);
 	    printf("What time step are we starting at?");
 	    scanf("%d", &CurrentTimeStep);
 	    ReadSandFromFile();
@@ -286,7 +297,7 @@ deltas_init()
 	if (StartFromFile == 'n')
 	{
 	    printf("Saving Filename? \n");
-	    scanf("%s", savefilename);
+	    scanf("%s", _io.savefilename);
 	    InitConds();
 	    if (InitialPert) 
 	    {
@@ -545,7 +556,7 @@ GraphCells();*/
 int
 deltas_finalize( void )
 {
-    printf("Run Complete.  Output file: %s\n" , savefilename);
+    printf("Run Complete.  Output file: %s\n" , _io.savefilename);
     return TRUE;
 }
 
@@ -2774,7 +2785,7 @@ void ReadSandFromFile(void)
     int x,y;
     FILE *ReadSandFile;
 	
-    ReadSandFile = fopen(readfilename,"r");printf("CHECK READ \n");
+    ReadSandFile = fopen(_io.readfilename,"r");printf("CHECK READ \n");
 
 	
     for (y = Ymax/2; y < 3*Ymax/2; y++)
@@ -2822,12 +2833,12 @@ void SaveSandToFile(void)
 
 {
     int	x,y;
-    char	savename[40];
+    char savename[40];
     FILE *SaveSandFile;
 
     printf("\n saving \n ");
 
-    sprintf(savename, "%s.%d", savefilename, CurrentTimeStep);
+    sprintf(savename, "%s.%d", _io.savefilename, CurrentTimeStep);
     printf( "Saving as: %s 		", savename );	
 
 
