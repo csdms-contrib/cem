@@ -1,11 +1,5 @@
 #!/bin/sh
 
+touch AUTHORS ChangeLog NEWS README
 autoreconf -fvi
-
-#set -x
-#aclocal -I config
-#libtoolize --force --copy
-#autoheader
-#automake --add-missing --copy
-#autoconf
 
