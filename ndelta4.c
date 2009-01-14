@@ -1374,7 +1374,7 @@ void  DetermineAngles(void)
 /*  Function to determine beach angles for all beach cells from left to right		*/
 /*  By convention, the ShorelineAngle will apply to current cell and right neighbor	*/
 /*  This function will determine global arrays:						*/
-/*		_s.ShorelineAngle[], UpWind[], _s.SurroundingAngle[]						*/
+/*		_s.ShorelineAngle[], _s.UpWind[], _s.SurroundingAngle[]						*/
 /*  This function will use but not affect the following arrays and values:		*/
 /*		_s.X[], _s.Y[], _s.PercentFull[][], _s.AllBeach[][], WaveAngle			*/
 /*  ADA Revised underside, SurroundingAngle 6/03, 2/04 fixed 				*/
@@ -1528,12 +1528,12 @@ void  DetermineAngles(void)
 
 	if ( fabs(WaveAngle - _s.SurroundingAngle[j]) >= 42.0/radtodeg )
 	{	
-	    UpWind[j] = 'u';
+	    _s.UpWind[j] = 'u';
 	    DEBUG_PRINT( DEBUG_4, "U(1)  ");
 	}
 	else 
 	{
-	    UpWind[j] = 'd';
+	    _s.UpWind[j] = 'd';
 	    DEBUG_PRINT( DEBUG_4, "D(1)  ");
 	}
 
@@ -1551,9 +1551,9 @@ void DetermineSedTransport(void)
 /*  Loop function to determine which neigbor/situation to use for sediment transport calcs	*/
 /*  Once situation is determined, will use function SedTrans to determine actual transport	*/
 /*  This function will call SedTrans which will determine global arrays:			*/
-/*		VolumeIn[], VolumeOut[]								*/
+/*		_s.VolumeIn[], _s.VolumeOut[]								*/
 /*  This function will use but not affect the following arrays and values:			*/
-/*		_s.X[], _s.Y[], _s.InShadow[], UpWind[], _s.ShorelineAngle[]				*/
+/*		_s.X[], _s.Y[], _s.InShadow[], _s.UpWind[], _s.ShorelineAngle[]				*/
 /*  		_s.PercentFull[][], _s.AllBeach[][], WaveAngle					*/
 
 {
@@ -1614,9 +1614,9 @@ void DetermineSedTransport(void)
 	    /*	transition from dw to up not because of shadow				*/
 	    /* keeping transition from uw to dw - does not seem to be big deal (04/02 AA) */
 			
-	    if ( ((UpWind[CalcCell] == 'd') && (UpWind[CalcCell+Next] == 'u') &&
+	    if ( ((_s.UpWind[CalcCell] == 'd') && (_s.UpWind[CalcCell+Next] == 'u') &&
 		  (_s.InShadow[CalcCell + Next] == 'n')) ||
-		 ((UpWind[CalcCell+Last] == 'u') && (UpWind[CalcCell] == 'd')
+		 ((_s.UpWind[CalcCell+Last] == 'u') && (_s.UpWind[CalcCell] == 'd')
 		  && (_s.InShadow[CalcCell+Last] == 'n')) )
 	    {
 		MaxTrans = 'y';
@@ -1628,7 +1628,7 @@ void DetermineSedTransport(void)
 	    /*  If Next cell is in shadow, use UpWind condition				*/
 			
 	    DoFlux = 1;
-	    UpWindLocal = UpWind[CalcCell];
+	    UpWindLocal = _s.UpWind[CalcCell];
 
 	    if (_s.InShadow[CalcCell+Next] == 'y')  
 	    {
@@ -1692,7 +1692,7 @@ void SedTrans(int From, int To, float ShoreAngle, char MaxT)
 /*  This central function will calcualte the sediment transported from the cell at From to	*/
 /*  the cell at To, using the input ShoreAngle							*/
 /*  This function will caluclate and determine the global arrays:				*/
-/*		VolumeIn[] and VolumeOut[]							*/
+/*		_s.VolumeIn[] and _s.VolumeOut[]							*/
 /*  This function does not use any other arrays							*/
 /*  This function will use the global values defining the wave field:				*/
 /*	WaveAngle, Period, OffShoreWvHt								*/
@@ -1798,13 +1798,13 @@ void SedTrans(int From, int To, float ShoreAngle, char MaxT)
 	VolumeAcrossBorder = 	fabs(1.1*rho*Raise(GRAV,3.0/2.0)*Raise(WvHeight,2.5)*
 				     cos(Angle)*sin(Angle)*TimeStep);
 				
-	VolumeOut[From] = VolumeOut[From] + VolumeAcrossBorder;
+	_s.VolumeOut[From] = _s.VolumeOut[From] + VolumeAcrossBorder;
 		
-	VolumeIn[To] = VolumeIn[To] + VolumeAcrossBorder;
+	_s.VolumeIn[To] = _s.VolumeIn[To] + VolumeAcrossBorder;
 	
 	DEBUG_PRINT( DEBUG_6, "VolumeAcrossBorder: %f  ",VolumeAcrossBorder);
-	DEBUG_PRINT( DEBUG_6, "VolumeIn : %f ",VolumeIn[To]);
-	DEBUG_PRINT( DEBUG_6, "VolumeOut : %f \n\n",VolumeOut[From]);
+	DEBUG_PRINT( DEBUG_6, "VolumeIn : %f ",_s.VolumeIn[To]);
+	DEBUG_PRINT( DEBUG_6, "VolumeOut : %f \n\n",_s.VolumeOut[From]);
 		
     }
 }
@@ -1847,7 +1847,7 @@ void TransportSedimentSweep(void)
 	    ii = TotalBeachCells-1-i;
 
 	DEBUG_PRINT( DEBUG_7A, "i: %d  ss: %d  X: %d  Y: %d  In: %.1f  Out: %.1f\n", ii, sweepsign,
-			   _s.X[i], _s.Y[i], VolumeIn[i], VolumeOut[i]);
+			   _s.X[i], _s.Y[i], _s.VolumeIn[i], _s.VolumeOut[i]);
 
 	AdjustShore(ii);
 				
@@ -1868,7 +1868,7 @@ void AdjustShore(int i)
 /*  Complete mass balance for incoming and ougoing sediment			*/
 /*  This function will change the global data array _s.PercentFull[][]		*/
 /*  Uses but does not adjust arrays:  						*/
-/*		VolumeIn[], VolumeOut[], _s.X[], _s.Y[], _s.ShorelineAngle[]		*/
+/*		_s.VolumeIn[], _s.VolumeOut[], _s.X[], _s.Y[], _s.ShorelineAngle[]		*/
 /*  Uses global variables: ShelfSlope, CellWidth, ShorefaceSlope, InitialDepth	*/
 /*  NEW - AA 05/04 fully utilize shoreface depths				*/
 
@@ -1893,7 +1893,7 @@ void AdjustShore(int i)
     float 	Xside, DistanceSide;	/* when gpoing to next y cell,other values */
     int 	ShorefaceFlag;		/* flag to see if started intersecting shoreface cells */
 
-    if (VolumeIn[i] <= VolumeOut[i])
+    if (_s.VolumeIn[i] <= _s.VolumeOut[i])
 	/* eroding, just have to use shoreface depth */
     {
 	Depth = DepthShoreface;
@@ -2049,12 +2049,12 @@ void AdjustShore(int i)
 	PauseRun(x,y,-1);
     }
 
-    DeltaArea = (VolumeIn[i] - VolumeOut[i])/Depth;
+    DeltaArea = (_s.VolumeIn[i] - _s.VolumeOut[i])/Depth;
 
     _s.PercentFull[_s.X[i]][_s.Y[i]] += DeltaArea/(CellWidth*CellWidth);
 	
-    PercentIn = VolumeIn[i]/(CellWidth*CellWidth*Depth);
-    PercentOut = VolumeOut[i]/(CellWidth*CellWidth*Depth);
+    PercentIn = _s.VolumeIn[i]/(CellWidth*CellWidth*Depth);
+    PercentOut = _s.VolumeOut[i]/(CellWidth*CellWidth*Depth);
     PercentSum = DeltaArea/(CellWidth*CellWidth);
 
     DEBUG_PRINT( DEBUG_7A, "  In: %2.4f  Out: %2.4f  Sum: %2.4f\n", PercentIn, PercentOut, PercentSum);
@@ -2822,9 +2822,9 @@ void ZeroVars(void)
 	_s.InShadow[z] = '?';	
 	_s.ShorelineAngle[z] = -999;
 	_s.SurroundingAngle[z] = -998;
-	UpWind[z] = '?';	
-	VolumeIn[z] = 0;	
-	VolumeOut[z] = 0;	
+	_s.UpWind[z] = '?';	
+	_s.VolumeIn[z] = 0;	
+	_s.VolumeOut[z] = 0;	
     }
 }
 
@@ -3090,7 +3090,7 @@ void PrintLocalConds(int x, int y, int in)
 	printf("Shadow		%c		%c		%c		%c		%c\n", 
 	       _s.InShadow[in-2], _s.InShadow[in-1],_s.InShadow[in], _s.InShadow[in+1], _s.InShadow[in+2]);
 	printf("Upwind		%c		%c		%c		%c		%c\n", 
-	       UpWind[in-2],  UpWind[in-1],UpWind[in],  UpWind[in+1],  UpWind[in+2]);
+	       _s.UpWind[in-2],  _s.UpWind[in-1],_s.UpWind[in],  _s.UpWind[in+1],  _s.UpWind[in+2]);
 	printf("Angle		%2.2f		%2.2f		%2.2f		%2.2f		%2.2f\n",
 	       _s.ShorelineAngle[in-2]*radtodeg,_s.ShorelineAngle[in-1]*radtodeg, _s.ShorelineAngle[in]*radtodeg,
 	       _s.ShorelineAngle[in+1]*radtodeg,_s.ShorelineAngle[in+2]*radtodeg);
@@ -3098,16 +3098,16 @@ void PrintLocalConds(int x, int y, int in)
 	       _s.SurroundingAngle[in-2]*radtodeg, _s.SurroundingAngle[in-1]*radtodeg,  _s.SurroundingAngle[in]*radtodeg,
 	       _s.SurroundingAngle[in+1]*radtodeg, _s.SurroundingAngle[in+2]*radtodeg);
 	printf("Vol In 		%2.2f		%2.2f		%2.2f		%2.2f		%2.2f\n",
-	       VolumeIn[in-2], VolumeIn[in-1],VolumeIn[in],VolumeIn[in+1],VolumeIn[in+2]);
+	       _s.VolumeIn[in-2], _s.VolumeIn[in-1],_s.VolumeIn[in],_s.VolumeIn[in+1],_s.VolumeIn[in+2]);
 	printf("Vol Out		%2.2f		%2.2f		%2.2f		%2.2f		%2.2f\n",
-	       VolumeOut[in-2], VolumeOut[in-1], VolumeOut[in],VolumeOut[in+1],VolumeOut[in+2]);
+	       _s.VolumeOut[in-2], _s.VolumeOut[in-1], _s.VolumeOut[in],_s.VolumeOut[in+1],_s.VolumeOut[in+2]);
 	printf("Diff		%2.2f		%2.2f		%2.2f		%2.2f		%2.2f\n",
-	       VolumeIn[in-2]-VolumeOut[in-2], VolumeIn[in-1]-VolumeOut[in-1], VolumeIn[in]-VolumeOut[in],
-	       VolumeIn[in+1]-VolumeOut[in+1],VolumeIn[in+2]-VolumeOut[in+2]);
+	       _s.VolumeIn[in-2]-_s.VolumeOut[in-2], _s.VolumeIn[in-1]-_s.VolumeOut[in-1], _s.VolumeIn[in]-_s.VolumeOut[in],
+	       _s.VolumeIn[in+1]-_s.VolumeOut[in+1],_s.VolumeIn[in+2]-_s.VolumeOut[in+2]);
 	printf("Frac Diff	%2.3f		%2.3f		%2.3f		%2.3f		%2.3f\n",
-	       (VolumeIn[in-2]-VolumeOut[in-2])/vol, (VolumeIn[in-1]-VolumeOut[in-1])/vol,
-	       (VolumeIn[in]-VolumeOut[in])/vol, (VolumeIn[in+1]-VolumeOut[in+1])/vol,
-	       (VolumeIn[in+2]-VolumeOut[in+2])/vol);
+	       (_s.VolumeIn[in-2]-_s.VolumeOut[in-2])/vol, (_s.VolumeIn[in-1]-_s.VolumeOut[in-1])/vol,
+	       (_s.VolumeIn[in]-_s.VolumeOut[in])/vol, (_s.VolumeIn[in+1]-_s.VolumeOut[in+1])/vol,
+	       (_s.VolumeIn[in+2]-_s.VolumeOut[in+2])/vol);
 
     }
 
