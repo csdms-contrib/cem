@@ -1,14 +1,14 @@
-/*  CAPERIFFIC                                                                  */
-/*  Program To generate capes?? and sandwaves?? using wave angle relationships  */
-/*  Begun by Brad Murray 01/00                                                  */
-/*  Refined by Olivier Arnoult 01/00 - 06/00                                    */
-/*  Revised and reformed by Andrew Ashton 06/00 -                               */
-/*                                                                              */      
-/*  Program Notes -                                                             */
-/*      To end program, press 'd' key and 'ESC' key simultaneously              */
-/*      To save current iteration to file, press 's' and 'f' simultaneously     */
-/*      To update screen display, press 'p' key                                 */
-/*                                                                              */
+/*  CAPERIFFIC                                                                */
+/*  Program To generate capes?? and sandwaves?? using wave angle relationships*/
+/*  Begun by Brad Murray 01/00                                                */
+/*  Refined by Olivier Arnoult 01/00 - 06/00                                  */
+/*  Revised and reformed by Andrew Ashton 06/00 -                             */
+/*                                                                            */
+/*  Program Notes -                                                           */
+/*      To end program, press 'd' key and 'ESC' key simultaneously            */
+/*      To save current iteration to file, press 's' and 'f' simultaneously   */
+/*      To update screen display, press 'p' key                               */
+/*                                                                            */
 
 #include <stdlib.h>      /*THIS PROGRAM GONNA MAKE CAPES, SANDWAVES??*/
 #include <stdio.h>
@@ -21,16 +21,40 @@
 #include <unistd.h>
 #include <ncurses.h>
 
+#undef DEBUG_ON
+
+#ifdef DEBUG_ON
+# if defined(__GNUC__)
+#  define DEBUG_PRINT( exp, format... ) { if (exp) fprintf(stderr,format); }
+# else
+static void DEBUG_PRINT( int exp, const char* format, ... )
+{
+   if ( exp )
+   {
+      va_list args;
+      va_start( args , format );
+      fprintf( stderr, format, args );
+      va_end( args );
+   }
+}
+# endif
+#else
+# define DEBUG_PRINT( exp, format... ) { }
+#endif
 
 /*  Run Control Parameters */
 
-#define TimeStep        0.2      /* days - reflects rate of sediment transport per time step */
-#define OffShoreWvHt    2     /* meters */
-#define Period          7     /* seconds */
-#define Asym            0.7    /*ractional portion of waves coming from positive (left) direction */
-#define Highness        0.1    /*ll New! .5 = even dist, > .5 high angle domination */
-#define Duration        1       /* Number of time steps calculations loop at same wave angle */
-#define StopAfter       2600 /* Stop after what number of time steps */
+#define TimeStep     0.2  /* days - reflects rate of sediment transport per
+                             time step */
+#define OffShoreWvHt 2    /* meters */
+#define Period       7    /* seconds */
+#define Asym         0.7  /* Fractional portion of waves coming from positive
+                             (left) direction */
+#define Highness     0.1  /* All New! .5 = even dist, > .5 high angle
+                             domination */
+#define Duration     1    /* Number of time steps calculations loop at same wave
+                            angle */
+#define StopAfter    2600 /* Stop after what number of time steps */
 
 /* init,finalize, SaveSandToFile...*/
 //char            savefilename[24] = "fileout";
@@ -129,24 +153,8 @@ Deltas_io _io = { SAVE_FILENAME, READ_FILENAME };
 #define DEBUG_7A  (0)  /* Slope Calcs */
 #define DEBUG_8   (0)  /* Full/Empty */
 #define DEBUG_9   (0)  /* FixBeach */
-
-#define DEBUG_10A (0) /* Overwash Tests*/
-#define DEBUG_10B (0) /* doing overwash (w/screen) */
-
-
-//int	DEBUG_0 = 0;	/* Main program steps */
-//int	DEBUG_1 = 0 ;	/* Find Next Cell */
-//int 	DEBUG_2 = 0;	/* Shadow Routine */
-//int 	DEBUG_3 = 0;	/* Determine Angles */
-//int 	DEBUG_4 = 0;	/* Upwind/Downwind */
-//int 	DEBUG_5 = 0;	/* Sediment Transport Decisions*/
-//int 	DEBUG_6 = 0;	/* Sediment Trans Calculations */
-//int 	DEBUG_7A = 0;	/* Transport Sweep (move sediment) */
-//int	DEBUG_7A = 0;	/* Slope Calcs */
-//int 	DEBUG_8 = 0;	/* Full/Empty */
-//int 	DEBUG_9 = 0;	/* FixBeach */
-//int	DEBUG_10A = 0;	/* Overwash Tests*/
-//int	DEBUG_10B = 0;	/* doing overwash (w/screen) */
+#define DEBUG_10A (0)  /* Overwash Tests*/
+#define DEBUG_10B (0)  /* doing overwash (w/screen) */
 int	OWflag = 0;     /* debugger */
 
 /* Universal Constants */
@@ -157,10 +165,36 @@ int	OWflag = 0;     /* debugger */
 //float g =		9.80665;
 //float radtodeg = 	180.0/pi; /* transform rads to degrees */
 
+typedef struct
+{
+   char AllBeach[Xmax][2*Ymax]; /* Flag indicating of cell is entirely beach */
+   float PercentFull[Xmax][2*Ymax]; /* Fractional amount of shore cell full of
+                                       sediment */
+   int Age[Xmax][2*Ymax]; /* Age since cell was deposited */
+   float CellDepth[Xmax][2*Ymax]; /* Depth array (m) (ADA 6/3) */
+   int X[MaxBeachLength]; /* X Position of ith beach element */
+   int Y[MaxBeachLength]; /* Y Position of ith beach element */
+   char	InShadow[MaxBeachLength];	 /* Is ith beach element in shadow? */
+   float ShorelineAngle[MaxBeachLength]; /* Angle between cell and right (z+1)
+                                            neighbor */
+   float SurroundingAngle[MaxBeachLength];/* Cell-orientated angle based upon
+                                             left and right neighbor */
+   char UpWind[MaxBeachLength]; /* Upwind or downwind condition used to
+                                   calculate sediment transport */
+   float VolumeIn[MaxBeachLength];  /* Sediment volume into ith beach
+                                       element */	
+   float VolumeOut[MaxBeachLength]; /* Sediment volume out of ith beach
+                                       element */
+
+   int CurrentTimeStep; /* Time step of current calculation */ 
+}
+Deltas_state;
+
+Deltas_state _s;
 
 /* Overall Shoreface Configuration Arrays - Data file information */
 
-char	AllBeach[Xmax][2*Ymax];		/* Flag indicating of cell is entirely beach */
+//char	AllBeach[Xmax][2*Ymax];		/* Flag indicating of cell is entirely beach */
 float	PercentFull[Xmax][2*Ymax];	/* Fractional amount of shore cell full of sediment */
 int	Age[Xmax][2*Ymax];		/* Age since cell was deposited */
 float	CellDepth[Xmax][2*Ymax];	/* Depth array (m) (ADA 6/3) */
@@ -197,7 +231,6 @@ int	NumWaveBins;		/* For Input Wave - number of bins	*/
 float	WaveMax[36];		/* Max Angle for specific bin */
 float	WaveProb[36];		/* Probability of Certain Bin */
 
-// Graphics variables???
 //float xcellwidth;
 //float ycellwidth;
 ///*ScreenInit*/static WINDOW *mainwnd;
@@ -454,18 +487,21 @@ deltas_run( void )
 	    /* printf("Foundbeach!: %d \n", CurrentTimeStep); */
 
 	    ShadowSweep();
-	    if (DEBUG_0) printf("Shadowswept: %d \n", CurrentTimeStep);
+	    //DEBUG_PRINT( DEBUG_0, "Shadowswept: %d \n", CurrentTimeStep);
+            DEBUG_PRINT( DEBUG_0, "Shadowswept: %d \n", CurrentTimeStep );
+
 	    DetermineAngles();
-	    if (DEBUG_0) printf("AngleDet: %d \n", CurrentTimeStep);
+	    //DEBUG_PRINT( DEBUG_0, "AngleDet: %d \n", CurrentTimeStep);
+	    DEBUG_PRINT( DEBUG_0, "AngleDet: %d \n", CurrentTimeStep );
 	    DetermineSedTransport();
-	    if (DEBUG_0) printf("Sed Trans: %d \n", CurrentTimeStep); 
+	    DEBUG_PRINT( DEBUG_0, "Sed Trans: %d \n", CurrentTimeStep); 
 	    TransportSedimentSweep();
-	    if (DEBUG_0) printf("Transswept: %d \n", CurrentTimeStep);
+	    DEBUG_PRINT( DEBUG_0, "Transswept: %d \n", CurrentTimeStep);
 
 	    DeliverSediment();
 
 	    FixBeach();
-	    if (DEBUG_0) printf("Fixed Beach: %d \n", CurrentTimeStep);
+	    DEBUG_PRINT( DEBUG_0, "Fixed Beach: %d \n", CurrentTimeStep);
 
 
 		/* OVERWASH */
@@ -503,9 +539,9 @@ deltas_run( void )
 				/* printf("Foundbeach!: %d \n", CurrentTimeStep); */
 
 			ShadowSweep();
-				if (DEBUG_0) printf("Shadowswept: %d \n", CurrentTimeStep);
+				DEBUG_PRINT( DEBUG_0, "Shadowswept: %d \n", CurrentTimeStep);
 			DetermineAngles();
-				if (DEBUG_0) printf("AngleDet: %d \n", CurrentTimeStep);
+				DEBUG_PRINT( DEBUG_0, "AngleDet: %d \n", CurrentTimeStep);
 			CheckOverwashSweep();
 			FixBeach();
 	
@@ -516,7 +552,7 @@ deltas_run( void )
 		PauseRun(1,1,-1);			
 	    }
 
-	    if(DEBUG_0) printf("End of Time Step: %d \n", CurrentTimeStep);
+	    DEBUG_PRINT( DEBUG_3, "End of Time Step: %d \n", CurrentTimeStep);
 		
 	    /* Age Empty Cells */
 
@@ -684,7 +720,7 @@ void FindBeachCells(int YStart)
 
     xstart = Xmax -1; y = YStart;
 	
-    while (AllBeach[xstart][y] == 'n')
+    while (_s.AllBeach[xstart][y] == 'n')
     {	
 	xstart -= 1;
     }
@@ -693,7 +729,7 @@ void FindBeachCells(int YStart)
 
     X[0] = xstart; 	Y[0] = YStart;
 
-    if (DEBUG_1) printf("FirsX: %3d  FrstY: %3d  z: 0 \n", X[0], Y[0]);	
+    DEBUG_PRINT( DEBUG_1, "FirsX: %3d  FrstY: %3d  z: 0 \n", X[0], Y[0]);	
 
     z = 0;
 
@@ -707,7 +743,7 @@ void FindBeachCells(int YStart)
 	X[z] = NextX;
 	Y[z] = NextY;
 			
-	if (DEBUG_1) printf("NextX: %3d  NextY: %3d  z: %d \n", NextX, NextY, z);
+	DEBUG_PRINT( DEBUG_1, "NextX: %3d  NextY: %3d  z: %d \n", NextX, NextY, z);
 
 	if (PercentFull[X[z]][Y[z]] == 0) 
 	{
@@ -738,7 +774,7 @@ void FindBeachCells(int YStart)
     TotalBeachCells = z; 
     FellOffArray = 'n';		
 
-    if (DEBUG_1) printf("Total Beach: %d  \n \n", TotalBeachCells); 
+    DEBUG_PRINT( DEBUG_1, "Total Beach: %d  \n \n", TotalBeachCells); 
 
 }
 
@@ -751,17 +787,17 @@ void FindNextCell(int x, int y, int z)
 
 {
 
-    if ( AllBeach[x-1][y] == 'n')
+    if ( _s.AllBeach[x-1][y] == 'n')
 	/* No beach directly beneath cell */
     {  	
-	if ( AllBeach[x][y-1] == 'y' && AllBeach[x][y+1] == 'n') 
+	if ( _s.AllBeach[x][y-1] == 'y' && _s.AllBeach[x][y+1] == 'n') 
 	    /* If on right side of protuberance */
 	{
-	    if ( AllBeach[x-1][y-1] == 'y' )
+	    if ( _s.AllBeach[x-1][y-1] == 'y' )
 	    {  	/* Move one inshore */	
 		NextX = x-1; NextY = y; return;
 	    }	
-	    else if (AllBeach[x-1][y-1] == 'n' )	/* This is where shadow procedure was */
+	    else if (_s.AllBeach[x-1][y-1] == 'n' )	/* This is where shadow procedure was */
 	    {	/* Back and to the left */
 		NextX = x-1; NextY = y-1; return;
 	    }
@@ -770,24 +806,24 @@ void FindNextCell(int x, int y, int z)
 	}
 		
 
-	else if ( AllBeach[x][y-1] == 'n' && AllBeach[x][y+1] == 'y')	
+	else if ( _s.AllBeach[x][y-1] == 'n' && _s.AllBeach[x][y+1] == 'y')	
 	    /* If on left side of protuberance */
 	{
-	    if ( AllBeach[x+1][y+1] == 'n' && AllBeach[x+1][y] == 'n')
+	    if ( _s.AllBeach[x+1][y+1] == 'n' && _s.AllBeach[x+1][y] == 'n')
 		/*  Up and right - move around spit end */
 	    {
 		NextX = x+1; NextY = y+1; return;			
 	    }
 		
-	    else if (  AllBeach[x+1][y] == 'y')
+	    else if (  _s.AllBeach[x+1][y] == 'y')
 		/*  On underside of regular or diagonally thin spit */
 	    {
-		if ( AllBeach[x+1][y-1] == 'n' && AllBeach[x-1][y-1] == 'n' && X[z-1]>x)
+		if ( _s.AllBeach[x+1][y-1] == 'n' && _s.AllBeach[x-1][y-1] == 'n' && X[z-1]>x)
 		    /* Reaching end of spit - not going in circles */
 		{
 		    NextX = x-1; NextY = y; return;
 		}
-		else if (AllBeach[x+1][y-1] == 'n')
+		else if (_s.AllBeach[x+1][y-1] == 'n')
 		    /* This is reaching end of spit */
 		{
 		    NextX = x+1; NextY = y-1; return;
@@ -798,8 +834,8 @@ void FindNextCell(int x, int y, int z)
 		}
 	    }
 		
-	    else if ( AllBeach[x+1][y+1] == 'y')
-		/* we know ( AllBeach[x+1][y] == 'n') */
+	    else if ( _s.AllBeach[x+1][y+1] == 'y')
+		/* we know ( _s.AllBeach[x+1][y] == 'n') */
 		/* Moving straight up */
 		/* NEW - we still don't want to go in */
 	    {
@@ -811,22 +847,22 @@ void FindNextCell(int x, int y, int z)
 	}
 
 
-	if  (AllBeach[x][y-1] == 'n' && AllBeach[x][y+1] == 'n')
+	if  (_s.AllBeach[x][y-1] == 'n' && _s.AllBeach[x][y+1] == 'n')
 	    /* Hanging out - nothing on sides or top - maybe on corner? */
 	{
-	    if (AllBeach[x-1][y+1] == 'y' && AllBeach[x+1][y] == 'n')
+	    if (_s.AllBeach[x-1][y+1] == 'y' && _s.AllBeach[x+1][y] == 'n')
 		/* On left corner of protuberence, move right*/
 	    {
 		NextX = x; NextY = y+1; return;
 	    }
 
-	    else if (AllBeach[x+1][y] == 'y' && AllBeach[x+1][y-1] == 'n')
+	    else if (_s.AllBeach[x+1][y] == 'y' && _s.AllBeach[x+1][y-1] == 'n')
 		/* Under protuberance, move around to left and up  */ 
 	    {
 		NextX = x+1; NextY = y-1; return;
 	    }
 			
-	    else if (AllBeach[x+1][y] == 'y' && AllBeach[x+1][y-1] == 'y')
+	    else if (_s.AllBeach[x+1][y] == 'y' && _s.AllBeach[x+1][y-1] == 'y')
 		/* Under protuberance, move to left */ 
 	    {
 		NextX = x; NextY = y-1; return;
@@ -835,24 +871,24 @@ void FindNextCell(int x, int y, int z)
 	    PauseRun(x, y, z); 
 	}
 
-	else if ( AllBeach[x][y-1] == 'y' && AllBeach[x][y+1] == 'y' )
+	else if ( _s.AllBeach[x][y-1] == 'y' && _s.AllBeach[x][y+1] == 'y' )
 	    /* thin entrance between spits.  Don't even think about going in there */
 	    /* (Similar case to over head and underneath - don't go in */
 	    /* check to see which way we were coming in - from below or from side	*/
 	{	if (X[z-1] > x)
 	    /* coming from above */
 	{
-	    if (AllBeach[x+1][y+1] == 'n')
+	    if (_s.AllBeach[x+1][y+1] == 'n')
 		/* Move right and up*/
 	    {
 		NextX = x+1; NextY = y+1; return;
 	    }
-	    else if (AllBeach[x+1][y] == 'n')
+	    else if (_s.AllBeach[x+1][y] == 'n')
 		/* Straight up*/
 	    {
 		NextX = x+1; NextY = y; return;
 	    }
-	    else if (AllBeach[x+1][y-1] == 'n')
+	    else if (_s.AllBeach[x+1][y-1] == 'n')
 		/* Up and left*/
 		/* shouldn't need this, this where coming from */
 	    {
@@ -862,17 +898,17 @@ void FindNextCell(int x, int y, int z)
 	else if (X[z-1] < x)
 	    /* coming from below */
 	{
-	    if (AllBeach[x-1][y-1] == 'n')
+	    if (_s.AllBeach[x-1][y-1] == 'n')
 		/* move down and left*/
 	    {
 		NextX = x-1; NextY = y-1; return;
 	    }
-	    else if (AllBeach[x-1][y] == 'n')
+	    else if (_s.AllBeach[x-1][y] == 'n')
 		/*move straight down*/
 	    {
 		NextX = x-1; NextY = y; return;
 	    }
-	    else if (AllBeach[x-1][y+1] == 'n')
+	    else if (_s.AllBeach[x-1][y+1] == 'n')
 		/*move straight down*/
 		/* shouldn't need this, this would be where coming from*/
 	    {
@@ -888,18 +924,18 @@ void FindNextCell(int x, int y, int z)
     }
 
 	
-    else if ( AllBeach[x-1][y] == 'y' && AllBeach[x+1][y] == 'n') 
+    else if ( _s.AllBeach[x-1][y] == 'y' && _s.AllBeach[x+1][y] == 'n') 
 	/* There is beach beneath cell, nothing over the head */
     {
-	if ( AllBeach[x][y+1] == 'n')
+	if ( _s.AllBeach[x][y+1] == 'n')
 	    /*  Adjacent Cell to right is vacant */
 	{
-	    if ( AllBeach[x-1][y+1] == 'y' )
+	    if ( _s.AllBeach[x-1][y+1] == 'y' )
 		/* move straight right */
 	    {
 		NextX = x; NextY = y+1; return;
 	    }
-	    else if ( AllBeach[x-1][y+1] == 'n' ) 
+	    else if ( _s.AllBeach[x-1][y+1] == 'n' ) 
 		/* Move down and to right */
 	    {			 
 		NextX = x-1; NextY = y+1; return;	
@@ -909,16 +945,16 @@ void FindNextCell(int x, int y, int z)
 	    PauseRun(x, y, z); 
 	}
 		
-	else if ( AllBeach[x][y+1] == 'y')	
+	else if ( _s.AllBeach[x][y+1] == 'y')	
 	    /*Brad's note : DON'T REALLY NEED TO REPEAT THIS (WORKS SAME IN BOTH CASES) */
 	    /* Right neighbor occupied */
 	{				
-	    if ( AllBeach[x+1][y+1] == 'n' )
+	    if ( _s.AllBeach[x+1][y+1] == 'n' )
 		/* Move up and to right */
 	    {
 		NextX = x+1; NextY = y+1; return;
 	    }
-	    else if ( AllBeach[x+1][y+1] == 'y')
+	    else if ( _s.AllBeach[x+1][y+1] == 'y')
 		/* Move straight up */
 	    {
 		NextX = x+1; NextY = y; return;
@@ -933,7 +969,7 @@ void FindNextCell(int x, int y, int z)
     }
 
 
-    else if ( (AllBeach[x-1][y] == 'y') && (AllBeach[x+1][y] == 'y')) 
+    else if ( (_s.AllBeach[x-1][y] == 'y') && (_s.AllBeach[x+1][y] == 'y')) 
 	/* There is beach behind cell, and over the head don't want to go in (will be shadowed anyway */
 	/* Need to use last cell to find out if going into left or right enclosure */
     {
@@ -945,17 +981,17 @@ void FindNextCell(int x, int y, int z)
 	if (Y[z-1] < y)
 	    /* Moving towards right, bump up and over the problem */
 	{
-	    if (AllBeach[x+1][y-1] == 'n')
+	    if (_s.AllBeach[x+1][y-1] == 'n')
 		/* Move up and to the left */
 	    {
 		NextX = x+1;  NextY = y-1; return;
 	    }
-	    else if (AllBeach[x][y-1] == 'n')
+	    else if (_s.AllBeach[x][y-1] == 'n')
 		/* Move directly left */	
 	    {
 		NextX = x;  NextY = y-1; return;
 	    }
-	    else if (AllBeach[x-1][y-1] == 'n')
+	    else if (_s.AllBeach[x-1][y-1] == 'n')
 		/* Move left and down */	
 	    {
 		NextX = x-1;  NextY = y-1; return;
@@ -967,17 +1003,17 @@ void FindNextCell(int x, int y, int z)
 	else if (Y[z-1] > y)
 	    /* Moving towards left, go back right */
 	{
-	    if (AllBeach[x-1][y+1] == 'n')
+	    if (_s.AllBeach[x-1][y+1] == 'n')
 		/* Move down and to the right */
 	    {
 		NextX = x-1;  NextY = y+1; return;
 	    }
-	    else if (AllBeach[x][y+1] == 'n')
+	    else if (_s.AllBeach[x][y+1] == 'n')
 		/* Move directly right */	
 	    {
 		NextX = x;  NextY = y+1; return;
 	    }
-	    else if (AllBeach[x+1][y+1] == 'n')
+	    else if (_s.AllBeach[x+1][y+1] == 'n')
 		/* Move right and up */	
 	    {
 		NextX = x+1;  NextY = y+1; return;
@@ -999,9 +1035,9 @@ void FindNextCell(int x, int y, int z)
 *  When thin entrance is discovered, fill it up *
 	
 {
-if (AllBeach[X][Y+2*LorR] == 'n')
+if (_s.AllBeach[X][Y+2*LorR] == 'n')
 {
-    AllBeach[X][Y+2*LorR] = 'y';
+    _s.AllBeach[X][Y+2*LorR] = 'y';
     PercentFull[X][Y+2*LorR] = 1;
     printf("!!!!!!!!!!!!!!!!!\n		FILLEDERUP: %d, %d, %d \n", X, Y, LorR);
 }	
@@ -1023,7 +1059,7 @@ void ShadowSweep(void)
 	
     ShadowXMax = XMaxBeach(ShadowXMax) + 3;
 	
-    if (DEBUG_2) printf("ShadowXMax: %d   XMaxBeach: %d \n", ShadowXMax, XMaxBeach(ShadowXMax));
+    DEBUG_PRINT( DEBUG_3, "ShadowXMax: %d   XMaxBeach: %d \n", ShadowXMax, XMaxBeach(ShadowXMax));
 
     /* Determine if beach cells are in shadow */
 
@@ -1051,7 +1087,7 @@ int XMaxBeach(int Max)
     {
 	while (ytest < 2 *Ymax)
 	{
-	    if (AllBeach[xtest][ytest] == 'y')
+	    if (_s.AllBeach[xtest][ytest] == 'y')
 	    {
 		return xtest;
 	    }
@@ -1078,7 +1114,7 @@ char FindIfInShadow(int icheck, int ShadMax)
 /*  New 2/04 - use pixelwise march  - make it faster, more accurate - aa	*/
 /*  New 3/04 - correctly take acocunt for sideways and underneath shadows - aa	*/
 /*  This function will use but not affect the global arrays: 			*/
-/*	AllBeach[][] and PercentFull[][]					*/
+/*	_s.AllBeach[][] and PercentFull[][]					*/
 /*  This function refers to global variable:  WaveAngle				*/
 	
 {
@@ -1121,7 +1157,7 @@ char FindIfInShadow(int icheck, int ShadMax)
     else
 	ysign = 1;
 		
-    if (DEBUG_2a) printf("\nI: %d----------x: %d  Y: %d  Wang:  %f Slope: %f sign: %d \n",
+    DEBUG_PRINT( DEBUG_3, "\nI: %d----------x: %d  Y: %d  Wang:  %f Slope: %f sign: %d \n",
 			icheck, X[icheck],Y[icheck],WaveAngle*radtodeg,slope, ysign); 
 	
     /* 03/04 AA: depending on local orientations, starting point will differ */
@@ -1130,35 +1166,35 @@ char FindIfInShadow(int icheck, int ShadMax)
     xinint = X[icheck];
     yinint = Y[icheck];
 
-    if (AllBeach[xinint-1][yinint] == 'y' || ((AllBeach[xinint][yinint-1] == 'y') && 
-					      (AllBeach[xinint][yinint+1] == 'y')) )
+    if (_s.AllBeach[xinint-1][yinint] == 'y' || ((_s.AllBeach[xinint][yinint-1] == 'y') && 
+					      (_s.AllBeach[xinint][yinint+1] == 'y')) )
 	/* 'regular condition' */
 	/* plus 'stuck in the middle' situation (unlikely scenario)*/
     {
 	xin = xinint + PercentFull[xinint][yinint];
 	yin = yinint + 0.5;
-	if (DEBUG_2a) printf("-- Regular xin: %f  yin: %f\n",xin,yin);
+	DEBUG_PRINT( DEBUG_3, "-- Regular xin: %f  yin: %f\n",xin,yin);
     }
-    else if (AllBeach[xinint][yinint-1] == 'y')
+    else if (_s.AllBeach[xinint][yinint-1] == 'y')
 	/* on right side */
     {
 	xin = xinint + 0.5;
 	yin = yinint + PercentFull[xinint][yinint];
-	if (DEBUG_2a) printf("-- Right xin: %f  yin: %f\n",xin,yin);
+	DEBUG_PRINT( DEBUG_3, "-- Right xin: %f  yin: %f\n",xin,yin);
     }
-    else if (AllBeach[xinint][yinint+1] == 'y')
+    else if (_s.AllBeach[xinint][yinint+1] == 'y')
 	/* on left side */
     {
 	xin = xinint + 0.5;
 	yin = yinint + 1.0 - PercentFull[xinint][yinint];
-	if (DEBUG_2a) printf("-- Left xin: %f  yin: %f\n",xin,yin);
+	DEBUG_PRINT( DEBUG_3, "-- Left xin: %f  yin: %f\n",xin,yin);
     }
-    else if (AllBeach[xinint+1][yinint] == 'y')
+    else if (_s.AllBeach[xinint+1][yinint] == 'y')
 	/* gotta be on the bottom now */
     {
 	xin = xinint + 1 - PercentFull[xinint][yinint];
 	yin = yinint + 0.5;
-	if (DEBUG_2a) printf("-- Under xin: %f  yin: %f\n",xin,yin);
+	DEBUG_PRINT( DEBUG_3, "-- Under xin: %f  yin: %f\n",xin,yin);
     }
     else
 	/* debug ain't just an insect */
@@ -1186,7 +1222,7 @@ char FindIfInShadow(int icheck, int ShadMax)
 	Xside = x + fabs(NextYInt - y) / slope;
 	DistanceSide = ((NextYInt - y)*(NextYInt - y) + (Xside - x)*(Xside - x));
 	
-	if (DEBUG_2a) printf("x: %f  y: %f  X:%d  Y: %d  Yd: %f  DistD: %f Xs: %f DistS: %f\n",
+	DEBUG_PRINT( DEBUG_3, "x: %f  y: %f  X:%d  Y: %d  Yd: %f  DistD: %f Xs: %f DistS: %f\n",
 			    x,y,NextXInt,NextYInt, Yup,DistanceUp,Xside,DistanceSide); 
 
 	if (DistanceUp < DistanceSide)
@@ -1196,7 +1232,7 @@ char FindIfInShadow(int icheck, int ShadMax)
 	    y = Yup;
 	    xtestint = NextXInt;	
 	    ytestint = floor(y);
-	    if (DEBUG_2a) printf(" up ");
+	    DEBUG_PRINT( DEBUG_3, " up ");
 	}
 	else
 	    /* next cell is the side cell */
@@ -1205,10 +1241,10 @@ char FindIfInShadow(int icheck, int ShadMax)
 	    y = NextYInt;
 	    xtestint = floor(x);
 	    ytestint = y + (ysign-1)/2;
-	    if (DEBUG_2a) printf(" side ");
+	    DEBUG_PRINT( DEBUG_3, " side ");
 	}
 		
-	if (DEBUG_2a) printf("	x: %f  y: %f  xtesti: %d ytesti: %d \n\n",x,y,xtestint,ytestint); 
+	DEBUG_PRINT( DEBUG_3, "	x: %f  y: %f  xtesti: %d ytesti: %d \n\n",x,y,xtestint,ytestint); 
 			
 			
 	/* Now Test */
@@ -1216,7 +1252,7 @@ char FindIfInShadow(int icheck, int ShadMax)
 	/* Trick - if crossing through the diamond, will change quadrants 	*/
 	/* Probably won't get to this one, though			 	*/		
 
-	if 	(AllBeach[xtestint][ytestint] == 'y')
+	if 	(_s.AllBeach[xtestint][ytestint] == 'y')
 	{
 	    /* use same approach to find exit (could make this modular)	 */
 	    /* don't change 'x' or 'y' and this will be ok			*/
@@ -1244,14 +1280,14 @@ char FindIfInShadow(int icheck, int ShadMax)
 		yout = NextYInt;
 	    }
 
-	    /*if (DEBUG_2a) printf("In Allbeach xin: %2.2f yin: %2.2f xout: %2.2f yout: %2.2f\n",
+	    /*DEBUG_PRINT( DEBUG_3, "In Allbeach xin: %2.2f yin: %2.2f xout: %2.2f yout: %2.2f\n",
 	      x,y,xout,yout);
-	      if (DEBUG_2a) printf("In Allbeach xin: %2.2f yin: %2.2f xout: %2.2f yout: %2.2f\n",
+	      DEBUG_PRINT( DEBUG_3, "In Allbeach xin: %2.2f yin: %2.2f xout: %2.2f yout: %2.2f\n",
 	      (xout-xtestint-0.5),(x-xtestint-0.5),(yout-ytestint-0.5),(y-ytestint-0.5));*/
 
 	    if(( (xout-xtestint-0.5) * (x-xtestint-0.5) < 0 ) || ((yout-ytestint-0.5) * (y-ytestint-0.5) < 0)) 
 	    {
-		if (DEBUG_2a) printf("  Shaddowded ");
+		DEBUG_PRINT( DEBUG_3, "  Shaddowded ");
 		return 'y';
 	    }
 	}	
@@ -1264,8 +1300,8 @@ char FindIfInShadow(int icheck, int ShadMax)
 
 	else if ( PercentFull[xtestint][ytestint] > 0 ) 
 	{
-	    if (AllBeach[xtestint-1][ytestint] == 'y' || ((AllBeach[xtestint][ytestint-1] == 'y') && 
-							  (AllBeach[xtestint][ytestint+1] == 'y')) )
+	    if (_s.AllBeach[xtestint-1][ytestint] == 'y' || ((_s.AllBeach[xtestint][ytestint-1] == 'y') && 
+							  (_s.AllBeach[xtestint][ytestint+1] == 'y')) )
 		/* 'regular' condition */
 		/* plus 'stuck in the middle' situation (unlikely scenario) */
 	    {
@@ -1279,7 +1315,7 @@ char FindIfInShadow(int icheck, int ShadMax)
 		    return 'y';
 		}
 	    }
-	    else if (AllBeach[xtestint][ytestint-1] == 'y')
+	    else if (_s.AllBeach[xtestint][ytestint-1] == 'y')
 		/* on right side */
 	    {
 		xtest = xtestint + 0.5;
@@ -1292,7 +1328,7 @@ char FindIfInShadow(int icheck, int ShadMax)
 		    return 'y';
 		}
 	    }
-	    else if (AllBeach[xtestint][ytestint+1] == 'y')
+	    else if (_s.AllBeach[xtestint][ytestint+1] == 'y')
 		/* on left side */
 	    {
 		xtest = xtestint + 0.5;
@@ -1305,7 +1341,7 @@ char FindIfInShadow(int icheck, int ShadMax)
 		    return 'y';
 		}
 	    }
-	    else if (AllBeach[xtestint+1][ytestint] == 'y')
+	    else if (_s.AllBeach[xtestint+1][ytestint] == 'y')
 		/* gotta be on the bottom now */
 	    {
 		xtest = xtestint + 1 - PercentFull[xtestint][ytestint];
@@ -1340,7 +1376,7 @@ void  DetermineAngles(void)
 /*  This function will determine global arrays:						*/
 /*		ShorelineAngle[], UpWind[], SurroundingAngle[]						*/
 /*  This function will use but not affect the following arrays and values:		*/
-/*		X[], Y[], PercentFull[][], AllBeach[][], WaveAngle			*/
+/*		X[], Y[], PercentFull[][], _s.AllBeach[][], WaveAngle			*/
 /*  ADA Revised underside, SurroundingAngle 6/03, 2/04 fixed 				*/
 /*  ADA Revised angle calc 5/04								*/
 
@@ -1371,8 +1407,8 @@ void  DetermineAngles(void)
 	x2int = X[i+1];
 	y2int = Y[i+1];
 
-	if (AllBeach[x2int-1][y2int] == 'y' || ((AllBeach[x2int][y2int-1] == 'y') && 
-						(AllBeach[x2int][y2int+1] == 'y')) && (AllBeach[x2int+1][y2int] == 'n'))
+	if (_s.AllBeach[x2int-1][y2int] == 'y' || ((_s.AllBeach[x2int][y2int-1] == 'y') && 
+						(_s.AllBeach[x2int][y2int+1] == 'y')) && (_s.AllBeach[x2int+1][y2int] == 'n'))
 	    /* 'regular condition' - if between  */
 	    /* plus 'stuck in the middle' situation (unlikely scenario)*/
 	{
@@ -1380,12 +1416,12 @@ void  DetermineAngles(void)
 	    y2 = y2int + 0.5;
 	    if (debug3a) printf("-- Regular xin: %f  yin: %f\n",x2,y2);
 	}
-	else if ((AllBeach[x2int+1][y2int] == 'y') && (AllBeach[x2int-1][y2int] == 'y'))
+	else if ((_s.AllBeach[x2int+1][y2int] == 'y') && (_s.AllBeach[x2int-1][y2int] == 'y'))
 	    /* in a sideways nook (or is that a cranny?) */
 	{
 	    x2 = x2int + 0.5;
 
-	    if (AllBeach[x2int][y2int-1] == 'y')
+	    if (_s.AllBeach[x2int][y2int-1] == 'y')
 		/* right-facing nook */
 	    {
 		y2 = y2int + PercentFull[x2int][y2int];
@@ -1397,21 +1433,21 @@ void  DetermineAngles(void)
 	    }
 	    if (debug3a) printf("-- Nook  xin: %f  yin: %f\n",x2,y2);
 	}
-	else if (AllBeach[x2int][y2int-1] == 'y')
+	else if (_s.AllBeach[x2int][y2int-1] == 'y')
 	    /* on right side */
 	{
 	    x2 = x2int + 0.5;
 	    y2 = y2int + PercentFull[x2int][y2int];
 	    if (debug3a) printf("-- Right xin: %f  yin: %f\n",x2,y2);
 	}
-	else if (AllBeach[x2int][y2int+1] == 'y')
+	else if (_s.AllBeach[x2int][y2int+1] == 'y')
 	    /* on left side */
 	{
 	    x2 = x2int + 0.5;
 	    y2 = y2int + 1.0 - PercentFull[x2int][y2int];
 	    if (debug3a) printf("-- Left xin: %f  yin: %f\n",x2,y2);
 	}
-	else if (AllBeach[x2int+1][y2int] == 'y')
+	else if (_s.AllBeach[x2int+1][y2int] == 'y')
 	    /* gotta be on the bottom now */
 	{
 	    x2 = x2int + 1 - PercentFull[x2int][y2int];
@@ -1431,13 +1467,13 @@ void  DetermineAngles(void)
 	if (y2 > y1)
 	{
 	    ShorelineAngle[i] = atan((x2 - x1) / (y2 - y1));
-	    if (DEBUG_3) printf("(R) i = %d  X[i]: %d Y[i]: %d Percent %3f x: %f y: %f Angle:%f  Deg Angle: %f \n",
+	    DEBUG_PRINT( DEBUG_3, "(R) i = %d  X[i]: %d Y[i]: %d Percent %3f x: %f y: %f Angle:%f  Deg Angle: %f \n",
 			       i, X[i], Y[i], PercentFull[X[i]][Y[i]],x2,y2,ShorelineAngle[i], ShorelineAngle[i]*180/M_PI);
 	}
 	else if (y2 == y1)
 	{
 	    ShorelineAngle[i] = M_PI/2.0 * (x1 - x2) / fabs(x2 - x1);
-	    if (DEBUG_3) printf("(G) i = %d  X[i]: %d Y[i]: %d Percent %3f x: %f y: %f Angle:%f  Deg Angle: %f \n",
+	    DEBUG_PRINT( DEBUG_3, "(G) i = %d  X[i]: %d Y[i]: %d Percent %3f x: %f y: %f Angle:%f  Deg Angle: %f \n",
 			       i, X[i], Y[i], PercentFull[X[i]][Y[i]],x2,y2,ShorelineAngle[i], ShorelineAngle[i]*180/M_PI);
 	}
 	else 
@@ -1449,7 +1485,7 @@ void  DetermineAngles(void)
 	    {
 		ShorelineAngle[i] += 2.0 * M_PI;
 	    }
-	    if (DEBUG_3) printf("(U) i = %d  X[i]: %d Y[i]: %d Percent %3f x: %f y: %f Angle:%f  Deg Angle: %f \n",
+	    DEBUG_PRINT( DEBUG_3, "(U) i = %d  X[i]: %d Y[i]: %d Percent %3f x: %f y: %f Angle:%f  Deg Angle: %f \n",
 			       i, X[i], Y[i], PercentFull[X[i]][Y[i]],x2,y2,ShorelineAngle[i], ShorelineAngle[i]*180/M_PI);
 	}
 
@@ -1469,7 +1505,7 @@ void  DetermineAngles(void)
 	    {
 		SurroundingAngle[k] -= 2.0 * M_PI;
 	    }
-	    if (DEBUG_4) printf("Under: %d\n",k);
+	    DEBUG_PRINT( DEBUG_4, "Under: %d\n",k);
 	}
 	else
 	{
@@ -1482,26 +1518,26 @@ void  DetermineAngles(void)
     /* and is centered on cell, not on right boundary				*/
 	
 
-    if (DEBUG_4) printf("\nUp/Down   Wave Angle:%f\n", WaveAngle * radtodeg);
+    DEBUG_PRINT( DEBUG_4, "\nUp/Down   Wave Angle:%f\n", WaveAngle * radtodeg);
 
     for (j=1 ; j < TotalBeachCells  ; j++)
     {
-	if (DEBUG_4) printf("i: %d  Shad: %c Ang[i]: %3.1f  Sur: %3.1f  Effect: %3f  ",
+	DEBUG_PRINT( DEBUG_4, "i: %d  Shad: %c Ang[i]: %3.1f  Sur: %3.1f  Effect: %3f  ",
 			   j,InShadow[j], ShorelineAngle[j]*radtodeg, 
 			   SurroundingAngle[j]*radtodeg, (WaveAngle - SurroundingAngle[j])*radtodeg);
 
 	if ( fabs(WaveAngle - SurroundingAngle[j]) >= 42.0/radtodeg )
 	{	
 	    UpWind[j] = 'u';
-	    if (DEBUG_4) printf("U(1)  ");
+	    DEBUG_PRINT( DEBUG_4, "U(1)  ");
 	}
 	else 
 	{
 	    UpWind[j] = 'd';
-	    if (DEBUG_4) printf("D(1)  ");
+	    DEBUG_PRINT( DEBUG_4, "D(1)  ");
 	}
 
-	if (DEBUG_4) printf("\n");
+	DEBUG_PRINT( DEBUG_4, "\n");
 
     }
 
@@ -1518,7 +1554,7 @@ void DetermineSedTransport(void)
 /*		VolumeIn[], VolumeOut[]								*/
 /*  This function will use but not affect the following arrays and values:			*/
 /*		X[], Y[], InShadow[], UpWind[], ShorelineAngle[]				*/
-/*  		PercentFull[][], AllBeach[][], WaveAngle					*/
+/*  		PercentFull[][], _s.AllBeach[][], WaveAngle					*/
 
 {
 
@@ -1533,11 +1569,11 @@ void DetermineSedTransport(void)
     float   SedTansLimit =  SED_TRANS_LIMIT;
 
 
-    if (DEBUG_5) printf("\nSEDTRANS: %d  @  %f \n\n", CurrentTimeStep, WaveAngle * radtodeg);
+    DEBUG_PRINT( DEBUG_5, "\nSEDTRANS: %d  @  %f \n\n", CurrentTimeStep, WaveAngle * radtodeg);
 
     for (i=1 ; i < TotalBeachCells-1 ; i++)
     {
-	if (DEBUG_5) printf("\n  i: %d  ",i);		
+	DEBUG_PRINT( DEBUG_5, "\n  i: %d  ",i);		
 
 
 	MaxTrans = 'n';
@@ -1553,7 +1589,7 @@ void DetermineSedTransport(void)
 	    Last = -1;
 	    Correction = 0;
 
-	    if (DEBUG_5) printf("RT  %d ",CalcCell);
+	    DEBUG_PRINT( DEBUG_5, "RT  %d ",CalcCell);
 	}
 	else
 	{
@@ -1564,7 +1600,7 @@ void DetermineSedTransport(void)
 	    Last = 1;
 	    Correction = -1;
 
-	    if (DEBUG_5) printf("LT  %d ",CalcCell);
+	    DEBUG_PRINT( DEBUG_5, "LT  %d ",CalcCell);
 	}
 			
 
@@ -1584,7 +1620,7 @@ void DetermineSedTransport(void)
 		  && (InShadow[CalcCell+Last] == 'n')) )
 	    {
 		MaxTrans = 'y';
-		if (DEBUG_5) printf("MAXTRAN  ");
+		DEBUG_PRINT( DEBUG_5, "MAXTRAN  ");
 	    } 
 			
 
@@ -1597,7 +1633,7 @@ void DetermineSedTransport(void)
 	    if (InShadow[CalcCell+Next] == 'y')  
 	    {
 		UpWindLocal = 'u';
-		if (DEBUG_5) printf("U(2)  ");
+		DEBUG_PRINT( DEBUG_5, "U(2)  ");
 	    }
 
 	    /*  If coming out of shadow, downwind should be used		*/
@@ -1607,7 +1643,7 @@ void DetermineSedTransport(void)
 	    if ((InShadow[CalcCell+Last] == 'y') &&(UpWindLocal == 'u')) 
 	    {
 		DoFlux = 0;
-		if (DEBUG_5) printf("U(X) NOFLUX \n");
+		DEBUG_PRINT( DEBUG_5, "U(X) NOFLUX \n");
 				
 	    }
 
@@ -1616,12 +1652,12 @@ void DetermineSedTransport(void)
 	    if (UpWindLocal == 'u')
 	    {
 		ShoreAngleUsed = ShorelineAngle[CalcCell+Last+Correction];
-		if (DEBUG_5) printf("UP  ShoreAngle: %3.1f  ", ShoreAngleUsed * radtodeg);
+		DEBUG_PRINT( DEBUG_5, "UP  ShoreAngle: %3.1f  ", ShoreAngleUsed * radtodeg);
 	    }	
 	    else if (UpWindLocal == 'd')
 	    {
 		ShoreAngleUsed = ShorelineAngle[CalcCell+Correction];
-		if (DEBUG_5) printf("DN  ShoreAngle: %3.1f  ", ShoreAngleUsed *radtodeg);
+		DEBUG_PRINT( DEBUG_5, "DN  ShoreAngle: %3.1f  ", ShoreAngleUsed *radtodeg);
 	    }
 			
 
@@ -1637,7 +1673,7 @@ void DetermineSedTransport(void)
 	    /* printf("i = %d  Cell: %d NextCell: %d Angle: %f Trans Angle: %f\n",
 	       i, CalcCell, CalcCell+Next, ShoreAngleUsed*180/pi, (WaveAngle - ShoreAngleUsed)*180/pi); */
 
-	    if (DEBUG_5) printf("From: %d  To: %d  TransAngle %3.1f", CalcCell, CalcCell+Next, 
+	    DEBUG_PRINT( DEBUG_5, "From: %d  To: %d  TransAngle %3.1f", CalcCell, CalcCell+Next, 
 			       (WaveAngle - ShoreAngleUsed) * radtodeg);
 
 	    if (DoFlux)
@@ -1690,7 +1726,7 @@ void SedTrans(int From, int To, float ShoreAngle, char MaxT)
     /* New algorithm 6/02 iteratively takes wiave onshore until they break, then computes Qs	*/
     /* See notes 06/05/02										*/
 	
-    if (DEBUG_6) printf("Wave Angle %2.2f Shore Angle  %2.2f    ",WaveAngle*radtodeg, ShoreAngle*radtodeg);
+    DEBUG_PRINT( DEBUG_6, "Wave Angle %2.2f Shore Angle  %2.2f    ",WaveAngle*radtodeg, ShoreAngle*radtodeg);
 
     AngleDeep = WaveAngle - ShoreAngle;
 
@@ -1698,7 +1734,7 @@ void SedTrans(int From, int To, float ShoreAngle, char MaxT)
     {
 	AngleDeep = 42.0 / radtodeg;
     }
-    if (DEBUG_6) printf("Deep Tranport Angle %2.2f \n\n",AngleDeep*radtodeg);	
+    DEBUG_PRINT( DEBUG_6, "Deep Tranport Angle %2.2f \n\n",AngleDeep*radtodeg);	
 
     /*  Don't do calculations if over 90 degrees, should be in shadow  */
 	
@@ -1713,7 +1749,7 @@ void SedTrans(int From, int To, float ShoreAngle, char MaxT)
 		
 	CDeep = GRAV * Period / (2.0 * M_PI);
 	LDeep = CDeep * Period;
-	if (DEBUG_6) printf("CDeep = %2.2f LDeep = %2.2f \n",CDeep, LDeep);
+	DEBUG_PRINT( DEBUG_6, "CDeep = %2.2f LDeep = %2.2f \n",CDeep, LDeep);
 
 	while(!Broken)
 	{
@@ -1721,25 +1757,25 @@ void SedTrans(int From, int To, float ShoreAngle, char MaxT)
 
 	    WaveLength = LDeep * Raise(tanh(Raise(Raise(2.0*M_PI/Period,2)*Depth/GRAV,.75)),2.0/3.0);
 	    C = WaveLength/Period;
-	    if (DEBUG_6) printf("DEPTH: %2.2f Wavelength = %2.2f C = %2.2f ", Depth, WaveLength,C);
+	    DEBUG_PRINT( DEBUG_6, "DEPTH: %2.2f Wavelength = %2.2f C = %2.2f ", Depth, WaveLength,C);
 			
 	    /* Determine n = 1/2(1+2kh/tanh(kh)) Komar 5.21			*/
 	    /* First Calculate kh = 2 pi Depth/L  from k = 2 pi/L		*/
 
 	    kh =  M_PI * Depth / WaveLength;
 	    n =0.5 * ( 1 + 2.0 * kh / sinh(2.0*kh));
-	    if (DEBUG_6) printf("kh: %2.3f  n: %2.3f ", kh, n);
+	    DEBUG_PRINT( DEBUG_6, "kh: %2.3f  n: %2.3f ", kh, n);
 
 	    /* Calculate angle, assuming shore parallel contours and no conv/div of rays 	*/
 	    /* from Komar 5.47								*/
 
 	    Angle = asin(C/CDeep * sin(AngleDeep));
-	    if (DEBUG_6) printf("Angle: %2.2f",Angle*radtodeg);
+	    DEBUG_PRINT( DEBUG_6, "Angle: %2.2f",Angle*radtodeg);
 
 	    /* Determine Wave height from refract calcs - Komar 5.49			*/
 	
 	    WvHeight = OffShoreWvHt * Raise(CDeep*cos(AngleDeep)/(C*2.0*n*cos(Angle)),.5);
-	    if (DEBUG_6) printf(" WvHeight : %2.3f\n",WvHeight);
+	    DEBUG_PRINT( DEBUG_6, " WvHeight : %2.3f\n",WvHeight);
 
 	    if (WvHeight > Depth*KBreak)
 		Broken = 1;
@@ -1766,9 +1802,9 @@ void SedTrans(int From, int To, float ShoreAngle, char MaxT)
 		
 	VolumeIn[To] = VolumeIn[To] + VolumeAcrossBorder;
 	
-	if (DEBUG_6) printf("VolumeAcrossBorder: %f  ",VolumeAcrossBorder);
-	if (DEBUG_6) printf("VolumeIn : %f ",VolumeIn[To]);
-	if (DEBUG_6) printf("VolumeOut : %f \n\n",VolumeOut[From]);
+	DEBUG_PRINT( DEBUG_6, "VolumeAcrossBorder: %f  ",VolumeAcrossBorder);
+	DEBUG_PRINT( DEBUG_6, "VolumeIn : %f ",VolumeIn[To]);
+	DEBUG_PRINT( DEBUG_6, "VolumeOut : %f \n\n",VolumeOut[From]);
 		
     }
 }
@@ -1792,15 +1828,15 @@ void TransportSedimentSweep(void)
     if (RandZeroToOne()*2 > 1)
     {
 	sweepsign = 1;
-	if (DEBUG_7A) printf("L  ");
+	DEBUG_PRINT( DEBUG_7A, "L  ");
     }
     else
     {
 	sweepsign = 0;
-	if (DEBUG_7A) printf("R  ");
+	DEBUG_PRINT( DEBUG_7A, "R  ");
     }
 
-    if (DEBUG_7A) printf("\n\n TransSedSweep  Ang %f  %d\n", WaveAngle * radtodeg, CurrentTimeStep);
+    DEBUG_PRINT( DEBUG_7A, "\n\n TransSedSweep  Ang %f  %d\n", WaveAngle * radtodeg, CurrentTimeStep);
 	
     for (i=0; i < TotalBeachCells-1 ; i++)
     {
@@ -1810,7 +1846,7 @@ void TransportSedimentSweep(void)
 	else
 	    ii = TotalBeachCells-1-i;
 
-	if (DEBUG_7A) printf("i: %d  ss: %d  X: %d  Y: %d  In: %.1f  Out: %.1f\n", ii, sweepsign,
+	DEBUG_PRINT( DEBUG_7A, "i: %d  ss: %d  X: %d  Y: %d  In: %.1f  Out: %.1f\n", ii, sweepsign,
 			   X[i], Y[i], VolumeIn[i], VolumeOut[i]);
 
 	AdjustShore(ii);
@@ -1874,7 +1910,7 @@ void AdjustShore(int i)
 	Yintfloat = Y[i] + 0.5 - Distance * sin(SurroundingAngle[i]);
 	Yintint = floor(Yintfloat);
 
-	if (DEBUG_7A)printf("xs: %d  ys: %d  Xint: %f Xint:%d Yint: %f Yint: %d  Dint: %f SAng: %f Sin = %f\n",
+	DEBUG_PRINT( DEBUG_7A, "xs: %d  ys: %d  Xint: %f Xint:%d Yint: %f Yint: %d  Dint: %f SAng: %f Sin = %f\n",
 			   X[i],Y[i],Xintfloat,Xintint,Yintfloat,Yintint,CellDepth[Xintint][Yintint],SurroundingAngle[i]*radtodeg,sin(SurroundingAngle[i]));
 
 
@@ -1897,7 +1933,7 @@ void AdjustShore(int i)
 	    /* looking back on land */
 	{
 	    Depth = DepthShoreface;
-	    if (DEBUG_7A) printf("=== Shoreface is Shore, eh? Accreti:  xs: %d  ys: %d  Xint:%d  Yint: %d  Dint: %f \n",
+	    DEBUG_PRINT( DEBUG_7A, "=== Shoreface is Shore, eh? Accreti:  xs: %d  ys: %d  Xint:%d  Yint: %d  Dint: %f \n",
 				X[i],Y[i],Xintint,Yintint,CellDepth[Xintint][Yintint]);
 	}
 	else if (CellDepth[Xintint][Yintint] < DepthShoreface)
@@ -1979,7 +2015,7 @@ void AdjustShore(int i)
 		    /* Deep hole - fill 'er in - mass came from previous maths */ 
 		{
 
-		    if (DEBUG_7A) printf("=== Deep Hole, eh? Accreti:  xs: %d  ys: %d  Xint:%d  Yint: %d  Dint: %f Xfill: %d Yfill: %d Dt: %f\n",
+		    DEBUG_PRINT( DEBUG_7A, "=== Deep Hole, eh? Accreti:  xs: %d  ys: %d  Xint:%d  Yint: %d  Dint: %f Xfill: %d Yfill: %d Dt: %f\n",
 					X[i],Y[i],Xintint,Yintint,CellDepth[Xintint][Yintint],xtest,ytest,
 					CellDepth[xtest][ytest]); 
 		    CellDepth[xtest][ytest] = DepthShoreface;
@@ -2021,7 +2057,7 @@ void AdjustShore(int i)
     PercentOut = VolumeOut[i]/(CellWidth*CellWidth*Depth);
     PercentSum = DeltaArea/(CellWidth*CellWidth);
 
-    if (DEBUG_7A) printf("  In: %2.4f  Out: %2.4f  Sum: %2.4f\n", PercentIn, PercentOut, PercentSum);
+    DEBUG_PRINT( DEBUG_7A, "  In: %2.4f  Out: %2.4f  Sum: %2.4f\n", PercentIn, PercentOut, PercentSum);
 
 }
 
@@ -2033,7 +2069,7 @@ void OopsImEmpty(int x, int y)
 /*  		New Approach - steal from all neighboring AllBeach cells		*/
 /*		Backup plan - steal from all neighboring percent full > 0		*/
 /*  Function adjusts primary data arrays:						*/
-/*		AllBeach[][] and PercentFull[][]					*/
+/*		_s.AllBeach[][] and PercentFull[][]					*/
 	
 
 {
@@ -2041,47 +2077,47 @@ void OopsImEmpty(int x, int y)
     int emptycells = 0;
     int emptycells2 = 0;
 
-    if (DEBUG_8) printf("\n		OOPS I'm EMPTY!  X: %d  Y: %d Per: %f ", x, y, PercentFull[x][y]);
+    DEBUG_PRINT( DEBUG_8, "\n		OOPS I'm EMPTY!  X: %d  Y: %d Per: %f ", x, y, PercentFull[x][y]);
 
     /* find out how many AllBeaches to take from */
 
-    if (AllBeach[x-1][y] == 'y')
+    if (_s.AllBeach[x-1][y] == 'y')
 	emptycells += 1;
-    if (AllBeach[x+1][y] == 'y')
+    if (_s.AllBeach[x+1][y] == 'y')
 	emptycells += 1;
-    if (AllBeach[x][y-1] == 'y')
+    if (_s.AllBeach[x][y-1] == 'y')
 	emptycells += 1;
-    if (AllBeach[x][y+1] == 'y')
+    if (_s.AllBeach[x][y+1] == 'y')
 	emptycells += 1;
 
     if (emptycells > 0)
     {
 	/* Now Move Sediment */
 
-	if (AllBeach[x-1][y] == 'y')
+	if (_s.AllBeach[x-1][y] == 'y')
 	{
 	    PercentFull[x-1][y] += (PercentFull[x][y])/emptycells;
-	    AllBeach[x-1][y] = 'n';
-	    if (DEBUG_8) printf ("  MOVEDBACK");
+	    _s.AllBeach[x-1][y] = 'n';
+	    DEBUG_PRINT( DEBUG_8, "  MOVEDBACK");
 	}		
-	if (AllBeach[x+1][y] == 'y')
+	if (_s.AllBeach[x+1][y] == 'y')
 	{
 	    PercentFull[x+1][y] += (PercentFull[x][y])/emptycells;
-	    AllBeach[x+1][y] = 'n';
-	    if (DEBUG_8) printf ("  MOVEDUP");
+	    _s.AllBeach[x+1][y] = 'n';
+	    DEBUG_PRINT( DEBUG_8, "  MOVEDUP");
 	}
-	if (AllBeach[x][y-1] == 'y')
+	if (_s.AllBeach[x][y-1] == 'y')
 	{
 	    PercentFull[x][y-1] += (PercentFull[x][y])/emptycells;
-	    AllBeach[x][y-1] = 'n';
-	    if (DEBUG_8) printf ("  MOVEDLEFT");
+	    _s.AllBeach[x][y-1] = 'n';
+	    DEBUG_PRINT( DEBUG_8, "  MOVEDLEFT");
 	    /*if (DEBUG_8) PauseRun(x,y,-1);*/
 	}
-	if (AllBeach[x][y+1] == 'y')
+	if (_s.AllBeach[x][y+1] == 'y')
 	{
 	    PercentFull[x][y+1] += (PercentFull[x][y])/emptycells;
-	    AllBeach[x][y+1] = 'n';
-	    if (DEBUG_8) printf ("  MOVEDRIGHT");
+	    _s.AllBeach[x][y+1] = 'n';
+	    DEBUG_PRINT( DEBUG_8, "  MOVEDRIGHT");
 	    /*if (DEBUG_8) PauseRun(x,y,-1);*/
 	}
     }
@@ -2104,23 +2140,23 @@ void OopsImEmpty(int x, int y)
 	    if (PercentFull[x-1][y] > 0)
 	    {
 		PercentFull[x-1][y] += (PercentFull[x][y])/emptycells2;
-		if (DEBUG_8) printf ("  NOTFULL MOVEDBACK");
+		DEBUG_PRINT( DEBUG_8, "  NOTFULL MOVEDBACK");
 	    }		
 	    if (PercentFull[x+1][y] > 0)
 	    {
 		PercentFull[x+1][y] += (PercentFull[x][y])/emptycells2;
-		if (DEBUG_8) printf ("  NOTFULL MOVEDUP");
+		DEBUG_PRINT( DEBUG_8, "  NOTFULL MOVEDUP");
 	    }
 	    if (PercentFull[x][y-1] > 0)
 	    {
 		PercentFull[x][y-1] += (PercentFull[x][y])/emptycells2;
-		if (DEBUG_8) printf ("  NOTFULL MOVEDLEFT");
+		DEBUG_PRINT( DEBUG_8, "  NOTFULL MOVEDLEFT");
 		/*if (DEBUG_8) PauseRun(x,y,-1);*/
 	    }
 	    if (PercentFull[x][y+1] > 0)
 	    {
 		PercentFull[x][y+1] += (PercentFull[x][y])/emptycells2;
-		if (DEBUG_8) printf ("  NOTFULL MOVEDRIGHT");
+		DEBUG_PRINT( DEBUG_8, "  NOTFULL MOVEDRIGHT");
 		/*if (DEBUG_8) PauseRun(x,y,-1);*/
 	    }	
 	}
@@ -2132,11 +2168,11 @@ void OopsImEmpty(int x, int y)
 
     }
 
-    AllBeach[x][y] = 'n';
+    _s.AllBeach[x][y] = 'n';
     PercentFull[x][y] = 0.0;
     CellDepth[x][y] = DepthShoreface;
 
-    if (DEBUG_8) printf("\n");
+    DEBUG_PRINT( DEBUG_8, "\n");
 
 }
 
@@ -2148,7 +2184,7 @@ void OopsImFull(int x, int y)
 /*  New approach: 	put sand wherever 0% full in adjacent cells			*/
 /*			if not 0% full, then fill all non-allbeach			*/
 /*  Function adjusts primary data arrays:						*/
-/*		AllBeach[][] and PercentFull[][]					*/
+/*		_s.AllBeach[][] and PercentFull[][]					*/
 	
 
 {
@@ -2156,7 +2192,7 @@ void OopsImFull(int x, int y)
     int fillcells = 0;
     int fillcells2 = 0;
 
-    if (DEBUG_8) printf("\n		OOOPPPS I'M FULLL: X: %d  Y: %d Per: %f  ==", x, y, PercentFull[x][y]);
+    DEBUG_PRINT( DEBUG_8, "\n		OOOPPPS I'M FULLL: X: %d  Y: %d Per: %f  ==", x, y, PercentFull[x][y]);
     /*if (DEBUG_8) PrintLocalConds(x,y,-1);*/
 
     /* find out how many cells will be filled up	*/
@@ -2178,26 +2214,26 @@ void OopsImFull(int x, int y)
 	{
 	    PercentFull[x-1][y] += (PercentFull[x][y]-1)/fillcells;
 	    CellDepth[x-1][y] = - LandHeight;
-	    if (DEBUG_8) printf ("  MOVEDBACK");
+	    DEBUG_PRINT( DEBUG_8, "  MOVEDBACK");
 	}		
 	if (PercentFull[x+1][y] == 0.0)
 	{
 	    PercentFull[x+1][y] += (PercentFull[x][y]-1)/fillcells;
 	    CellDepth[x+1][y] = - LandHeight;
-	    if (DEBUG_8) printf ("  MOVEDUP");
+	    DEBUG_PRINT( DEBUG_8, "  MOVEDUP");
 	}
 	if (PercentFull[x][y-1] == 0.0)
 	{
 	    PercentFull[x][y-1] += (PercentFull[x][y]-1)/fillcells;
 	    CellDepth[x][y-1] = - LandHeight;
-	    if (DEBUG_8) printf ("  MOVEDLEFT");
+	    DEBUG_PRINT( DEBUG_8, "  MOVEDLEFT");
 	    /*if (DEBUG_8) PauseRun(x,y,-1);*/
 	}
 	if (PercentFull[x][y+1] == 0.0)
 	{
 	    PercentFull[x][y+1] += (PercentFull[x][y]-1)/fillcells;
 	    CellDepth[x][y+1] = - LandHeight;
-	    if (DEBUG_8) printf ("  MOVEDRIGHT");
+	    DEBUG_PRINT( DEBUG_8, "  MOVEDRIGHT");
 	    /*if (DEBUG_8) PauseRun(x,y,-1);*/
 	}
     }
@@ -2220,37 +2256,37 @@ void OopsImFull(int x, int y)
 	    if (PercentFull[x-1][y] < 1)
 	    {
 		PercentFull[x-1][y] += (PercentFull[x][y]-1)/fillcells2;
-		if (DEBUG_8) printf ("  MOVEDBACK");
+		DEBUG_PRINT( DEBUG_8, "  MOVEDBACK");
 	    }		
 	    if (PercentFull[x+1][y] < 1)
 	    {
 		PercentFull[x+1][y] += (PercentFull[x][y]-1)/fillcells2;
-		if (DEBUG_8) printf ("  MOVEDUP");
+		DEBUG_PRINT( DEBUG_8, "  MOVEDUP");
 	    }
 	    if (PercentFull[x][y-1] < 1)
 	    {
 		PercentFull[x][y-1] += (PercentFull[x][y]-1)/fillcells2;
-		if (DEBUG_8) printf ("  MOVEDLEFT");
+		DEBUG_PRINT( DEBUG_8, "  MOVEDLEFT");
 	    }
 	    if (PercentFull[x][y+1] < 1)
 	    {
 		PercentFull[x][y+1] += (PercentFull[x][y]-1)/fillcells2;
-		if (DEBUG_8) printf ("  MOVEDRIGHT");
+		DEBUG_PRINT( DEBUG_8, "  MOVEDRIGHT");
 	    }	
 	}
 	else
 	{
-	    if (DEBUG_8) printf("Nobody wants our sand!!! x: %d  y: %d Per: %f\n",x,y,PercentFull[x][y]);
+	    DEBUG_PRINT( DEBUG_8, "Nobody wants our sand!!! x: %d  y: %d Per: %f\n",x,y,PercentFull[x][y]);
 	    /*PauseRun(x,y,-1);*/
 	}
 
     }
 
-    AllBeach[x][y] = 'y';
+    _s.AllBeach[x][y] = 'y';
     PercentFull[x][y] = 1.0;
     CellDepth[x][y] = - LandHeight;
 
-    if (DEBUG_8) printf("\n");
+    DEBUG_PRINT( DEBUG_8, "\n");
 	
 	
 }
@@ -2265,7 +2301,7 @@ void FixBeach(void)
 /* Also takes care of over/under filled beach pieces				*/
 /* Revised 5/21/02 to move sand to all adjacent neighbors sandrevt.c 		*/
 /* Changes global variable PercentFull[][]					*/
-/* Uses but does not change AllBeach[][]					*/
+/* Uses but does not change _s.AllBeach[][]					*/
 /* sandrevx.c - added sweepsign to reduce chances of asymmetrical artifacts	*/
 
 
@@ -2275,17 +2311,17 @@ void FixBeach(void)
     int FixXMax;
     int fillcells3 = 0;
 
-    /*if (DEBUG_9) printf("\n\nFIXBEACH      %d     %f\n", CurrentTimeStep, WaveAngle*radtodeg);*/
+    /*DEBUG_PRINT( DEBUG_9, "\n\nFIXBEACH      %d     %f\n", CurrentTimeStep, WaveAngle*radtodeg);*/
 
     if (RandZeroToOne()*2 > 1)
     {
 	sweepsign = 1;
-	if (DEBUG_9) printf("fixL  ");
+	DEBUG_PRINT( DEBUG_9, "fixL  ");
     }
     else
     {
 	sweepsign = 0;
-	if (DEBUG_9) printf("fixR  ");
+	DEBUG_PRINT( DEBUG_9, "fixR  ");
     }
 
 
@@ -2327,8 +2363,8 @@ void FixBeach(void)
 
 	    if (PercentFull[x][y] < 0)
 	    {
-		AllBeach[x][y] = 'n';
-		if (DEBUG_9 && y != 0) printf("\nUnder 0 Percent X: %d  Y: %d Percent: %f\n", x,y,PercentFull[x][y]);
+		_s.AllBeach[x][y] = 'n';
+		DEBUG_PRINT( DEBUG_9 && y != 0, "\nUnder 0 Percent X: %d  Y: %d Percent: %f\n", x,y,PercentFull[x][y]);
 		OopsImEmpty(x,y);
 		printf("Underzerofill");
 		/*PauseRun(x,y,-1);*/
@@ -2336,18 +2372,18 @@ void FixBeach(void)
 
 	    if (PercentFull[x][y] > 1)
 	    {
-		AllBeach[x][y] = 'y';
+		_s.AllBeach[x][y] = 'y';
 		CellDepth[x][y] = - LandHeight;
-		if (DEBUG_9 && y != 0) printf("\nOver 100 Percent X: %d  Y: %d Per: %f\n"
+		DEBUG_PRINT( DEBUG_9 && y != 0, "\nOver 100 Percent X: %d  Y: %d Per: %f\n"
 					     ,x,y, PercentFull[x][y]);
 		OopsImFull(x,y);
 	    }
 
-	    if (((PercentFull[x][y] >=0) && (PercentFull[x][y] <1)) && (AllBeach[x][y] == 'y'))
+	    if (((PercentFull[x][y] >=0) && (PercentFull[x][y] <1)) && (_s.AllBeach[x][y] == 'y'))
 	    {
-		AllBeach[x][y] = 'n';
+		_s.AllBeach[x][y] = 'n';
 		CellDepth[x][y] = - LandHeight;
-		if (DEBUG_9 && y != 0) printf("\nALLBeachProb X: %d  Y: %d\n", x,y);
+		DEBUG_PRINT( DEBUG_9 && y != 0, "\nALLBeachProb X: %d  Y: %d\n", x,y);
 	    }
 
 
@@ -2356,10 +2392,10 @@ void FixBeach(void)
 	    fillcells3 = 0;
 			
 	    if ( (PercentFull[x][y] != 0) && (PercentFull[x-1][y] < 1) && (PercentFull[x+1][y] < 1) &&
-		 (PercentFull[x][y+1] < 1) && (PercentFull[x][y-1] < 1) && (AllBeach[x][y] =='n'))
+		 (PercentFull[x][y+1] < 1) && (PercentFull[x][y-1] < 1) && (_s.AllBeach[x][y] =='n'))
 		/* Beach in cell, but bottom, top, right, and left neighbors not all full */
 	    {
-		if (DEBUG_9 && y != 0) printf("\nFB Moved loose bit of sand,  X: %d  Y: %d  Per: %f  ",
+		DEBUG_PRINT( DEBUG_9 && y != 0, "\nFB Moved loose bit of sand,  X: %d  Y: %d  Per: %f  ",
 					     x, y, PercentFull[x][y]);
 
 		/* distribute to partially full neighbors */
@@ -2379,23 +2415,23 @@ void FixBeach(void)
 		    if ((PercentFull[x-1][y] < 1) && (PercentFull[x-1][y] > 0))
 		    {
 			PercentFull[x-1][y] += (PercentFull[x][y])/fillcells3;
-			if (DEBUG_9) printf ("  MOVEDBACK");
+			DEBUG_PRINT( DEBUG_9, "  MOVEDBACK");
 		    }		
 		    if ((PercentFull[x+1][y] < 1) && (PercentFull[x+1][y] > 0))
 		    {
 			PercentFull[x+1][y] += (PercentFull[x][y])/fillcells3;
-			if (DEBUG_9) printf ("  MOVEDUP");
+			DEBUG_PRINT( DEBUG_9, "  MOVEDUP");
 		    }
 		    if ((PercentFull[x][y-1] < 1) && (PercentFull[x][y-1] > 0))
 		    {
 			PercentFull[x][y-1] += (PercentFull[x][y])/fillcells3;
-			if (DEBUG_9) printf ("  MOVEDLEFT");
+			DEBUG_PRINT( DEBUG_9, "  MOVEDLEFT");
 			/*if (DEBUG_9) PauseRun(x,y,-1);*/
 		    }
 		    if ((PercentFull[x][y+1] < 1) && (PercentFull[x][y+1] > 0))
 		    {
 			PercentFull[x][y+1] += (PercentFull[x][y])/fillcells3;
-			if (DEBUG_9) printf ("  MOVEDRIGHT");
+			DEBUG_PRINT( DEBUG_9, "  MOVEDRIGHT");
 			/*if (DEBUG_9) PauseRun(x,y,-1);*/
 		    }	
 		}
@@ -2407,10 +2443,10 @@ void FixBeach(void)
 		}	
 
 		PercentFull[x][y] = 0;
-		AllBeach[x][y] = 'n';
+		_s.AllBeach[x][y] = 'n';
 		CellDepth[x][y] = DepthShoreface;
 
-		if (DEBUG_9) printf("\n");
+		DEBUG_PRINT( DEBUG_9, "\n");
 
 
 		/* If we have overfilled any of the cells in this loop, need to OopsImFull() */
@@ -2418,30 +2454,30 @@ void FixBeach(void)
 		if (PercentFull[x-1][y] > 1)
 		{
 		    OopsImFull(x-1,y);
-		    if (DEBUG_9) printf("	Below Overfilled\n");
+		    DEBUG_PRINT( DEBUG_9, "	Below Overfilled\n");
 		}
 		if (PercentFull[x][y-1] > 1)
 		{
 		    OopsImFull(x,y-1);
-		    if (DEBUG_9) printf("	Left Side Overfilled\n");	
+		    DEBUG_PRINT( DEBUG_9, "	Left Side Overfilled\n");	
 		}
 		if (PercentFull[x][y+1] > 1)
 		{
 		    OopsImFull(x,y+1);
-		    if (DEBUG_9) printf("	Right Side Overfilled\n");
+		    DEBUG_PRINT( DEBUG_9, "	Right Side Overfilled\n");
 		}
 		if (PercentFull[x+1][y+1] > 1)
 		{
 		    OopsImFull(x+1,y+1);
-		    if (DEBUG_9) printf("	Top Overfilled\n");
+		    DEBUG_PRINT( DEBUG_9, "	Top Overfilled\n");
 		}
 			
 	    }
 		
-	    /*if ((AllBeach[x][y] =='y') && (PercentFull[x-1][y] < 1) && (PercentFull[x+1][y] < 1)
+	    /*if ((_s.AllBeach[x][y] =='y') && (PercentFull[x-1][y] < 1) && (PercentFull[x+1][y] < 1)
 	      && (PercentFull[x][y-1] < 1) && (PercentFull[x][y+1] < 1)
-	      && (AllBeach[x-1][y-1] == 'n') && (AllBeach[x-1][y+1] == 'n') &&
-	      (AllBeach[x+1][y+1] == 'n') && (AllBeach[x+1][y-1] == 'n') )
+	      && (_s.AllBeach[x-1][y-1] == 'n') && (_s.AllBeach[x-1][y+1] == 'n') &&
+	      (_s.AllBeach[x+1][y+1] == 'n') && (_s.AllBeach[x+1][y-1] == 'n') )
 
 	      {
 	      printf("%% Booger !! x: %d  y: %d", x,y);
@@ -2460,7 +2496,7 @@ float MassCount(void)
 /* Counts the total volume occupied by beach cells 	*/
 /* Uses same algorhythm as AdjustShore			*/
 /* returns a float of the total sum 			*/
-/* Uses AllBeach[][] and PercentFull[][]		*/
+/* Uses _s.AllBeach[][] and PercentFull[][]		*/
 /* and InitialDepth, CellWidth, ShelfSlope		*/
 
 {
@@ -2537,7 +2573,7 @@ void InitConds(void)
 		if (x < InitBeach)
 		{  	 
 		    PercentFull[x][y] = 1;
-		    AllBeach[x][y] = 'y';
+		    _s.AllBeach[x][y] = 'y';
 		    CellDepth[x][y] = - LandHeight;
 		}
 		else if (x == InitBeach)
@@ -2551,13 +2587,13 @@ void InitConds(void)
 			PercentFull[x][y] = RandZeroToOne();
 			printf("x: %d  Y: %d  Per: %f\n",x,y,PercentFull[x][y]);
 		    }
-		    AllBeach[x][y] = 'n';
+		    _s.AllBeach[x][y] = 'n';
 		    CellDepth[x][y] = - LandHeight;
 		}
 		else if (x > InitBeach)
 		{
 		    PercentFull[x][y] = 0;
-		    AllBeach[x][y] = 'n';
+		    _s.AllBeach[x][y] = 'n';
 		    if (CellDepth[x][y] < DepthShoreface)
 		    {
 			CellDepth[x][y] = DepthShoreface;
@@ -2588,14 +2624,14 @@ void InitConds(void)
 		    /* This must be land due to continental shelf intersection */
 		{
 		    PercentFull[x][y] = 1.0;
-		    AllBeach[x][y] = 'y';
+		    _s.AllBeach[x][y] = 'y';
 		    CellDepth[x][y] = - LandHeight;
 		}
 		else if (x > InitBeach)
 		    /* Shoreward of beach - enforce ShorefaceDepth if necessary */
 		{
 		    PercentFull[x][y] = 0;
-		    AllBeach[x][y] = 'n';
+		    _s.AllBeach[x][y] = 'n';
 		    if (CellDepth[x][y] < DepthShoreface)
 		    {
 			CellDepth[x][y] = DepthShoreface;
@@ -2613,14 +2649,14 @@ void InitConds(void)
 			PercentFull[x][y] = RandZeroToOne();
 			/*printf("x: %d  Y: %d  Per: %f\n",x,y,PercentFull[x][y]);*/
 		    }
-		    AllBeach[x][y] = 'n';
+		    _s.AllBeach[x][y] = 'n';
 		    CellDepth[x][y] = - LandHeight;
 		}
 		else if ((x < InitBeach) && (x > InitBeach - InitBWidth - 1))
 		    /* Island */
 		{  	 
 		    PercentFull[x][y] = 1.0;
-		    AllBeach[x][y] = 'y';
+		    _s.AllBeach[x][y] = 'y';
 		    CellDepth[x][y] = - LandHeight;
 		}
 		else if (x == InitBeach - InitBWidth -1)
@@ -2635,14 +2671,14 @@ void InitConds(void)
 			PercentFull[x][y] = RandZeroToOne();
 			printf("x: %d  Y: %d  Per: %f\n",x,y,PercentFull[x][y]);
 		    }
-		    AllBeach[x][y] = 'n';
+		    _s.AllBeach[x][y] = 'n';
 		    CellDepth[x][y] = - LandHeight;
 		}
 		else if (x < InitBeach - InitBWidth -1)
 		    /* Lagoon at depth of shelf slope  */
 		{
 		    PercentFull[x][y] = 0;
-		    AllBeach[x][y] = 'n';
+		    _s.AllBeach[x][y] = 'n';
 		}
 		if (PercentFull[x][y] > 1)
 		{
@@ -2680,7 +2716,7 @@ void InitPert(void)
 	    for (y = PYstart ; y <= PYstart + PWidth ; y++)
 	    {
 		PercentFull[x][y] = 1.0;
-		AllBeach[x][y] = 'y';
+		_s.AllBeach[x][y] = 'y';
 	    } 	
 	}
 
@@ -2709,21 +2745,21 @@ void InitPert(void)
 
 	PercentFull[x][17] = 0.8;
 	PercentFull[x][18] = 1.0;
-	AllBeach[x][18] = 'y';
+	_s.AllBeach[x][18] = 'y';
 	PercentFull[x][19] = 0.8;
 
 	x = InitBeach + 1;
 
 	PercentFull[x][17] = 0.6;
 	PercentFull[x][18] = 1.0;
-	AllBeach[x][18] = 'y';
+	_s.AllBeach[x][18] = 'y';
 	PercentFull[x][19] = 0.6;
 
 	x = InitBeach + 2;
 
 	PercentFull[x][17] = 0.2;
 	PercentFull[x][18] = 1.0;
-	AllBeach[x][18] = 'y';
+	_s.AllBeach[x][18] = 'y';
 	PercentFull[x][19] = 0.2;
 
 	x = InitBeach + 3;
@@ -2746,7 +2782,7 @@ void PeriodicBoundaryCopy(void)
     for (y = Ymax; y < 3*Ymax/2; y++)
 	for (x = 0; x < Xmax; x++)
 	{
-	    AllBeach[x][y-Ymax] = AllBeach[x][y];
+	    _s.AllBeach[x][y-Ymax] = _s.AllBeach[x][y];
 	    PercentFull[x][y-Ymax] = PercentFull[x][y];
 	    Age[x][y-Ymax] = Age[x][y];
 	    CellDepth[x][y-Ymax] = CellDepth[x][y];
@@ -2754,7 +2790,7 @@ void PeriodicBoundaryCopy(void)
     for (y = Ymax/2; y <= Ymax; y++)
 	for (x = 0; x < Xmax; x++)
 	{
-	    AllBeach[x][y+Ymax] = AllBeach[x][y];
+	    _s.AllBeach[x][y+Ymax] = _s.AllBeach[x][y];
 	    PercentFull[x][y+Ymax] = PercentFull[x][y];
 	    Age[x][y+Ymax] = Age[x][y];
 	    CellDepth[x][y+Ymax] = CellDepth[x][y];
@@ -2795,7 +2831,7 @@ void ZeroVars(void)
 			
 void ReadSandFromFile(void)	
 	
-/*  Reads saved output file, AllBeach[][] & PercentFull[][]	 */
+/*  Reads saved output file, _s.AllBeach[][] & PercentFull[][]	 */
 
 {
     int x,y;
@@ -2812,9 +2848,9 @@ void ReadSandFromFile(void)
 	    fscanf(ReadSandFile, " %f", &PercentFull[x][y]);
 
 	    if (PercentFull[x][y] >= 1.0)
-		AllBeach[x][y] = 'y';
+		_s.AllBeach[x][y] = 'y';
 	    else 
-		AllBeach[x][y] = 'n';
+		_s.AllBeach[x][y] = 'n';
 	}
     }
 
@@ -2844,7 +2880,7 @@ void ReadSandFromFile(void)
 
 void SaveSandToFile(void)
 
-/*  Saves current AllBeach[][] and PercentFull[][] data arrays to file 		*/
+/*  Saves current _s.AllBeach[][] and PercentFull[][] data arrays to file 		*/
 /*  Save file name will add extension '.' and the CurrentTimeStep		*/
 
 {
@@ -2923,7 +2959,7 @@ void SaveLineToFile(void)
 	xtop = Xmax;	
 
 	/* step back to where we encounter allbeach */
-	while(AllBeach[x][y] == 'n')
+	while(_s.AllBeach[x][y] == 'n')
 	{
 	    x -= 1;
 	}
@@ -3020,7 +3056,7 @@ void PrintLocalConds(int x, int y, int in)
     {
 	for (j = y-2 ; j < y+3 ; j++)
 	{
-	    printf("	%c", AllBeach[i][j]);
+	    printf("	%c", _s.AllBeach[i][j]);
 	}
 	printf("\n");
     }
@@ -3318,14 +3354,14 @@ void GraphCells(void)
 	    AgeFactorGreen = (float)((Age[x][y]+AgeShadeSpacing/3)%AgeShadeSpacing)/AgeShadeSpacing;
 	    AgeFactorBlue = (float)((Age[x][y]+2*AgeShadeSpacing/3)%AgeShadeSpacing)/AgeShadeSpacing;
 
-	    if ((PercentFull[x][y] > 0) && (AllBeach[x][y] == 'n'))
+	    if ((PercentFull[x][y] > 0) && (_s.AllBeach[x][y] == 'n'))
 	    {
 		Red =((((235 - 100 *(AgeFactorRed))-backRed)* PercentFull[x][y] )+backRed)/255.0;
 		Green =((((235 - 95 * (AgeFactorGreen))-backGreen) * PercentFull[x][y])+backGreen)/255.0;
 		Blue =((((210 - 150 * AgeFactorBlue)-backBlue)* PercentFull[x][y])+backBlue)/255.0;
 
 	    }
-	    else if (AllBeach[x][y] == 'y')
+	    else if (_s.AllBeach[x][y] == 'y')
 	    {
 		Red =((((235 - 100 *(AgeFactorRed))-backRed)* PercentFull[x][y] )+backRed)/255.0;
 		Green =((((235 - 95 * (AgeFactorGreen))-backGreen) * PercentFull[x][y])+backGreen)/255.0;
@@ -3346,7 +3382,7 @@ void GraphCells(void)
 
     y = StreamSpot;
 
-    while (AllBeach[x][y] == 'y')
+    while (_s.AllBeach[x][y] == 'y')
     {
 	PutPixel(x-_g.xplotoff, y-_g.yplotoff, 1,0,0);
 	x += 1;
@@ -3388,7 +3424,7 @@ void	DeliverSediment(void)
 	x = 0;
 	y = StreamSpot;
 
-	while (AllBeach[x][y] == 'y')
+	while (_s.AllBeach[x][y] == 'y')
 	{
 		x += 1;
 	}
@@ -3416,12 +3452,12 @@ void CheckOverwashSweep(void)
 	if (RandZeroToOne()*2 > 1)
 	{
 		sweepsign = 1;
-		if (DEBUG_10A) printf("L  ");
+		DEBUG_PRINT( DEBUG_10A, "L  ");
 	}
 	else
 	{
 		sweepsign = 0;
-		if (DEBUG_10A) printf("R  ");
+		DEBUG_PRINT( DEBUG_10A, "R  ");
 	}
 
 	OWflag = 0;
@@ -3454,7 +3490,7 @@ void CheckOverwash(int icheck)
 
 	/* New 1/04 ADA - Step back pixelwise in direction of Surrounding Angle to check needage 	*/
 	/* If too short, calls DoOverwash, which will move some sediment				*/
-	/* Uses AllBeach[][] and PercentFull[][] (can be changed when DoOVerwash is called		*/
+	/* Uses _s.AllBeach[][] and PercentFull[][] (can be changed when DoOVerwash is called		*/
 	/* Need to change sweepsign because filling cells should affect neighbors 			*/
 	/* 'x' and 'y' hold real-space values, will be mapped onto ineger array				*/
 
@@ -3500,31 +3536,31 @@ void CheckOverwash(int icheck)
 	else
 		ysign = -1;
 		
-		if (DEBUG_10A) printf("\nI: %d------------- Surr: %f  %f Slope: %f sign: %d \n",
+		DEBUG_PRINT( DEBUG_10A, "\nI: %d------------- Surr: %f  %f Slope: %f sign: %d \n",
 		 icheck, SurroundingAngle[icheck],SurroundingAngle[icheck]*radtodeg,slope, ysign); 
 	
 
-	if (AllBeach[X[icheck]-1][Y[icheck]] == 'y' || ((AllBeach[X[icheck]][Y[icheck]-1] == 'y') && 
-		(AllBeach[X[icheck]][Y[icheck]+1] == 'y')) )
+	if (_s.AllBeach[X[icheck]-1][Y[icheck]] == 'y' || ((_s.AllBeach[X[icheck]][Y[icheck]-1] == 'y') && 
+		(_s.AllBeach[X[icheck]][Y[icheck]+1] == 'y')) )
 	/* 'regular condition' */
 	/* plus 'stuck in the middle' situation (unlikely scenario)*/
 	{
 		xin = X[icheck] + PercentFull[X[icheck]][Y[icheck]];
 		yin = Y[icheck] + 0.5;
 	}
-	else if (AllBeach[X[icheck]][Y[icheck]-1] == 'y')
+	else if (_s.AllBeach[X[icheck]][Y[icheck]-1] == 'y')
 	/* on right side */
 	{
 		xin = X[icheck] + 0.5;
 		yin = Y[icheck] + PercentFull[X[icheck]][Y[icheck]];
-		if (DEBUG_10A) printf("-- Right xin: %f  yin: %f\n",xin,yin);
+		DEBUG_PRINT( DEBUG_10A, "-- Right xin: %f  yin: %f\n",xin,yin);
 	}
-	else if (AllBeach[X[icheck]][Y[icheck]+1] == 'y')
+	else if (_s.AllBeach[X[icheck]][Y[icheck]+1] == 'y')
 	/* on left side */
 	{
 		xin = X[icheck] + 0.5;
 		yin = Y[icheck] + 1.0 - PercentFull[X[icheck]][Y[icheck]];
-		if (DEBUG_10A) printf("-- Left xin: %f  yin: %f\n",xin,yin);
+		DEBUG_PRINT( DEBUG_10A, "-- Left xin: %f  yin: %f\n",xin,yin);
 	}
 	else	
 	/* underneath, no overwash */
@@ -3553,7 +3589,7 @@ void CheckOverwash(int icheck)
 		Xside = x - fabs(NextYInt - y) / slope;
 		DistanceSide = Raise(((NextYInt - y)*(NextYInt - y) + (Xside - x)*(Xside - x)),.5);
 	
-			if (DEBUG_10A) printf("x: %f  y: %f  X:%d  Y: %d  Yd: %f  DistD: %f Xs: %f DistS: %f\n",
+			DEBUG_PRINT( DEBUG_10A, "x: %f  y: %f  X:%d  Y: %d  Yd: %f  DistD: %f Xs: %f DistS: %f\n",
 			x,y,NextXInt,NextYInt, Ydown,DistanceDown,Xside,DistanceSide); 
 
 		if (DistanceDown < DistanceSide)
@@ -3563,7 +3599,7 @@ void CheckOverwash(int icheck)
 			y = Ydown;
 			xtest = NextXInt-1;	
 			ytest = floor(y);
-				/*if (DEBUG_10A) printf(" down ");*/
+				/*DEBUG_PRINT( DEBUG_10A, " down ");*/
 		}
 		else
 		/* next cell is the side cell */
@@ -3572,30 +3608,30 @@ void CheckOverwash(int icheck)
 			y = NextYInt;
 			xtest = floor(x);
 			ytest = y + (ysign-1)/2;
-				/*if (DEBUG_10A) printf(" side ");*/
+				/*DEBUG_PRINT( DEBUG_10A, " side ");*/
 		}
 		
 		/*if ((DEBUG_10A) && (DoGraphics == 'y'))PutPixel(ytest*CELL_PIXEL_SIZE,xtest*CELL_PIXEL_SIZE,0,0,200);*/
 
 		checkdistance = Raise(((x - xin)*(x - xin) +  (y - yin)*(y - yin)),.5) * CellWidth;	
-		if (AllBeach[xtest][ytest] == 'y')
+		if (_s.AllBeach[xtest][ytest] == 'y')
 			AllBeachFlag = 1;
 
-		if (DEBUG_10A) printf("	x: %f  y: %f  xtest: %d ytest: %d check: %f\n\n",x,y,xtest,ytest,checkdistance);
+		DEBUG_PRINT( DEBUG_10A, "	x: %f  y: %f  xtest: %d ytest: %d check: %f\n\n",x,y,xtest,ytest,checkdistance);
 
-		if ((AllBeach[xtest][ytest] == 'n') && (AllBeachFlag) && !(((X[icheck]-xtest) > 1) || (abs(ytest - Y[icheck]) > 1)))
+		if ((_s.AllBeach[xtest][ytest] == 'n') && (AllBeachFlag) && !(((X[icheck]-xtest) > 1) || (abs(ytest - Y[icheck]) > 1)))
 		/* if passed through an allbeach and a neighboring partial cell, jump out, only bad things follow */
 		{
 			return;
 		}		
 		
-		if((AllBeach[xtest][ytest] == 'n') && (AllBeachFlag) && (xtest < X[icheck]) &&
+		if((_s.AllBeach[xtest][ytest] == 'n') && (AllBeachFlag) && (xtest < X[icheck]) &&
 			(((X[icheck]-xtest) > 1) || (abs(ytest - Y[icheck]) > 1)))
 		/* Looking for shore cells, but don't want immediate neighbors, and go backwards */
 		/* Also mush pass though an allbeach cell along the way */
 		{
 		
-			if (AllBeach[xtest+1][ytest] == 'y')
+			if (_s.AllBeach[xtest+1][ytest] == 'y')
 			/* 'regular condition' - UNDERNEATH, here */
 			{
 				xint = (xtest + 1 - PercentFull[xtest][ytest]);
@@ -3605,18 +3641,18 @@ void CheckOverwash(int icheck)
 				/* This cell isn't actually an overwash cell */
 				{
 					measwidth = CritBWidth;
-					if (DEBUG_10A) printf("-- Regunder Cancelled  xin: %2.2f  yin: %2.2f xt:%d yt: %d xint: %f yint: %f sl: %2.2fMMeas: %3.2f\n",
+					DEBUG_PRINT( DEBUG_10A, "-- Regunder Cancelled  xin: %2.2f  yin: %2.2f xt:%d yt: %d xint: %f yint: %f sl: %2.2fMMeas: %3.2f\n",
 					xin,yin,xtest,ytest,xint,yint,slope,measwidth);
 				}
 				else
 				{
 					measwidth = CellWidth * Raise((xint - xin)*(xint - xin)+ (yint - yin)*(yint - yin),0.5);
 
-					if (DEBUG_10A) printf("-- Regunder Over  xin: %2.2f  yin: %2.2f xt:%d yt: %d xint: %f yint: %f sl: %2.2fMeas: %3.2f\n",
+					DEBUG_PRINT( DEBUG_10A, "-- Regunder Over  xin: %2.2f  yin: %2.2f xt:%d yt: %d xint: %f yint: %f sl: %2.2fMeas: %3.2f\n",
 					xin,yin,xtest,ytest,xint,yint,slope,measwidth);
 				}
 			}
-			else if (AllBeach[xtest][ytest-1] == 'y')
+			else if (_s.AllBeach[xtest][ytest-1] == 'y')
 			/* on right side */
 			{
 				yint = (ytest + PercentFull[xtest][ytest]);
@@ -3627,18 +3663,18 @@ void CheckOverwash(int icheck)
 				{
 					measwidth = CritBWidth;
 
-					if (DEBUG_10A) printf("-- Right Cancelled  xin: %2.2f  yin: %2.2f xt:%d yt: %d xint: %f yint: %f sl: %2.2fMMeas: %3.2f\n",
+					DEBUG_PRINT( DEBUG_10A, "-- Right Cancelled  xin: %2.2f  yin: %2.2f xt:%d yt: %d xint: %f yint: %f sl: %2.2fMMeas: %3.2f\n",
 					xin,yin,xtest,ytest,xint,yint,slope,measwidth);
 				}
 				else
 				{
 					measwidth = CellWidth * Raise((xint - xin)*(xint - xin)+ (yint - yin)*(yint - yin),0.5);
 
-					if (DEBUG_10A) printf("-- Right Over  xin: %2.2f  yin: %2.2f xt:%d yt: %d xint: %f yint: %f sl: %2.2fMMeas: %3.2f\n",
+					DEBUG_PRINT( DEBUG_10A, "-- Right Over  xin: %2.2f  yin: %2.2f xt:%d yt: %d xint: %f yint: %f sl: %2.2fMMeas: %3.2f\n",
 					xin,yin,xtest,ytest,xint,yint,slope,measwidth);
 				}
 			}
-			else if (AllBeach[xtest][ytest+1] == 'y')
+			else if (_s.AllBeach[xtest][ytest+1] == 'y')
 			/* on left side */
 			{
 				yint = (ytest + 1 - PercentFull[xtest][ytest]);
@@ -3649,18 +3685,18 @@ void CheckOverwash(int icheck)
 				{
 					measwidth = CritBWidth;
 					
-					if (DEBUG_10A) printf("-- Left cancelled  xin: %2.2f  yin: %2.2f xt:%d yt: %d xint: %f yint: %f sl: %2.2fMMeas: %3.2f\n",
+					DEBUG_PRINT( DEBUG_10A, "-- Left cancelled  xin: %2.2f  yin: %2.2f xt:%d yt: %d xint: %f yint: %f sl: %2.2fMMeas: %3.2f\n",
 					xin,yin,xtest,ytest,xint,yint,slope,measwidth);
 				}
 				else
 				{
 					measwidth = CellWidth * Raise((xint - xin)*(xint - xin)+ (yint - yin)*(yint - yin),0.5);
 
-					if (DEBUG_10A) printf("-- Left Over  xin: %2.2f  yin: %2.2f xt:%d yt: %d xint: %f yint: %f sl: %2.2fMMeas: %3.2f\n",
+					DEBUG_PRINT( DEBUG_10A, "-- Left Over  xin: %2.2f  yin: %2.2f xt:%d yt: %d xint: %f yint: %f sl: %2.2fMMeas: %3.2f\n",
 					xin,yin,xtest,ytest,xint,yint,slope,measwidth);
 				}
 			}
-			else if (AllBeach[xtest-1][ytest] == 'y')
+			else if (_s.AllBeach[xtest-1][ytest] == 'y')
 			/* 'regular condition' */
 			/* plus 'stuck in the middle' situation */
 			{
@@ -3671,14 +3707,14 @@ void CheckOverwash(int icheck)
 				/* This cell isn't actually an overwash cell */
 				{
 					measwidth = CritBWidth;
-					if (DEBUG_10A) printf("-- RegularODD Cancelled  xin: %2.2f  yin: %2.2f xt:%d yt: %d xint: %f yint: %f Meas: %3.2f\n",
+					DEBUG_PRINT( DEBUG_10A, "-- RegularODD Cancelled  xin: %2.2f  yin: %2.2f xt:%d yt: %d xint: %f yint: %f Meas: %3.2f\n",
 					xin,yin,xtest,ytest,xint,yint,measwidth);
 				}
 				else
 				{
 					measwidth = CellWidth * Raise((xint - xin)*(xint - xin)+ (yint - yin)*(yint - yin),0.5);
 
-					if (DEBUG_10A) printf("-- RegularODD Over  xin: %2.2f  yin: %2.2f xt:%d yt: %d xint: %f yint: %f Meas: %3.2f\n",
+					DEBUG_PRINT( DEBUG_10A, "-- RegularODD Over  xin: %2.2f  yin: %2.2f xt:%d yt: %d xint: %f yint: %f Meas: %3.2f\n",
 					xin,yin,xtest,ytest,xint,yint,measwidth);
 					/*PauseRun(xtest,ytest,icheck);*/
 				}
@@ -3771,13 +3807,14 @@ void DoOverwash(int xfrom,int yfrom, int xto, int yto, float xintto, float yintt
 	}
 
 
-	if (DEBUG_10B) printf("** Overwash From X: %d  Y: %d  To: X: %d Y: %d Width: %f \n"
+	DEBUG_PRINT( DEBUG_10B, "** Overwash From X: %d  Y: %d  To: X: %d Y: %d Width: %f \n"
 		, xfrom, yfrom,xto,yto,widthin );
-	if (DEBUG_10B) printf("DepthBB: %f  BBNeed: %f DelShore: %f  DelBB: %f\n",
+	DEBUG_PRINT( DEBUG_10B, "DepthBB: %f  BBNeed: %f DelShore: %f  DelBB: %f\n",
 			DepthBB, BBneed,delShore,delBB );
 	/*if (DepthBB == DepthShoreface) PauseRun(xto,yto,-1);*/
 
 #ifdef WITH_OPENGL
+#ifdef DEBUG_ON
 	if (DEBUG_10B && ( DO_GRAPHICS == 'y'))	
 	{
 		/*bgnpolygon();
@@ -3798,6 +3835,7 @@ void DoOverwash(int xfrom,int yfrom, int xto, int yto, float xintto, float yintt
 			endpolygon();*/
 	}
 #endif
+#endif
 
 	PercentFull[xto][yto] += delBB;
 	PercentFull[xfrom][yfrom] -= delShore;
@@ -3811,7 +3849,9 @@ void DoOverwash(int xfrom,int yfrom, int xto, int yto, float xintto, float yintt
 		OopsImEmpty(xfrom,yfrom);
 	}
 
+#ifdef DEBUG_ON
 	if (DEBUG_10B) PauseRun(xto,yto,-1);
+#endif
 
 }
 
@@ -3905,7 +3945,7 @@ float GetOverwashDepth(int xin, int yin, float xinfl, float yinfl, int ishore)
 			Xside = x - fabs(NextYInt - y) / slope;
 			DistanceSide = Raise(((NextYInt - y)*(NextYInt - y) + (Xside - x)*(Xside - x)),.5);
 		
-				if (DEBUG_10B) printf("x: %f  y: %f  X:%d  Y: %d  Yd: %f  DistD: %f Xs: %f DistS: %f\n",
+				DEBUG_PRINT( DEBUG_10B, "x: %f  y: %f  X:%d  Y: %d  Yd: %f  DistD: %f Xs: %f DistS: %f\n",
 				x,y,NextXInt,NextYInt, Ydown,DistanceDown,Xside,DistanceSide); 		
 
 			if (DistanceDown < DistanceSide)
@@ -3951,7 +3991,7 @@ float GetOverwashDepth(int xin, int yin, float xinfl, float yinfl, int ishore)
 		/* Periodic B.C.'s should make this not so important 						*/
 		{
 			Depth = DepthShoreface;
-			if (DEBUG_10B) printf("\nbackbarrier out of bounds: xin: %d yin: %d xbi: %d ybi: %d xinf: %f yinf: %f Per: %f Dist:  Depth: %f\n",
+			DEBUG_PRINT( DEBUG_10B, "\nbackbarrier out of bounds: xin: %d yin: %d xbi: %d ybi: %d xinf: %f yinf: %f Per: %f Dist:  Depth: %f\n",
 			xin, yin, xtest, ytest, xinfl, yinfl,PercentFull[xtest][ytest], Depth);
 			/*PauseRun(xin,yin,-1);*/
 		}	
@@ -3966,7 +4006,7 @@ float GetOverwashDepth(int xin, int yin, float xinfl, float yinfl, int ishore)
 			/* Assume 1/2 of the length applies to this case */
 			{
 				Depth = BBDistance/2 * ShorefaceSlope * CellWidth;
-				if (DEBUG_10B) printf("\nNot Found backi: %d bx: %d by: %d Depth:%f",
+				DEBUG_PRINT( DEBUG_10B, "\nNot Found backi: %d bx: %d by: %d Depth:%f",
 					Backi,xtest,ytest,Depth);
 			}
 			else
@@ -3982,7 +4022,7 @@ float GetOverwashDepth(int xin, int yin, float xinfl, float yinfl, int ishore)
 				if (fabs(AngleUsed) > M_PI/4.0)
 				{
 					AngleUsed = M_PI/4.0;
-					if (DEBUG_10B) printf("Big Angle");
+					DEBUG_PRINT( DEBUG_10B, "Big Angle");
 					/*PauseRun(X[Backi],Y[Backi],Backi);*/
 				}
 
@@ -3990,7 +4030,7 @@ float GetOverwashDepth(int xin, int yin, float xinfl, float yinfl, int ishore)
 
 				Depth = BBDistance * AngleSin / (1 + AngleSin);
 		
-		if (DEBUG_10B) printf("\nBack Angle backi: %d bx: %d by: %d BackA: %f AngU: %f Asin: %f L/2: %f Depth:%f",
+		DEBUG_PRINT( DEBUG_10B, "\nBack Angle backi: %d bx: %d by: %d BackA: %f AngU: %f Asin: %f L/2: %f Depth:%f",
 			Backi,X[Backi],Y[Backi],SurroundingAngle[ishore]*radtodeg,AngleUsed*radtodeg,AngleSin,
 					BBDistance/2.0,Depth);
 	
@@ -4005,7 +4045,7 @@ float GetOverwashDepth(int xin, int yin, float xinfl, float yinfl, int ishore)
 		{
 			Depth = DepthShoreface;
 		}
-			if (DEBUG_10B) printf("\nOverwash Depth2: xin: %d yin: %d xbi: %d ybi: %d xinf: %f yinf: %f Per: %f Dist: %f  Depth: %f\n",
+			DEBUG_PRINT( DEBUG_10B, "\nOverwash Depth2: xin: %d yin: %d xbi: %d ybi: %d xinf: %f yinf: %f Per: %f Dist: %f  Depth: %f\n",
 			xin, yin, xtest, ytest, xinfl, yinfl,PercentFull[xtest][ytest],BBDistance, Depth);	
 		return Depth;
 	} 
