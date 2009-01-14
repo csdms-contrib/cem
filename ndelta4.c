@@ -1374,7 +1374,7 @@ void  DetermineAngles(void)
 /*  Function to determine beach angles for all beach cells from left to right		*/
 /*  By convention, the ShorelineAngle will apply to current cell and right neighbor	*/
 /*  This function will determine global arrays:						*/
-/*		_s.ShorelineAngle[], UpWind[], SurroundingAngle[]						*/
+/*		_s.ShorelineAngle[], UpWind[], _s.SurroundingAngle[]						*/
 /*  This function will use but not affect the following arrays and values:		*/
 /*		_s.X[], _s.Y[], _s.PercentFull[][], _s.AllBeach[][], WaveAngle			*/
 /*  ADA Revised underside, SurroundingAngle 6/03, 2/04 fixed 				*/
@@ -1500,16 +1500,16 @@ void  DetermineAngles(void)
 	if ((_s.Y[k-1] - _s.Y[k+1] == 2) && 
 	    (copysign(_s.ShorelineAngle[k-1],_s.ShorelineAngle[k]) != _s.ShorelineAngle[k-1]))
 	{		
-	    SurroundingAngle[k] = (_s.ShorelineAngle[k-1] + _s.ShorelineAngle[k]) / 2 + M_PI;
-	    if (SurroundingAngle[k] > M_PI)
+	    _s.SurroundingAngle[k] = (_s.ShorelineAngle[k-1] + _s.ShorelineAngle[k]) / 2 + M_PI;
+	    if (_s.SurroundingAngle[k] > M_PI)
 	    {
-		SurroundingAngle[k] -= 2.0 * M_PI;
+		_s.SurroundingAngle[k] -= 2.0 * M_PI;
 	    }
 	    DEBUG_PRINT( DEBUG_4, "Under: %d\n",k);
 	}
 	else
 	{
-	    SurroundingAngle[k] = (_s.ShorelineAngle[k-1] + _s.ShorelineAngle[k]) / 2;
+	    _s.SurroundingAngle[k] = (_s.ShorelineAngle[k-1] + _s.ShorelineAngle[k]) / 2;
 	}
     }
 	
@@ -1524,9 +1524,9 @@ void  DetermineAngles(void)
     {
 	DEBUG_PRINT( DEBUG_4, "i: %d  Shad: %c Ang[i]: %3.1f  Sur: %3.1f  Effect: %3f  ",
 			   j,_s.InShadow[j], _s.ShorelineAngle[j]*radtodeg, 
-			   SurroundingAngle[j]*radtodeg, (WaveAngle - SurroundingAngle[j])*radtodeg);
+			   _s.SurroundingAngle[j]*radtodeg, (WaveAngle - _s.SurroundingAngle[j])*radtodeg);
 
-	if ( fabs(WaveAngle - SurroundingAngle[j]) >= 42.0/radtodeg )
+	if ( fabs(WaveAngle - _s.SurroundingAngle[j]) >= 42.0/radtodeg )
 	{	
 	    UpWind[j] = 'u';
 	    DEBUG_PRINT( DEBUG_4, "U(1)  ");
@@ -1905,13 +1905,13 @@ void AdjustShore(int i)
 	
 	/* uncomplicated way - assume starting in middle of cell */
 	Distance = DepthShoreface/CellWidth/ShorefaceSlope;
-	Xintfloat = _s.X[i] + 0.5 + Distance * cos(SurroundingAngle[i]);
+	Xintfloat = _s.X[i] + 0.5 + Distance * cos(_s.SurroundingAngle[i]);
 	Xintint = floor(Xintfloat);
-	Yintfloat = _s.Y[i] + 0.5 - Distance * sin(SurroundingAngle[i]);
+	Yintfloat = _s.Y[i] + 0.5 - Distance * sin(_s.SurroundingAngle[i]);
 	Yintint = floor(Yintfloat);
 
 	DEBUG_PRINT( DEBUG_7A, "xs: %d  ys: %d  Xint: %f Xint:%d Yint: %f Yint: %d  Dint: %f SAng: %f Sin = %f\n",
-			   _s.X[i],_s.Y[i],Xintfloat,Xintint,Yintfloat,Yintint,_s.CellDepth[Xintint][Yintint],SurroundingAngle[i]*radtodeg,sin(SurroundingAngle[i]));
+			   _s.X[i],_s.Y[i],Xintfloat,Xintint,Yintfloat,Yintint,_s.CellDepth[Xintint][Yintint],_s.SurroundingAngle[i]*radtodeg,sin(_s.SurroundingAngle[i]));
 
 
 	if ((Yintint < 0) || (Yintint > 2*Ymax))
@@ -1951,21 +1951,21 @@ void AdjustShore(int i)
 	    /* reuse some of the overwash checking code here */
 
 
-	    if (SurroundingAngle[i] == 0)
+	    if (_s.SurroundingAngle[i] == 0)
 	    {
 		/* unlikely, but make sure no div by zero */
 		slope = 0.00001;
 	    }
-	    else if (fabs(SurroundingAngle[i]) == 90.0)
+	    else if (fabs(_s.SurroundingAngle[i]) == 90.0)
 	    {
 		slope = 9999.9;
 	    }
 	    else
 	    {
-		slope = fabs(tan(SurroundingAngle[i]));
+		slope = fabs(tan(_s.SurroundingAngle[i]));
 	    }
 
-	    if (SurroundingAngle[i] > 0)
+	    if (_s.SurroundingAngle[i] > 0)
 		ysign = 1;
 	    else
 		ysign = -1;
@@ -2821,7 +2821,7 @@ void ZeroVars(void)
 	_s.Y[z] = -1;		
 	_s.InShadow[z] = '?';	
 	_s.ShorelineAngle[z] = -999;
-	SurroundingAngle[z] = -998;
+	_s.SurroundingAngle[z] = -998;
 	UpWind[z] = '?';	
 	VolumeIn[z] = 0;	
 	VolumeOut[z] = 0;	
@@ -3095,8 +3095,8 @@ void PrintLocalConds(int x, int y, int in)
 	       _s.ShorelineAngle[in-2]*radtodeg,_s.ShorelineAngle[in-1]*radtodeg, _s.ShorelineAngle[in]*radtodeg,
 	       _s.ShorelineAngle[in+1]*radtodeg,_s.ShorelineAngle[in+2]*radtodeg);
 	printf("SurrAngle	%2.2f		%2.2f		%2.2f		%2.2f		%2.2f\n",
-	       SurroundingAngle[in-2]*radtodeg, SurroundingAngle[in-1]*radtodeg,  SurroundingAngle[in]*radtodeg,
-	       SurroundingAngle[in+1]*radtodeg, SurroundingAngle[in+2]*radtodeg);
+	       _s.SurroundingAngle[in-2]*radtodeg, _s.SurroundingAngle[in-1]*radtodeg,  _s.SurroundingAngle[in]*radtodeg,
+	       _s.SurroundingAngle[in+1]*radtodeg, _s.SurroundingAngle[in+2]*radtodeg);
 	printf("Vol In 		%2.2f		%2.2f		%2.2f		%2.2f		%2.2f\n",
 	       VolumeIn[in-2], VolumeIn[in-1],VolumeIn[in],VolumeIn[in+1],VolumeIn[in+2]);
 	printf("Vol Out		%2.2f		%2.2f		%2.2f		%2.2f		%2.2f\n",
@@ -3471,7 +3471,7 @@ void CheckOverwashSweep(void)
 		/* To do test shoreline should be facing seaward 					*/
 		/* don't worry about shadow here, as overwash is not set to a time scale with AST 	*/
 
-		if ((fabs(SurroundingAngle[ii]) < (OverwashLimit/radtodeg))  && (_s.InShadow[ii] == 'n'))
+		if ((fabs(_s.SurroundingAngle[ii]) < (OverwashLimit/radtodeg))  && (_s.InShadow[ii] == 'n'))
 		{
 			CheckOverwash(ii);
 		}	
@@ -3517,27 +3517,27 @@ void CheckOverwash(int icheck)
 	else
 		DEBUG_10A = 0;*/
 
-	if (SurroundingAngle[icheck] == 0.0)
+	if (_s.SurroundingAngle[icheck] == 0.0)
 	{
 		/* unlikely, but make sure no div by zero */
 		slope = 0.00001;
 	}
-	else if (fabs(SurroundingAngle[icheck]) == 90.0)
+	else if (fabs(_s.SurroundingAngle[icheck]) == 90.0)
 	{
 		slope = 9999.9;
 	}
 	else
 	{
-		slope = fabs(tan(SurroundingAngle[icheck]));
+		slope = fabs(tan(_s.SurroundingAngle[icheck]));
 	}
 
-	if (SurroundingAngle[icheck] > 0)
+	if (_s.SurroundingAngle[icheck] > 0)
 		ysign = 1;
 	else
 		ysign = -1;
 		
 		DEBUG_PRINT( DEBUG_10A, "\nI: %d------------- Surr: %f  %f Slope: %f sign: %d \n",
-		 icheck, SurroundingAngle[icheck],SurroundingAngle[icheck]*radtodeg,slope, ysign); 
+		 icheck, _s.SurroundingAngle[icheck],_s.SurroundingAngle[icheck]*radtodeg,slope, ysign); 
 	
 
 	if (_s.AllBeach[_s.X[icheck]-1][_s.Y[icheck]] == 'y' || ((_s.AllBeach[_s.X[icheck]][_s.Y[icheck]-1] == 'y') && 
@@ -3729,7 +3729,7 @@ void CheckOverwash(int icheck)
 				measwidth = CellWidth * Raise((xint - xin)*(xint - xin)+ (yint - yin)*(yint - yin),0.5);
 
 				printf("-- Some Odd Over  xin: %2.2f  yin: %2.2f xt:%d yt: %d xint: %f yint: %f Meas: %3.2f Ang: %f Abs: %f\n",
-				xin,yin,xtest,ytest,xint,yint,measwidth, SurroundingAngle[icheck]*radtodeg,fabs(SurroundingAngle[icheck])*radtodeg);
+				xin,yin,xtest,ytest,xint,yint,measwidth, _s.SurroundingAngle[icheck]*radtodeg,fabs(_s.SurroundingAngle[icheck])*radtodeg);
 				/*PauseRun(xtest,ytest,icheck);*/
 			}
 			else
@@ -3740,7 +3740,7 @@ void CheckOverwash(int icheck)
 				measwidth = CritBWidth - CellWidth;
 				
 				printf("-- Empty Odd Over  xin: %2.2f  yin: %2.2f xt:%d yt: %d xint: %f yint: %f Meas: %3.2f Ang: %f Abs: %f\n",
-				xin,yin,xtest,ytest,xint,yint,measwidth, SurroundingAngle[icheck]*radtodeg,fabs(SurroundingAngle[icheck])*radtodeg);
+				xin,yin,xtest,ytest,xint,yint,measwidth, _s.SurroundingAngle[icheck]*radtodeg,fabs(_s.SurroundingAngle[icheck])*radtodeg);
 				/*PauseRun(xtest,ytest,icheck); */
 			}
 
@@ -3909,22 +3909,22 @@ float GetOverwashDepth(int xin, int yin, float xinfl, float yinfl, int ishore)
 		x = xinfl;
 		y = yinfl;
 				
-		if (SurroundingAngle[ishore] == 0.0)
+		if (_s.SurroundingAngle[ishore] == 0.0)
 		{
 			/* unlikely, but make sure no div by zero */
 			slope = 0.00001;
 		}
-		else if (fabs(SurroundingAngle[ishore]) == 90.0)
+		else if (fabs(_s.SurroundingAngle[ishore]) == 90.0)
 		{
 			slope = 9999.9;
 		}
 		else
 		{
-			slope = fabs(tan(SurroundingAngle[ishore]));
+			slope = fabs(tan(_s.SurroundingAngle[ishore]));
 		}
 
 		BackFlag = 0;
-		if (SurroundingAngle[ishore] > 0)
+		if (_s.SurroundingAngle[ishore] > 0)
 			ysign = 1;
 		else
 			ysign = -1;
@@ -4015,7 +4015,7 @@ float GetOverwashDepth(int xin, int yin, float xinfl, float yinfl, int ishore)
 				AngleUsed = 0;
 				for (j = -1; j <2 ; j ++)
 				{
-					AngleUsed += SurroundingAngle[Backi+j];
+					AngleUsed += _s.SurroundingAngle[Backi+j];
 				}
 				AngleUsed = AngleUsed/5;
 
@@ -4026,12 +4026,12 @@ float GetOverwashDepth(int xin, int yin, float xinfl, float yinfl, int ishore)
 					/*PauseRun(_s.X[Backi],_s.Y[Backi],Backi);*/
 				}
 
-				AngleSin = sin(M_PI/2.0 - fabs(SurroundingAngle[ishore] + AngleUsed));
+				AngleSin = sin(M_PI/2.0 - fabs(_s.SurroundingAngle[ishore] + AngleUsed));
 
 				Depth = BBDistance * AngleSin / (1 + AngleSin);
 		
 		DEBUG_PRINT( DEBUG_10B, "\nBack Angle backi: %d bx: %d by: %d BackA: %f AngU: %f Asin: %f L/2: %f Depth:%f",
-			Backi,_s.X[Backi],_s.Y[Backi],SurroundingAngle[ishore]*radtodeg,AngleUsed*radtodeg,AngleSin,
+			Backi,_s.X[Backi],_s.Y[Backi],_s.SurroundingAngle[ishore]*radtodeg,AngleUsed*radtodeg,AngleSin,
 					BBDistance/2.0,Depth);
 	
 			}
