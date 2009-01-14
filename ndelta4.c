@@ -56,11 +56,6 @@ static void DEBUG_PRINT( int exp, const char* format, ... )
                             angle */
 #define StopAfter    2600 /* Stop after what number of time steps */
 
-/* init,finalize, SaveSandToFile...*/
-//char            savefilename[24] = "fileout";
-/* init,ReadSandFromFile */
-//char            readfilename[24] = "";
-/* init, FindWaveAngle */
 #define SAVE_FILENAME "fileout"
 #define READ_FILENAME ""
 
@@ -74,14 +69,8 @@ Deltas_io;
 Deltas_io _io = { SAVE_FILENAME, READ_FILENAME };
 
 #define WAVE_IN (0) /* Input Wave Distribution file? */
-//int     WaveIn = 0;             /* Input Wave Distribution file? */
-
 
 /* Delta Info */
-
-
-/* Unused!!! */#define NMouths         2       /* number of river mouths */
-/* Unused!!! */float   QRiver[NMouths];
 
 #define SedRate 0.02
 #define StreamSpot Ymax
@@ -89,7 +78,7 @@ Deltas_io _io = { SAVE_FILENAME, READ_FILENAME };
 /* Aspect Parameters */
 
 #define CellWidth       100.0  /* size of cells (meters) */
-#define CritBWidth    350.0    /* width barrier maintains due to overwash (m) important scaling param! */
+#define CritBWidth      350.0    /* width barrier maintains due to overwash (m) important scaling param! */
 #define Xmax            200      /* number of cells in x (cross-shore) direction */
 #define Ymax            500     /* number of cells in y (longshore) direction */
 #define MaxBeachLength  8*Ymax  /* maximum length of arrays that contain beach data at each time step */
@@ -110,9 +99,6 @@ Deltas_io _io = { SAVE_FILENAME, READ_FILENAME };
 #define CELL_PIXEL_SIZE (4)
 #define XPlotExtent     (Xmax)
 #define YPlotExtent     (Ymax)
-//int CELL_PIXEL_SIZE = 4;
-//int XPlotExtent = Xmax;
-//int YPlotExtent = Ymax;
 
 /* DeBuggin Parameters */
 
@@ -127,20 +113,6 @@ Deltas_io _io = { SAVE_FILENAME, READ_FILENAME };
 #define InitialPert       (0)    /* Start with a bump? */
 #define InitialSmooth     (0)    /* Smooth starting conditions */
 #define WaveAngleSign     (1)    /* used to change sign of wave angles */
-
-//int     DoGraphics = 1;
-//int     KeysOn = 0;
-//int 	SaveAge = 1;		/* Save/update age of cells? */
-//char	PromptStart = 'n';	/* ask prompts for file names, etc? */
-/* unused !!! */char 	OffArray = 'n';		/* Initializing this variable for later use */
-//int	ScreenTextSpacing = 1000;/* Spacing of writing to screen in time steps */
-//int	EveryPlotSpacing = 100;
-//int	StartStop = 0;		/* Stop after every iteration 'Q' to move on */
-/* unused */int	InterruptRun = 0;	/* Allow run to be paused by pressing the 'A' key */
-//int	NoPauseRun = 1;		/* Disbale PauseRun subroutine */
-//int	InitialPert = 0;	/* Start with a bump? */
-//int	InitialSmooth = 0;	/* Smooth starting conditions */
-//int	WaveAngleSign = 1;	/* used to change sign of wave angles */
 
 #define DEBUG_0   (0)  /* Main program steps */
 #define DEBUG_1   (0)  /* Find Next Cell */
@@ -158,20 +130,19 @@ Deltas_io _io = { SAVE_FILENAME, READ_FILENAME };
 int	OWflag = 0;     /* debugger */
 
 /* Universal Constants */
-//#define	pi		3.1415927
-//#define	exp		2.7182818 /* e */
 #define GRAV            (9.80665)
 #define radtodeg        (180.0/M_PI) /* transform rads to degrees */
-//float g =		9.80665;
-//float radtodeg = 	180.0/pi; /* transform rads to degrees */
 
 typedef struct
 {
+   /* Overall Shoreface Configuration Arrays - Data file information */
    char AllBeach[Xmax][2*Ymax]; /* Flag indicating of cell is entirely beach */
    float PercentFull[Xmax][2*Ymax]; /* Fractional amount of shore cell full of
                                        sediment */
    int Age[Xmax][2*Ymax]; /* Age since cell was deposited */
    float CellDepth[Xmax][2*Ymax]; /* Depth array (m) (ADA 6/3) */
+
+   /* Computational Arrays (determined for each time step) */
    int X[MaxBeachLength]; /* X Position of ith beach element */
    int Y[MaxBeachLength]; /* Y Position of ith beach element */
    char	InShadow[MaxBeachLength];	 /* Is ith beach element in shadow? */
@@ -186,6 +157,7 @@ typedef struct
    float VolumeOut[MaxBeachLength]; /* Sediment volume out of ith beach
                                        element */
 
+   /* Miscellaneous State Variables */
    int CurrentTimeStep; /* Time step of current calculation */ 
 
    int NextX; /* used to iterate FindNextCell in global array - */
@@ -210,56 +182,6 @@ Deltas_state;
 
 Deltas_state _s;
 
-/* Overall Shoreface Configuration Arrays - Data file information */
-
-//char	AllBeach[Xmax][2*Ymax];		/* Flag indicating of cell is entirely beach */
-//float	PercentFull[Xmax][2*Ymax];	/* Fractional amount of shore cell full of sediment */
-//int	Age[Xmax][2*Ymax];		/* Age since cell was deposited */
-//float	CellDepth[Xmax][2*Ymax];	/* Depth array (m) (ADA 6/3) */
-
-
-/* Computational Arrays (determined for each time step) */
- 
-//int 	X[MaxBeachLength];		/* X Position of ith beach element */
-//int	Y[MaxBeachLength];		/* Y Position of ith beach element */
-//char	InShadow[MaxBeachLength];	/* Is ith beach element in shadow? */
-//float	ShorelineAngle[MaxBeachLength];	/* Angle between cell and right (z+1) neighbor	*/
-//float	SurroundingAngle[MaxBeachLength];/* Cell-orientated angle based upon left and right neighbor */
-//char	UpWind[MaxBeachLength];		/* Upwind or downwind condition used to calculate sediment transport */
-//float	VolumeIn[MaxBeachLength];	/* Sediment volume into ith beach element */	
-//float 	VolumeOut[MaxBeachLength];	/* Sediment volume out of ith beach element */
-
-
-/* Miscellaneous Global Variables */
-
-//int	CurrentTimeStep = 0;  	/* Time step of current calculation */ 
-///*FindBeachCells,FindNextCell*/int	NextX;			/* Global variables used to iterate FindNextCell in global array - */
-///*FindBeachCells,FindNextCell*/int	NextY;			/*	would've used pointer but wouldn't work	*/
-//int 	TotalBeachCells;	/* Number of cells describing beach at particular iteration */
-//int 	ShadowXMax; 		/* used to determine maximum extent of beach cells */
-//float 	WaveAngle;		/* wave angle for current time step */	
-///* run */int	FindStart;		/* Used to tell FindBeach at what Y value to start looking */
-///*run,FindBeachCells*/char	FellOffArray;		/* Flag used to determine if accidentally went off array */
-///* init,run */float   MassInitial;		/* For conservation of mass calcs */
-///* run */float	MassCurrent;		/* " */
-
-/* unused!!! */int	device;			
-/* unused!!! */short	button;
-/* unused!!! */long	buttonback;
-
-//int	NumWaveBins;		/* For Input Wave - number of bins	*/
-//float	WaveMax[36];		/* Max Angle for specific bin */
-//float	WaveProb[36];		/* Probability of Certain Bin */
-
-//float xcellwidth;
-//float ycellwidth;
-///*ScreenInit*/static WINDOW *mainwnd;
-///*ScreenInit*/static WINDOW *screen;
-/* unused!!! */WINDOW *my_win;
-/* unused!!! */int current_getch;
-//int xplotoff;
-//int yplotoff;
-
 typedef struct
 {
    float xcellwidth;
@@ -270,8 +192,6 @@ typedef struct
 Deltas_graphics;
 
 Deltas_graphics _g;
-
-/*Unused!!! */int KEY_P = 93;
 
 
 /* Function Prototypes */
@@ -315,8 +235,6 @@ void 	TransportSedimentSweep(void);
 int 	XMaxBeach(int Max);
 void	ZeroVars(void);
 
-/*void	FillUpGap(int X, int Y, int LorR);*/
-
 int deltas_init    ( void );
 int deltas_run     ( void );
 int deltas_finalize( void );
@@ -333,8 +251,6 @@ main( void )
 
 #define SEED             (44)  /* random seed  control value = 1 */
 #define START_FROM_FILE  ('n') /* start from saved file? */
-
-///* init */char    StartFromFile = 'n';    /* start from saved file? */
 
 int
 deltas_init()
@@ -433,13 +349,8 @@ deltas_init()
 #define SAVE_FILE         (1)    /* save full file? */
 #define SAVE_LINE         (0)    /* Save line */
 
-///* run */int     SaveSpacing = 2500 ;    /* space between saved files */
-///* run */int     SaveLineSpacing = 1000;/* space between saved line files */
-///* run */int     SaveFile = 1;           /* save full file? */
-///* run */int     SaveLine = 0;           /* Save line */
+#define AGE_UPDATE        (10) /* Time space for updating age of non-beach cells */
 
-#define AGE_UPDATE (10) /* Time space for updating age of non-beach cells */
-//int	AgeUpdate = 10;		/* Time space for updating age of non-beach cells */
 int
 deltas_run( void )
 { /* PRIMARY PROGRAM LOOP */
