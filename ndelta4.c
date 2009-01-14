@@ -205,7 +205,7 @@ Deltas_state _s;
 //int 	X[MaxBeachLength];		/* X Position of ith beach element */
 //int	Y[MaxBeachLength];		/* Y Position of ith beach element */
 //char	InShadow[MaxBeachLength];	/* Is ith beach element in shadow? */
-float	ShorelineAngle[MaxBeachLength];	/* Angle between cell and right (z+1) neighbor	*/
+//float	ShorelineAngle[MaxBeachLength];	/* Angle between cell and right (z+1) neighbor	*/
 float	SurroundingAngle[MaxBeachLength];/* Cell-orientated angle based upon left and right neighbor */
 char	UpWind[MaxBeachLength];		/* Upwind or downwind condition used to calculate sediment transport */
 float	VolumeIn[MaxBeachLength];	/* Sediment volume into ith beach element */	
@@ -1374,7 +1374,7 @@ void  DetermineAngles(void)
 /*  Function to determine beach angles for all beach cells from left to right		*/
 /*  By convention, the ShorelineAngle will apply to current cell and right neighbor	*/
 /*  This function will determine global arrays:						*/
-/*		ShorelineAngle[], UpWind[], SurroundingAngle[]						*/
+/*		_s.ShorelineAngle[], UpWind[], SurroundingAngle[]						*/
 /*  This function will use but not affect the following arrays and values:		*/
 /*		_s.X[], _s.Y[], _s.PercentFull[][], _s.AllBeach[][], WaveAngle			*/
 /*  ADA Revised underside, SurroundingAngle 6/03, 2/04 fixed 				*/
@@ -1395,7 +1395,7 @@ void  DetermineAngles(void)
     x2 = _s.X[0] + _s.PercentFull[_s.X[0]][_s.Y[0]];
     y2 = _s.Y[0] + 0.5;
 
-    /* Compute ShorelineAngle[]  */
+    /* Compute _s.ShorelineAngle[]  */
     /* 	not equal to TotalBeachCells because angle between cell and rt neighbor */
 
     for (i=0 ; i < TotalBeachCells ; i++)
@@ -1466,27 +1466,27 @@ void  DetermineAngles(void)
 
 	if (y2 > y1)
 	{
-	    ShorelineAngle[i] = atan((x2 - x1) / (y2 - y1));
+	    _s.ShorelineAngle[i] = atan((x2 - x1) / (y2 - y1));
 	    DEBUG_PRINT( DEBUG_3, "(R) i = %d  _s.X[i]: %d _s.Y[i]: %d Percent %3f x: %f y: %f Angle:%f  Deg Angle: %f \n",
-			       i, _s.X[i], _s.Y[i], _s.PercentFull[_s.X[i]][_s.Y[i]],x2,y2,ShorelineAngle[i], ShorelineAngle[i]*180/M_PI);
+			       i, _s.X[i], _s.Y[i], _s.PercentFull[_s.X[i]][_s.Y[i]],x2,y2,_s.ShorelineAngle[i], _s.ShorelineAngle[i]*180/M_PI);
 	}
 	else if (y2 == y1)
 	{
-	    ShorelineAngle[i] = M_PI/2.0 * (x1 - x2) / fabs(x2 - x1);
+	    _s.ShorelineAngle[i] = M_PI/2.0 * (x1 - x2) / fabs(x2 - x1);
 	    DEBUG_PRINT( DEBUG_3, "(G) i = %d  _s.X[i]: %d _s.Y[i]: %d Percent %3f x: %f y: %f Angle:%f  Deg Angle: %f \n",
-			       i, _s.X[i], _s.Y[i], _s.PercentFull[_s.X[i]][_s.Y[i]],x2,y2,ShorelineAngle[i], ShorelineAngle[i]*180/M_PI);
+			       i, _s.X[i], _s.Y[i], _s.PercentFull[_s.X[i]][_s.Y[i]],x2,y2,_s.ShorelineAngle[i], _s.ShorelineAngle[i]*180/M_PI);
 	}
 	else 
 	    /* y2 < y1 */
 	{
-	    ShorelineAngle[i] = atan((x2 - x1) / (y2 - y1)) - M_PI;
+	    _s.ShorelineAngle[i] = atan((x2 - x1) / (y2 - y1)) - M_PI;
 		
-	    if (ShorelineAngle[i] < - M_PI)
+	    if (_s.ShorelineAngle[i] < - M_PI)
 	    {
-		ShorelineAngle[i] += 2.0 * M_PI;
+		_s.ShorelineAngle[i] += 2.0 * M_PI;
 	    }
 	    DEBUG_PRINT( DEBUG_3, "(U) i = %d  _s.X[i]: %d _s.Y[i]: %d Percent %3f x: %f y: %f Angle:%f  Deg Angle: %f \n",
-			       i, _s.X[i], _s.Y[i], _s.PercentFull[_s.X[i]][_s.Y[i]],x2,y2,ShorelineAngle[i], ShorelineAngle[i]*180/M_PI);
+			       i, _s.X[i], _s.Y[i], _s.PercentFull[_s.X[i]][_s.Y[i]],x2,y2,_s.ShorelineAngle[i], _s.ShorelineAngle[i]*180/M_PI);
 	}
 
     }
@@ -1498,9 +1498,9 @@ void  DetermineAngles(void)
 	/* Use trick that x is less if on bottom of spit - angles might be different signs as well */
 		
 	if ((_s.Y[k-1] - _s.Y[k+1] == 2) && 
-	    (copysign(ShorelineAngle[k-1],ShorelineAngle[k]) != ShorelineAngle[k-1]))
+	    (copysign(_s.ShorelineAngle[k-1],_s.ShorelineAngle[k]) != _s.ShorelineAngle[k-1]))
 	{		
-	    SurroundingAngle[k] = (ShorelineAngle[k-1] + ShorelineAngle[k]) / 2 + M_PI;
+	    SurroundingAngle[k] = (_s.ShorelineAngle[k-1] + _s.ShorelineAngle[k]) / 2 + M_PI;
 	    if (SurroundingAngle[k] > M_PI)
 	    {
 		SurroundingAngle[k] -= 2.0 * M_PI;
@@ -1509,7 +1509,7 @@ void  DetermineAngles(void)
 	}
 	else
 	{
-	    SurroundingAngle[k] = (ShorelineAngle[k-1] + ShorelineAngle[k]) / 2;
+	    SurroundingAngle[k] = (_s.ShorelineAngle[k-1] + _s.ShorelineAngle[k]) / 2;
 	}
     }
 	
@@ -1523,7 +1523,7 @@ void  DetermineAngles(void)
     for (j=1 ; j < TotalBeachCells  ; j++)
     {
 	DEBUG_PRINT( DEBUG_4, "i: %d  Shad: %c Ang[i]: %3.1f  Sur: %3.1f  Effect: %3f  ",
-			   j,_s.InShadow[j], ShorelineAngle[j]*radtodeg, 
+			   j,_s.InShadow[j], _s.ShorelineAngle[j]*radtodeg, 
 			   SurroundingAngle[j]*radtodeg, (WaveAngle - SurroundingAngle[j])*radtodeg);
 
 	if ( fabs(WaveAngle - SurroundingAngle[j]) >= 42.0/radtodeg )
@@ -1553,7 +1553,7 @@ void DetermineSedTransport(void)
 /*  This function will call SedTrans which will determine global arrays:			*/
 /*		VolumeIn[], VolumeOut[]								*/
 /*  This function will use but not affect the following arrays and values:			*/
-/*		_s.X[], _s.Y[], _s.InShadow[], UpWind[], ShorelineAngle[]				*/
+/*		_s.X[], _s.Y[], _s.InShadow[], UpWind[], _s.ShorelineAngle[]				*/
 /*  		_s.PercentFull[][], _s.AllBeach[][], WaveAngle					*/
 
 {
@@ -1580,7 +1580,7 @@ void DetermineSedTransport(void)
 
 	/*  Is littoral transport going left or right?	*/
 
-	if ((WaveAngle-ShorelineAngle[i]) > 0)
+	if ((WaveAngle-_s.ShorelineAngle[i]) > 0)
 	{
 	    /*  Transport going right, center on cell to left side of border	 */
 	    /*  Next cell in positive direction, no correction term needed 		*/
@@ -1651,12 +1651,12 @@ void DetermineSedTransport(void)
 
 	    if (UpWindLocal == 'u')
 	    {
-		ShoreAngleUsed = ShorelineAngle[CalcCell+Last+Correction];
+		ShoreAngleUsed = _s.ShorelineAngle[CalcCell+Last+Correction];
 		DEBUG_PRINT( DEBUG_5, "UP  ShoreAngle: %3.1f  ", ShoreAngleUsed * radtodeg);
 	    }	
 	    else if (UpWindLocal == 'd')
 	    {
-		ShoreAngleUsed = ShorelineAngle[CalcCell+Correction];
+		ShoreAngleUsed = _s.ShorelineAngle[CalcCell+Correction];
 		DEBUG_PRINT( DEBUG_5, "DN  ShoreAngle: %3.1f  ", ShoreAngleUsed *radtodeg);
 	    }
 			
@@ -1868,7 +1868,7 @@ void AdjustShore(int i)
 /*  Complete mass balance for incoming and ougoing sediment			*/
 /*  This function will change the global data array _s.PercentFull[][]		*/
 /*  Uses but does not adjust arrays:  						*/
-/*		VolumeIn[], VolumeOut[], _s.X[], _s.Y[], ShorelineAngle[]		*/
+/*		VolumeIn[], VolumeOut[], _s.X[], _s.Y[], _s.ShorelineAngle[]		*/
 /*  Uses global variables: ShelfSlope, CellWidth, ShorefaceSlope, InitialDepth	*/
 /*  NEW - AA 05/04 fully utilize shoreface depths				*/
 
@@ -2820,7 +2820,7 @@ void ZeroVars(void)
 	_s.X[z] = -1;	
 	_s.Y[z] = -1;		
 	_s.InShadow[z] = '?';	
-	ShorelineAngle[z] = -999;
+	_s.ShorelineAngle[z] = -999;
 	SurroundingAngle[z] = -998;
 	UpWind[z] = '?';	
 	VolumeIn[z] = 0;	
@@ -3092,8 +3092,8 @@ void PrintLocalConds(int x, int y, int in)
 	printf("Upwind		%c		%c		%c		%c		%c\n", 
 	       UpWind[in-2],  UpWind[in-1],UpWind[in],  UpWind[in+1],  UpWind[in+2]);
 	printf("Angle		%2.2f		%2.2f		%2.2f		%2.2f		%2.2f\n",
-	       ShorelineAngle[in-2]*radtodeg,ShorelineAngle[in-1]*radtodeg, ShorelineAngle[in]*radtodeg,
-	       ShorelineAngle[in+1]*radtodeg,ShorelineAngle[in+2]*radtodeg);
+	       _s.ShorelineAngle[in-2]*radtodeg,_s.ShorelineAngle[in-1]*radtodeg, _s.ShorelineAngle[in]*radtodeg,
+	       _s.ShorelineAngle[in+1]*radtodeg,_s.ShorelineAngle[in+2]*radtodeg);
 	printf("SurrAngle	%2.2f		%2.2f		%2.2f		%2.2f		%2.2f\n",
 	       SurroundingAngle[in-2]*radtodeg, SurroundingAngle[in-1]*radtodeg,  SurroundingAngle[in]*radtodeg,
 	       SurroundingAngle[in+1]*radtodeg, SurroundingAngle[in+2]*radtodeg);
