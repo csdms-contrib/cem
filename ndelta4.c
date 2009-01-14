@@ -193,6 +193,9 @@ typedef struct
 
    int TotalBeachCells; /* Number of cells describing beach at particular iteration */
    int ShadowXMax; /* used to determine maximum extent of beach cells */
+   float WaveAngle; /* wave angle for current time step */	
+
+   int FindStart; /* Used to tell FindBeach at what Y value to start looking */
 }
 Deltas_state;
 
@@ -225,8 +228,8 @@ Deltas_state _s;
 ///*FindBeachCells,FindNextCell*/int	NextY;			/*	would've used pointer but wouldn't work	*/
 //int 	TotalBeachCells;	/* Number of cells describing beach at particular iteration */
 //int 	ShadowXMax; 		/* used to determine maximum extent of beach cells */
-float 	WaveAngle;		/* wave angle for current time step */	
-/* run */int	FindStart;		/* Used to tell FindBeach at what Y value to start looking */
+//float 	WaveAngle;		/* wave angle for current time step */	
+///* run */int	FindStart;		/* Used to tell FindBeach at what Y value to start looking */
 /*run,FindBeachCells*/char	FellOffArray;		/* Flag used to determine if accidentally went off array */
 /* init,run */float   MassInitial;		/* For conservation of mass calcs */
 /* run */float	MassCurrent;		/* " */
@@ -443,7 +446,7 @@ deltas_run( void )
 
 	/*  Calculate Wave Angle */
 
-	WaveAngle = FindWaveAngle();
+	_s.WaveAngle = FindWaveAngle();
 
 	/*  Loop for Duration at the current wave sign and wave angle */
 
@@ -454,7 +457,7 @@ deltas_run( void )
 
 	    if (_s.CurrentTimeStep%ScreenTextSpacing == 0)
 	    {
-		printf("==== WaveAngle: %2.2f  MASS Percent: %1.4f  Time Step: %d\n", 180*(WaveAngle)/M_PI, 
+		printf("==== _s.WaveAngle: %2.2f  MASS Percent: %1.4f  Time Step: %d\n", 180*(_s.WaveAngle)/M_PI, 
 		       MassCurrent/MassInitial, _s.CurrentTimeStep);
 	    }
 
@@ -465,26 +468,26 @@ deltas_run( void )
 	    /* Initialize for Find Beach Cells  (make sure strange beach does not cause trouble */
 
 	    FellOffArray = 'y';
-	    FindStart = 1;
+	    _s.FindStart = 1;
 		
 	    /*  Look for beach - if you fall off of array, bump over a little and try again */
 
 	    while (FellOffArray == 'y')
 	    {	
-		FindBeachCells(FindStart);
-		/*printf("FoundCells: %d GetO = %c \n", FindStart,FellOffArray);*/
-		FindStart += FindCellError;
+		FindBeachCells(_s.FindStart);
+		/*printf("FoundCells: %d GetO = %c \n", _s.FindStart,FellOffArray);*/
+		_s.FindStart += FindCellError;
 		if (FellOffArray == 'y')
 		{
-		    /*printf("NOODLE  !!!!!FoundCells: %d GetO = %c \n", FindStart,FellOffArray); */
+		    /*printf("NOODLE  !!!!!FoundCells: %d GetO = %c \n", _s.FindStart,FellOffArray); */
 		    /*PauseRun(1,1,-1);*/
 		}
 		
 		/* Get Out if no good beach spots exist - finish program*/
 			
-		if (FindStart > Ymax/2+1)
+		if (_s.FindStart > Ymax/2+1)
 		{
-		    printf("Stopped Finding Beach - done %d %d",FindStart,Ymax/2-5); 
+		    printf("Stopped Finding Beach - done %d %d",_s.FindStart,Ymax/2-5); 
 		    SaveSandToFile();
 		    return 1;
 		}
@@ -517,26 +520,26 @@ deltas_run( void )
 			/* Initialize for Find Beach Cells  (make sure strange beach does not cause trouble */
 
 			FellOffArray = 'y';
-			FindStart = 1;
+			_s.FindStart = 1;
 			
 			/*  Look for beach - if you fall off of array, bump over a little and try again */
 
 			while (FellOffArray == 'y')
 			{	
-				FindBeachCells(FindStart);
-				/*printf("FoundCells: %d GetO = %c \n", FindStart,FellOffArray);*/
-				FindStart += FindCellError;
+				FindBeachCells(_s.FindStart);
+				/*printf("FoundCells: %d GetO = %c \n", _s.FindStart,FellOffArray);*/
+				_s.FindStart += FindCellError;
 				if (FellOffArray == 'y')
 				{
-					/*printf("NOODLE  !!!!!FoundCells: %d GetO = %c \n", FindStart,FellOffArray); */
+					/*printf("NOODLE  !!!!!FoundCells: %d GetO = %c \n", _s.FindStart,FellOffArray); */
 					/*PauseRun(1,1,-1);*/
 				}
 			
 				/* Get Out if no good beach spots exist - finish program*/
 				
-				if (FindStart > Ymax/2+1)
+				if (_s.FindStart > Ymax/2+1)
 				{
-					printf("Stopped Finding Beach - done %d %d",FindStart,Ymax/2-5); 
+					printf("Stopped Finding Beach - done %d %d",_s.FindStart,Ymax/2-5); 
 					SaveSandToFile();
 					return 1;
 				}
@@ -701,7 +704,7 @@ float FindWaveAngle(void)
 	}
 
 	/*printf("Highness sub: %f AngleRandom: %f \n", Highness, AngleRandom);
-	  printf("WaveAngle sub: %f Angle: %f \n", 180*(Angle)/pi, AngleRandom);*/
+	  printf("_s.WaveAngle sub: %f Angle: %f \n", 180*(Angle)/pi, AngleRandom);*/
 	
     }
     Angle = WaveAngleSign*Angle;
@@ -1121,7 +1124,7 @@ char FindIfInShadow(int icheck, int ShadMax)
 /*  New 3/04 - correctly take acocunt for sideways and underneath shadows - aa	*/
 /*  This function will use but not affect the global arrays: 			*/
 /*	_s.AllBeach[][] and _s.PercentFull[][]					*/
-/*  This function refers to global variable:  WaveAngle				*/
+/*  This function refers to global variable:  _s.WaveAngle				*/
 	
 {
 
@@ -1144,27 +1147,27 @@ char FindIfInShadow(int icheck, int ShadMax)
     /* note that for case of shoreline, positive angle will be minus y direction */
     /*if (icheck == 106) {DEBUG_2a = 1;debug2b=1;}*/
 
-    if (WaveAngle == 0.0)
+    if (_s.WaveAngle == 0.0)
     {
 	/* unlikely, but make sure no div by zero */
 	slope = 0.00001;
     }
-    else if (fabs(WaveAngle) == 90.0)
+    else if (fabs(_s.WaveAngle) == 90.0)
     {
 	slope = 9999.9;
     }
     else
     {
-	slope = fabs(tan(WaveAngle));
+	slope = fabs(tan(_s.WaveAngle));
     }
 
-    if (WaveAngle > 0)
+    if (_s.WaveAngle > 0)
 	ysign = -1;
     else
 	ysign = 1;
 		
     DEBUG_PRINT( DEBUG_3, "\nI: %d----------x: %d  Y: %d  Wang:  %f Slope: %f sign: %d \n",
-			icheck, _s.X[icheck],_s.Y[icheck],WaveAngle*radtodeg,slope, ysign); 
+			icheck, _s.X[icheck],_s.Y[icheck],_s.WaveAngle*radtodeg,slope, ysign); 
 	
     /* 03/04 AA: depending on local orientations, starting point will differ */
     /* so go through scenarios */
@@ -1382,7 +1385,7 @@ void  DetermineAngles(void)
 /*  This function will determine global arrays:						*/
 /*		_s.ShorelineAngle[], _s.UpWind[], _s.SurroundingAngle[]						*/
 /*  This function will use but not affect the following arrays and values:		*/
-/*		_s.X[], _s.Y[], _s.PercentFull[][], _s.AllBeach[][], WaveAngle			*/
+/*		_s.X[], _s.Y[], _s.PercentFull[][], _s.AllBeach[][], _s.WaveAngle			*/
 /*  ADA Revised underside, SurroundingAngle 6/03, 2/04 fixed 				*/
 /*  ADA Revised angle calc 5/04								*/
 
@@ -1524,15 +1527,15 @@ void  DetermineAngles(void)
     /* and is centered on cell, not on right boundary				*/
 	
 
-    DEBUG_PRINT( DEBUG_4, "\nUp/Down   Wave Angle:%f\n", WaveAngle * radtodeg);
+    DEBUG_PRINT( DEBUG_4, "\nUp/Down   Wave Angle:%f\n", _s.WaveAngle * radtodeg);
 
     for (j=1 ; j < _s.TotalBeachCells  ; j++)
     {
 	DEBUG_PRINT( DEBUG_4, "i: %d  Shad: %c Ang[i]: %3.1f  Sur: %3.1f  Effect: %3f  ",
 			   j,_s.InShadow[j], _s.ShorelineAngle[j]*radtodeg, 
-			   _s.SurroundingAngle[j]*radtodeg, (WaveAngle - _s.SurroundingAngle[j])*radtodeg);
+			   _s.SurroundingAngle[j]*radtodeg, (_s.WaveAngle - _s.SurroundingAngle[j])*radtodeg);
 
-	if ( fabs(WaveAngle - _s.SurroundingAngle[j]) >= 42.0/radtodeg )
+	if ( fabs(_s.WaveAngle - _s.SurroundingAngle[j]) >= 42.0/radtodeg )
 	{	
 	    _s.UpWind[j] = 'u';
 	    DEBUG_PRINT( DEBUG_4, "U(1)  ");
@@ -1560,7 +1563,7 @@ void DetermineSedTransport(void)
 /*		_s.VolumeIn[], _s.VolumeOut[]								*/
 /*  This function will use but not affect the following arrays and values:			*/
 /*		_s.X[], _s.Y[], _s.InShadow[], _s.UpWind[], _s.ShorelineAngle[]				*/
-/*  		_s.PercentFull[][], _s.AllBeach[][], WaveAngle					*/
+/*  		_s.PercentFull[][], _s.AllBeach[][], _s.WaveAngle					*/
 
 {
 
@@ -1575,7 +1578,7 @@ void DetermineSedTransport(void)
     float   SedTansLimit =  SED_TRANS_LIMIT;
 
 
-    DEBUG_PRINT( DEBUG_5, "\nSEDTRANS: %d  @  %f \n\n", _s.CurrentTimeStep, WaveAngle * radtodeg);
+    DEBUG_PRINT( DEBUG_5, "\nSEDTRANS: %d  @  %f \n\n", _s.CurrentTimeStep, _s.WaveAngle * radtodeg);
 
     for (i=1 ; i < _s.TotalBeachCells-1 ; i++)
     {
@@ -1586,7 +1589,7 @@ void DetermineSedTransport(void)
 
 	/*  Is littoral transport going left or right?	*/
 
-	if ((WaveAngle-_s.ShorelineAngle[i]) > 0)
+	if ((_s.WaveAngle-_s.ShorelineAngle[i]) > 0)
 	{
 	    /*  Transport going right, center on cell to left side of border	 */
 	    /*  Next cell in positive direction, no correction term needed 		*/
@@ -1677,10 +1680,10 @@ void DetermineSedTransport(void)
 
 
 	    /* printf("i = %d  Cell: %d NextCell: %d Angle: %f Trans Angle: %f\n",
-	       i, CalcCell, CalcCell+Next, ShoreAngleUsed*180/pi, (WaveAngle - ShoreAngleUsed)*180/pi); */
+	       i, CalcCell, CalcCell+Next, ShoreAngleUsed*180/pi, (_s.WaveAngle - ShoreAngleUsed)*180/pi); */
 
 	    DEBUG_PRINT( DEBUG_5, "From: %d  To: %d  TransAngle %3.1f", CalcCell, CalcCell+Next, 
-			       (WaveAngle - ShoreAngleUsed) * radtodeg);
+			       (_s.WaveAngle - ShoreAngleUsed) * radtodeg);
 
 	    if (DoFlux)
 	    {
@@ -1701,7 +1704,7 @@ void SedTrans(int From, int To, float ShoreAngle, char MaxT)
 /*		_s.VolumeIn[] and _s.VolumeOut[]							*/
 /*  This function does not use any other arrays							*/
 /*  This function will use the global values defining the wave field:				*/
-/*	WaveAngle, Period, OffShoreWvHt								*/
+/*	_s.WaveAngle, Period, OffShoreWvHt								*/
 /*  Revised 6/02 - New iterative calc for refraction and breaking, parameters revised		*/
 {
 
@@ -1732,9 +1735,9 @@ void SedTrans(int From, int To, float ShoreAngle, char MaxT)
     /* New algorithm 6/02 iteratively takes wiave onshore until they break, then computes Qs	*/
     /* See notes 06/05/02										*/
 	
-    DEBUG_PRINT( DEBUG_6, "Wave Angle %2.2f Shore Angle  %2.2f    ",WaveAngle*radtodeg, ShoreAngle*radtodeg);
+    DEBUG_PRINT( DEBUG_6, "Wave Angle %2.2f Shore Angle  %2.2f    ",_s.WaveAngle*radtodeg, ShoreAngle*radtodeg);
 
-    AngleDeep = WaveAngle - ShoreAngle;
+    AngleDeep = _s.WaveAngle - ShoreAngle;
 
     if (MaxT == 'y')
     {
@@ -1842,7 +1845,7 @@ void TransportSedimentSweep(void)
 	DEBUG_PRINT( DEBUG_7A, "R  ");
     }
 
-    DEBUG_PRINT( DEBUG_7A, "\n\n TransSedSweep  Ang %f  %d\n", WaveAngle * radtodeg, _s.CurrentTimeStep);
+    DEBUG_PRINT( DEBUG_7A, "\n\n TransSedSweep  Ang %f  %d\n", _s.WaveAngle * radtodeg, _s.CurrentTimeStep);
 	
     for (i=0; i < _s.TotalBeachCells-1 ; i++)
     {
@@ -2317,7 +2320,7 @@ void FixBeach(void)
     int FixXMax;
     int fillcells3 = 0;
 
-    /*DEBUG_PRINT( DEBUG_9, "\n\nFIXBEACH      %d     %f\n", _s.CurrentTimeStep, WaveAngle*radtodeg);*/
+    /*DEBUG_PRINT( DEBUG_9, "\n\nFIXBEACH      %d     %f\n", _s.CurrentTimeStep, _s.WaveAngle*radtodeg);*/
 
     if (RandZeroToOne()*2 > 1)
     {
@@ -3090,7 +3093,7 @@ void PrintLocalConds(int x, int y, int in)
 	}
 	printf("\n\n\n");
 
-	printf("Wave Angle:	%f\n\n",WaveAngle*radtodeg);
+	printf("Wave Angle:	%f\n\n",_s.WaveAngle*radtodeg);
 	printf("i		%d		%d		!%d		%d		%d\n", 
 	       in-2, in-1,in,in+1,in+2);
 	printf("Shadow		%c		%c		%c		%c		%c\n", 
