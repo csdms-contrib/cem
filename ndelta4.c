@@ -187,6 +187,9 @@ typedef struct
                                        element */
 
    int CurrentTimeStep; /* Time step of current calculation */ 
+
+   int NextX; /* used to iterate FindNextCell in global array - */
+   int NextY;
 }
 Deltas_state;
 
@@ -206,17 +209,17 @@ Deltas_state _s;
 //int	Y[MaxBeachLength];		/* Y Position of ith beach element */
 //char	InShadow[MaxBeachLength];	/* Is ith beach element in shadow? */
 //float	ShorelineAngle[MaxBeachLength];	/* Angle between cell and right (z+1) neighbor	*/
-float	SurroundingAngle[MaxBeachLength];/* Cell-orientated angle based upon left and right neighbor */
-char	UpWind[MaxBeachLength];		/* Upwind or downwind condition used to calculate sediment transport */
-float	VolumeIn[MaxBeachLength];	/* Sediment volume into ith beach element */	
-float 	VolumeOut[MaxBeachLength];	/* Sediment volume out of ith beach element */
+//float	SurroundingAngle[MaxBeachLength];/* Cell-orientated angle based upon left and right neighbor */
+//char	UpWind[MaxBeachLength];		/* Upwind or downwind condition used to calculate sediment transport */
+//float	VolumeIn[MaxBeachLength];	/* Sediment volume into ith beach element */	
+//float 	VolumeOut[MaxBeachLength];	/* Sediment volume out of ith beach element */
 
 
 /* Miscellaneous Global Variables */
 
-int	CurrentTimeStep = 0;  	/* Time step of current calculation */ 
-/*FindBeachCells,FindNextCell*/int	NextX;			/* Global variables used to iterate FindNextCell in global array - */
-/*FindBeachCells,FindNextCell*/int	NextY;			/*	would've used pointer but wouldn't work	*/
+//int	CurrentTimeStep = 0;  	/* Time step of current calculation */ 
+///*FindBeachCells,FindNextCell*/int	NextX;			/* Global variables used to iterate FindNextCell in global array - */
+///*FindBeachCells,FindNextCell*/int	NextY;			/*	would've used pointer but wouldn't work	*/
 int 	TotalBeachCells;	/* Number of cells describing beach at particular iteration */
 int 	ShadowXMax; 		/* used to determine maximum extent of beach cells */
 float 	WaveAngle;		/* wave angle for current time step */	
@@ -339,7 +342,7 @@ deltas_init()
 	    printf("Saving Filename? \n");
 	    scanf("%s", _io.savefilename);
 	    printf("What time step are we starting at?");
-	    scanf("%d", &CurrentTimeStep);
+	    scanf("%d", &_s.CurrentTimeStep);
 	    ReadSandFromFile();
 	}
 	
@@ -431,7 +434,7 @@ deltas_run( void )
     int SaveLine        = SAVE_LINE;
     int AgeUpdate       = AGE_UPDATE;
 
-    while ( CurrentTimeStep < StopAfter )
+    while ( _s.CurrentTimeStep < StopAfter )
     {
 	/*  Time Step iteration - compute same wave angle for Duration time steps */
 
@@ -446,10 +449,10 @@ deltas_run( void )
 		
 	    /* Text to Screen? */
 
-	    if (CurrentTimeStep%ScreenTextSpacing == 0)
+	    if (_s.CurrentTimeStep%ScreenTextSpacing == 0)
 	    {
 		printf("==== WaveAngle: %2.2f  MASS Percent: %1.4f  Time Step: %d\n", 180*(WaveAngle)/M_PI, 
-		       MassCurrent/MassInitial, CurrentTimeStep);
+		       MassCurrent/MassInitial, _s.CurrentTimeStep);
 	    }
 
 	    PeriodicBoundaryCopy();
@@ -484,24 +487,24 @@ deltas_run( void )
 		}
 	    }
 	
-	    /* printf("Foundbeach!: %d \n", CurrentTimeStep); */
+	    /* printf("Foundbeach!: %d \n", _s.CurrentTimeStep); */
 
 	    ShadowSweep();
-	    //DEBUG_PRINT( DEBUG_0, "Shadowswept: %d \n", CurrentTimeStep);
-            DEBUG_PRINT( DEBUG_0, "Shadowswept: %d \n", CurrentTimeStep );
+	    //DEBUG_PRINT( DEBUG_0, "Shadowswept: %d \n", _s.CurrentTimeStep);
+            DEBUG_PRINT( DEBUG_0, "Shadowswept: %d \n", _s.CurrentTimeStep );
 
 	    DetermineAngles();
-	    //DEBUG_PRINT( DEBUG_0, "AngleDet: %d \n", CurrentTimeStep);
-	    DEBUG_PRINT( DEBUG_0, "AngleDet: %d \n", CurrentTimeStep );
+	    //DEBUG_PRINT( DEBUG_0, "AngleDet: %d \n", _s.CurrentTimeStep);
+	    DEBUG_PRINT( DEBUG_0, "AngleDet: %d \n", _s.CurrentTimeStep );
 	    DetermineSedTransport();
-	    DEBUG_PRINT( DEBUG_0, "Sed Trans: %d \n", CurrentTimeStep); 
+	    DEBUG_PRINT( DEBUG_0, "Sed Trans: %d \n", _s.CurrentTimeStep); 
 	    TransportSedimentSweep();
-	    DEBUG_PRINT( DEBUG_0, "Transswept: %d \n", CurrentTimeStep);
+	    DEBUG_PRINT( DEBUG_0, "Transswept: %d \n", _s.CurrentTimeStep);
 
 	    DeliverSediment();
 
 	    FixBeach();
-	    DEBUG_PRINT( DEBUG_0, "Fixed Beach: %d \n", CurrentTimeStep);
+	    DEBUG_PRINT( DEBUG_0, "Fixed Beach: %d \n", _s.CurrentTimeStep);
 
 
 		/* OVERWASH */
@@ -536,12 +539,12 @@ deltas_run( void )
 				}
 			}
 	
-				/* printf("Foundbeach!: %d \n", CurrentTimeStep); */
+				/* printf("Foundbeach!: %d \n", _s.CurrentTimeStep); */
 
 			ShadowSweep();
-				DEBUG_PRINT( DEBUG_0, "Shadowswept: %d \n", CurrentTimeStep);
+				DEBUG_PRINT( DEBUG_0, "Shadowswept: %d \n", _s.CurrentTimeStep);
 			DetermineAngles();
-				DEBUG_PRINT( DEBUG_0, "AngleDet: %d \n", CurrentTimeStep);
+				DEBUG_PRINT( DEBUG_0, "AngleDet: %d \n", _s.CurrentTimeStep);
 			CheckOverwashSweep();
 			FixBeach();
 	
@@ -552,11 +555,11 @@ deltas_run( void )
 		PauseRun(1,1,-1);			
 	    }
 
-	    DEBUG_PRINT( DEBUG_3, "End of Time Step: %d \n", CurrentTimeStep);
+	    DEBUG_PRINT( DEBUG_3, "End of Time Step: %d \n", _s.CurrentTimeStep);
 		
 	    /* Age Empty Cells */
 
-	    if ((CurrentTimeStep%AgeUpdate == 0) && SaveAge)
+	    if ((_s.CurrentTimeStep%AgeUpdate == 0) && SaveAge)
 		AgeCells();
 
 	    /* Count Mass */
@@ -566,7 +569,7 @@ deltas_run( void )
 	    /* GRAPHING */		
 		
 #ifdef WITH_OPENGL
-	    if ( DO_GRAPHICS && EveryPlotSpacing && (CurrentTimeStep%EveryPlotSpacing == 0))
+	    if ( DO_GRAPHICS && EveryPlotSpacing && (_s.CurrentTimeStep%EveryPlotSpacing == 0))
 		GraphCells();
 #endif
 	    
@@ -577,25 +580,25 @@ if(DoGraphics && KeysOn && (current_getch == KEY_P))
 GraphCells();*/
 
 		
-	    CurrentTimeStep ++;
+	    _s.CurrentTimeStep ++;
 
 	    /* SAVE FILE ? */
 
-	    if (((CurrentTimeStep%SaveSpacing == 0 && CurrentTimeStep >= StartSavingAt) 
-		 || (CurrentTimeStep == StopAfter)) && SaveFile)
+	    if (((_s.CurrentTimeStep%SaveSpacing == 0 && _s.CurrentTimeStep >= StartSavingAt) 
+		 || (_s.CurrentTimeStep == StopAfter)) && SaveFile)
 	    {	
 		SaveSandToFile();
 	    }
 
-	    if (((CurrentTimeStep%SaveLineSpacing == 0 && CurrentTimeStep >= StartSavingAt) 
-		 || (CurrentTimeStep == StopAfter)) && SaveLine)
+	    if (((_s.CurrentTimeStep%SaveLineSpacing == 0 && _s.CurrentTimeStep >= StartSavingAt) 
+		 || (_s.CurrentTimeStep == StopAfter)) && SaveLine)
 	    {
 		SaveLineToFile();
 	    }
 
 
 			
-	    /*if (CurrentTimeStep > 14300)
+	    /*if (_s.CurrentTimeStep > 14300)
 	      SaveSandToFile();*/
 	}				
 	
@@ -645,7 +648,7 @@ float FindWaveAngle(void)
 	RandBin = RandZeroToOne();
 	RandAngle = RandZeroToOne();
 	
-	/*printf("Time = %d RandBin = %f RandAng = %f\n",CurrentTimeStep, RandBin, RandAngle);*/
+	/*printf("Time = %d RandBin = %f RandAng = %f\n",_s.CurrentTimeStep, RandBin, RandAngle);*/
 
 	while (flag)
 	{
@@ -736,14 +739,14 @@ void FindBeachCells(int YStart)
     while ((_s.Y[z] < 2*Ymax -1) && (z < MaxBeachLength-1)) 
     {
 	z++;
-	NextX = -2;
-	NextY = -2;
+	_s.NextX = -2;
+	_s.NextY = -2;
 			
 	FindNextCell(_s.X[z-1], _s.Y[z-1], z-1);
-	_s.X[z] = NextX;
-	_s.Y[z] = NextY;
+	_s.X[z] = _s.NextX;
+	_s.Y[z] = _s.NextY;
 			
-	DEBUG_PRINT( DEBUG_1, "NextX: %3d  NextY: %3d  z: %d \n", NextX, NextY, z);
+	DEBUG_PRINT( DEBUG_1, "_s.NextX: %3d  _s.NextY: %3d  z: %d \n", _s.NextX, _s.NextY, z);
 
 	if (_s.PercentFull[_s.X[z]][_s.Y[z]] == 0) 
 	{
@@ -754,9 +757,9 @@ void FindBeachCells(int YStart)
 	/* If return to start point or go off left side of array, going the wrong direction 	*/
 	/* Jump off and start again closer to middle						*/
 
-	if ((NextY < 1) || ((NextY == _s.Y[0])&&(NextX==_s.X[0])) || (z > MaxBeachLength -2))
+	if ((_s.NextY < 1) || ((_s.NextY == _s.Y[0])&&(_s.NextX==_s.X[0])) || (z > MaxBeachLength -2))
 	{
-	    /*printf("!!!!!!!Fell Off!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! x = %d !!!!!!!!!!!!!", NextX);*/
+	    /*printf("!!!!!!!Fell Off!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! x = %d !!!!!!!!!!!!!", _s.NextX);*/
 	    FellOffArray = 'y';
 	    ZeroVars();
 	    return;
@@ -782,7 +785,7 @@ void FindBeachCells(int YStart)
 void FindNextCell(int x, int y, int z)
 
 /* Function to find next cell that is beach moving in the general positive X direction */
-/* changes global variables NextX and NextY, coordinates for the next beach cell       */
+/* changes global variables _s.NextX and _s.NextY, coordinates for the next beach cell       */
 /* This function will use but not affect the global arrays:  AllBeach [][], _s.X[], and _s.Y[] */
 
 {
@@ -795,11 +798,11 @@ void FindNextCell(int x, int y, int z)
 	{
 	    if ( _s.AllBeach[x-1][y-1] == 'y' )
 	    {  	/* Move one inshore */	
-		NextX = x-1; NextY = y; return;
+		_s.NextX = x-1; _s.NextY = y; return;
 	    }	
 	    else if (_s.AllBeach[x-1][y-1] == 'n' )	/* This is where shadow procedure was */
 	    {	/* Back and to the left */
-		NextX = x-1; NextY = y-1; return;
+		_s.NextX = x-1; _s.NextY = y-1; return;
 	    }
 	    printf("Should've found next cell (1): %d, %d \n", x, y);
 	    PauseRun(x, y, z); 
@@ -812,7 +815,7 @@ void FindNextCell(int x, int y, int z)
 	    if ( _s.AllBeach[x+1][y+1] == 'n' && _s.AllBeach[x+1][y] == 'n')
 		/*  Up and right - move around spit end */
 	    {
-		NextX = x+1; NextY = y+1; return;			
+		_s.NextX = x+1; _s.NextY = y+1; return;			
 	    }
 		
 	    else if (  _s.AllBeach[x+1][y] == 'y')
@@ -821,16 +824,16 @@ void FindNextCell(int x, int y, int z)
 		if ( _s.AllBeach[x+1][y-1] == 'n' && _s.AllBeach[x-1][y-1] == 'n' && _s.X[z-1]>x)
 		    /* Reaching end of spit - not going in circles */
 		{
-		    NextX = x-1; NextY = y; return;
+		    _s.NextX = x-1; _s.NextY = y; return;
 		}
 		else if (_s.AllBeach[x+1][y-1] == 'n')
 		    /* This is reaching end of spit */
 		{
-		    NextX = x+1; NextY = y-1; return;
+		    _s.NextX = x+1; _s.NextY = y-1; return;
 		}
 		/* Moving along back side of spit */
 		{
-		    NextX = x; NextY = y-1; return;
+		    _s.NextX = x; _s.NextY = y-1; return;
 		}
 	    }
 		
@@ -839,7 +842,7 @@ void FindNextCell(int x, int y, int z)
 		/* Moving straight up */
 		/* NEW - we still don't want to go in */
 	    {
-		NextX = x+1; NextY = y; return;
+		_s.NextX = x+1; _s.NextY = y; return;
 	    }
 					
 	    printf("Should've found next cell (2): %d, %d \n", x, y);
@@ -853,19 +856,19 @@ void FindNextCell(int x, int y, int z)
 	    if (_s.AllBeach[x-1][y+1] == 'y' && _s.AllBeach[x+1][y] == 'n')
 		/* On left corner of protuberence, move right*/
 	    {
-		NextX = x; NextY = y+1; return;
+		_s.NextX = x; _s.NextY = y+1; return;
 	    }
 
 	    else if (_s.AllBeach[x+1][y] == 'y' && _s.AllBeach[x+1][y-1] == 'n')
 		/* Under protuberance, move around to left and up  */ 
 	    {
-		NextX = x+1; NextY = y-1; return;
+		_s.NextX = x+1; _s.NextY = y-1; return;
 	    }
 			
 	    else if (_s.AllBeach[x+1][y] == 'y' && _s.AllBeach[x+1][y-1] == 'y')
 		/* Under protuberance, move to left */ 
 	    {
-		NextX = x; NextY = y-1; return;
+		_s.NextX = x; _s.NextY = y-1; return;
 	    }
 	    printf("Should've found next cell (3): %d, %d \n", x, y);
 	    PauseRun(x, y, z); 
@@ -881,18 +884,18 @@ void FindNextCell(int x, int y, int z)
 	    if (_s.AllBeach[x+1][y+1] == 'n')
 		/* Move right and up*/
 	    {
-		NextX = x+1; NextY = y+1; return;
+		_s.NextX = x+1; _s.NextY = y+1; return;
 	    }
 	    else if (_s.AllBeach[x+1][y] == 'n')
 		/* Straight up*/
 	    {
-		NextX = x+1; NextY = y; return;
+		_s.NextX = x+1; _s.NextY = y; return;
 	    }
 	    else if (_s.AllBeach[x+1][y-1] == 'n')
 		/* Up and left*/
 		/* shouldn't need this, this where coming from */
 	    {
-		NextX = x+1; NextY = y-1; return;
+		_s.NextX = x+1; _s.NextY = y-1; return;
 	    }
 	}
 	else if (_s.X[z-1] < x)
@@ -901,18 +904,18 @@ void FindNextCell(int x, int y, int z)
 	    if (_s.AllBeach[x-1][y-1] == 'n')
 		/* move down and left*/
 	    {
-		NextX = x-1; NextY = y-1; return;
+		_s.NextX = x-1; _s.NextY = y-1; return;
 	    }
 	    else if (_s.AllBeach[x-1][y] == 'n')
 		/*move straight down*/
 	    {
-		NextX = x-1; NextY = y; return;
+		_s.NextX = x-1; _s.NextY = y; return;
 	    }
 	    else if (_s.AllBeach[x-1][y+1] == 'n')
 		/*move straight down*/
 		/* shouldn't need this, this would be where coming from*/
 	    {
-		NextX = x-1; NextY = y+1; return;
+		_s.NextX = x-1; _s.NextY = y+1; return;
 	    }
 	}
 	printf("Should've found next cell (3.5): %d, %d \n", x, y);		
@@ -933,12 +936,12 @@ void FindNextCell(int x, int y, int z)
 	    if ( _s.AllBeach[x-1][y+1] == 'y' )
 		/* move straight right */
 	    {
-		NextX = x; NextY = y+1; return;
+		_s.NextX = x; _s.NextY = y+1; return;
 	    }
 	    else if ( _s.AllBeach[x-1][y+1] == 'n' ) 
 		/* Move down and to right */
 	    {			 
-		NextX = x-1; NextY = y+1; return;	
+		_s.NextX = x-1; _s.NextY = y+1; return;	
 	    }
 
 	    printf("Should've found next cell (5): %d, %d \n", x, y);
@@ -952,12 +955,12 @@ void FindNextCell(int x, int y, int z)
 	    if ( _s.AllBeach[x+1][y+1] == 'n' )
 		/* Move up and to right */
 	    {
-		NextX = x+1; NextY = y+1; return;
+		_s.NextX = x+1; _s.NextY = y+1; return;
 	    }
 	    else if ( _s.AllBeach[x+1][y+1] == 'y')
 		/* Move straight up */
 	    {
-		NextX = x+1; NextY = y; return;
+		_s.NextX = x+1; _s.NextY = y; return;
 	    }
 			
 	    printf("Should've found next cell (6): %d, %d \n", x, y);
@@ -984,17 +987,17 @@ void FindNextCell(int x, int y, int z)
 	    if (_s.AllBeach[x+1][y-1] == 'n')
 		/* Move up and to the left */
 	    {
-		NextX = x+1;  NextY = y-1; return;
+		_s.NextX = x+1;  _s.NextY = y-1; return;
 	    }
 	    else if (_s.AllBeach[x][y-1] == 'n')
 		/* Move directly left */	
 	    {
-		NextX = x;  NextY = y-1; return;
+		_s.NextX = x;  _s.NextY = y-1; return;
 	    }
 	    else if (_s.AllBeach[x-1][y-1] == 'n')
 		/* Move left and down */	
 	    {
-		NextX = x-1;  NextY = y-1; return;
+		_s.NextX = x-1;  _s.NextY = y-1; return;
 	    }
 	    printf("Should've found next cell (8): %d, %d \n", x, y);
 	    PauseRun(x, y, z); 
@@ -1006,17 +1009,17 @@ void FindNextCell(int x, int y, int z)
 	    if (_s.AllBeach[x-1][y+1] == 'n')
 		/* Move down and to the right */
 	    {
-		NextX = x-1;  NextY = y+1; return;
+		_s.NextX = x-1;  _s.NextY = y+1; return;
 	    }
 	    else if (_s.AllBeach[x][y+1] == 'n')
 		/* Move directly right */	
 	    {
-		NextX = x;  NextY = y+1; return;
+		_s.NextX = x;  _s.NextY = y+1; return;
 	    }
 	    else if (_s.AllBeach[x+1][y+1] == 'n')
 		/* Move right and up */	
 	    {
-		NextX = x+1;  NextY = y+1; return;
+		_s.NextX = x+1;  _s.NextY = y+1; return;
 	    }
 	    printf("Should've found next cell (8): %d, %d \n", x, y);
 	    PauseRun(x, y, z); 
@@ -1569,7 +1572,7 @@ void DetermineSedTransport(void)
     float   SedTansLimit =  SED_TRANS_LIMIT;
 
 
-    DEBUG_PRINT( DEBUG_5, "\nSEDTRANS: %d  @  %f \n\n", CurrentTimeStep, WaveAngle * radtodeg);
+    DEBUG_PRINT( DEBUG_5, "\nSEDTRANS: %d  @  %f \n\n", _s.CurrentTimeStep, WaveAngle * radtodeg);
 
     for (i=1 ; i < TotalBeachCells-1 ; i++)
     {
@@ -1836,7 +1839,7 @@ void TransportSedimentSweep(void)
 	DEBUG_PRINT( DEBUG_7A, "R  ");
     }
 
-    DEBUG_PRINT( DEBUG_7A, "\n\n TransSedSweep  Ang %f  %d\n", WaveAngle * radtodeg, CurrentTimeStep);
+    DEBUG_PRINT( DEBUG_7A, "\n\n TransSedSweep  Ang %f  %d\n", WaveAngle * radtodeg, _s.CurrentTimeStep);
 	
     for (i=0; i < TotalBeachCells-1 ; i++)
     {
@@ -2311,7 +2314,7 @@ void FixBeach(void)
     int FixXMax;
     int fillcells3 = 0;
 
-    /*DEBUG_PRINT( DEBUG_9, "\n\nFIXBEACH      %d     %f\n", CurrentTimeStep, WaveAngle*radtodeg);*/
+    /*DEBUG_PRINT( DEBUG_9, "\n\nFIXBEACH      %d     %f\n", _s.CurrentTimeStep, WaveAngle*radtodeg);*/
 
     if (RandZeroToOne()*2 > 1)
     {
@@ -2881,7 +2884,7 @@ void ReadSandFromFile(void)
 void SaveSandToFile(void)
 
 /*  Saves current _s.AllBeach[][] and _s.PercentFull[][] data arrays to file 		*/
-/*  Save file name will add extension '.' and the CurrentTimeStep		*/
+/*  Save file name will add extension '.' and the _s.CurrentTimeStep		*/
 
 {
     int	x,y;
@@ -2890,7 +2893,7 @@ void SaveSandToFile(void)
 
     printf("\n saving \n ");
 
-    sprintf(savename, "%s.%d", _io.savefilename, CurrentTimeStep);
+    sprintf(savename, "%s.%d", _io.savefilename, _s.CurrentTimeStep);
     printf( "Saving as: %s 		", savename );	
 
 
@@ -2929,7 +2932,7 @@ void SaveLineToFile(void)
 
 /*  Saves data line of shoreline position rather than entire array 		*/
 /*  Main concern is to have only one data point at each alongshore location	*/
-/*  Save file name will add extension '.' and the CurrentTimeStep		*/
+/*  Save file name will add extension '.' and the _s.CurrentTimeStep		*/
 
 {
 
@@ -2941,7 +2944,7 @@ void SaveLineToFile(void)
 
     printf("\n saving \n ");
 
-    sprintf(savename, "%s%d", savelinename, CurrentTimeStep);
+    sprintf(savename, "%s%d", savelinename, _s.CurrentTimeStep);
     printf( "Saving as: %s                 ", savename );	
 
     SaveSandFile = fopen(savename, "w");
@@ -3130,7 +3133,7 @@ void PauseRun(int x, int y, int in)
 		
     int xsee=1,ysee=-1,isee=-1,i;
 
-    printf("\nPaused x: %d  y: %d Time: %d\n",x,y,CurrentTimeStep);
+    printf("\nPaused x: %d  y: %d Time: %d\n",x,y,_s.CurrentTimeStep);
 
     /*if (SaveLine) SaveLineToFile();
       else SaveSandToFile();*/
@@ -3191,7 +3194,7 @@ void AgeCells(void)
 	for (x=0; x<Xmax; x++)
 	    if (_s.PercentFull[x][y] == 0)
 	    {
-		_s.Age[x][y] = CurrentTimeStep%AgeMax;
+		_s.Age[x][y] = _s.CurrentTimeStep%AgeMax;
 	    }
 				
 }
