@@ -196,6 +196,15 @@ typedef struct
    float WaveAngle; /* wave angle for current time step */	
 
    int FindStart; /* Used to tell FindBeach at what Y value to start looking */
+
+   char FellOffArray; /* Flag used to determine if accidentally went off array */
+
+   float MassInitial; /* For conservation of mass calcs */
+   float MassCurrent;
+
+   int NumWaveBins;    /* For Input Wave - number of bins */
+   float WaveMax[36];  /* Max Angle for specific bin */
+   float WaveProb[36]; /* Probability of Certain Bin */
 }
 Deltas_state;
 
@@ -230,15 +239,17 @@ Deltas_state _s;
 //int 	ShadowXMax; 		/* used to determine maximum extent of beach cells */
 //float 	WaveAngle;		/* wave angle for current time step */	
 ///* run */int	FindStart;		/* Used to tell FindBeach at what Y value to start looking */
-/*run,FindBeachCells*/char	FellOffArray;		/* Flag used to determine if accidentally went off array */
-/* init,run */float   MassInitial;		/* For conservation of mass calcs */
-/* run */float	MassCurrent;		/* " */
+///*run,FindBeachCells*/char	FellOffArray;		/* Flag used to determine if accidentally went off array */
+///* init,run */float   MassInitial;		/* For conservation of mass calcs */
+///* run */float	MassCurrent;		/* " */
+
 /* unused!!! */int	device;			
 /* unused!!! */short	button;
 /* unused!!! */long	buttonback;
-int	NumWaveBins;		/* For Input Wave - number of bins	*/
-float	WaveMax[36];		/* Max Angle for specific bin */
-float	WaveProb[36];		/* Probability of Certain Bin */
+
+//int	NumWaveBins;		/* For Input Wave - number of bins	*/
+//float	WaveMax[36];		/* Max Angle for specific bin */
+//float	WaveProb[36];		/* Probability of Certain Bin */
 
 //float xcellwidth;
 //float ycellwidth;
@@ -386,7 +397,7 @@ deltas_init()
 
     PeriodicBoundaryCopy();
     FixBeach();
-    MassInitial = MassCount();
+    _s.MassInitial = MassCount();
 
     /*if (SaveLine) 
       SaveLineToFile();
@@ -457,8 +468,8 @@ deltas_run( void )
 
 	    if (_s.CurrentTimeStep%ScreenTextSpacing == 0)
 	    {
-		printf("==== _s.WaveAngle: %2.2f  MASS Percent: %1.4f  Time Step: %d\n", 180*(_s.WaveAngle)/M_PI, 
-		       MassCurrent/MassInitial, _s.CurrentTimeStep);
+		printf("==== WaveAngle: %2.2f  MASS Percent: %1.4f  Time Step: %d\n", 180*(_s.WaveAngle)/M_PI, 
+		       _s.MassCurrent/_s.MassInitial, _s.CurrentTimeStep);
 	    }
 
 	    PeriodicBoundaryCopy();
@@ -467,19 +478,19 @@ deltas_run( void )
 			
 	    /* Initialize for Find Beach Cells  (make sure strange beach does not cause trouble */
 
-	    FellOffArray = 'y';
+	    _s.FellOffArray = 'y';
 	    _s.FindStart = 1;
 		
 	    /*  Look for beach - if you fall off of array, bump over a little and try again */
 
-	    while (FellOffArray == 'y')
+	    while (_s.FellOffArray == 'y')
 	    {	
 		FindBeachCells(_s.FindStart);
-		/*printf("FoundCells: %d GetO = %c \n", _s.FindStart,FellOffArray);*/
+		/*printf("FoundCells: %d GetO = %c \n", _s.FindStart,_s.FellOffArray);*/
 		_s.FindStart += FindCellError;
-		if (FellOffArray == 'y')
+		if (_s.FellOffArray == 'y')
 		{
-		    /*printf("NOODLE  !!!!!FoundCells: %d GetO = %c \n", _s.FindStart,FellOffArray); */
+		    /*printf("NOODLE  !!!!!FoundCells: %d GetO = %c \n", _s.FindStart,_s.FellOffArray); */
 		    /*PauseRun(1,1,-1);*/
 		}
 		
@@ -519,19 +530,19 @@ deltas_run( void )
 			ZeroVars();
 			/* Initialize for Find Beach Cells  (make sure strange beach does not cause trouble */
 
-			FellOffArray = 'y';
+			_s.FellOffArray = 'y';
 			_s.FindStart = 1;
 			
 			/*  Look for beach - if you fall off of array, bump over a little and try again */
 
-			while (FellOffArray == 'y')
+			while (_s.FellOffArray == 'y')
 			{	
 				FindBeachCells(_s.FindStart);
-				/*printf("FoundCells: %d GetO = %c \n", _s.FindStart,FellOffArray);*/
+				/*printf("FoundCells: %d GetO = %c \n", _s.FindStart,_s.FellOffArray);*/
 				_s.FindStart += FindCellError;
-				if (FellOffArray == 'y')
+				if (_s.FellOffArray == 'y')
 				{
-					/*printf("NOODLE  !!!!!FoundCells: %d GetO = %c \n", _s.FindStart,FellOffArray); */
+					/*printf("NOODLE  !!!!!FoundCells: %d GetO = %c \n", _s.FindStart,_s.FellOffArray); */
 					/*PauseRun(1,1,-1);*/
 				}
 			
@@ -570,7 +581,7 @@ deltas_run( void )
 
 	    /* Count Mass */
 
-	    MassCurrent = MassCount();
+	    _s.MassCurrent = MassCount();
 
 	    /* GRAPHING */		
 		
@@ -646,7 +657,7 @@ float FindWaveAngle(void)
 
 	
     /* Method using input binned wave distribution - 					*/
-    /* variables WaveProb[], WaveMax[], previously input from file using ReadWaveIn()	*/ 
+    /* variables _s.WaveProb[], _s.WaveMax[], previously input from file using ReadWaveIn()	*/ 
 	
     if ( WAVE_IN )
     {
@@ -660,16 +671,16 @@ float FindWaveAngle(void)
 	{
 	    i++;		
 
-	    if (RandBin < WaveProb[i])
+	    if (RandBin < _s.WaveProb[i])
 	    {
 		flag = 0;
 	    }
 	}
 
-	Angle = - ( RandAngle * (WaveMax[i] - WaveMax[i-1]) + WaveMax[i-1])*M_PI/180;
+	Angle = - ( RandAngle * (_s.WaveMax[i] - _s.WaveMax[i-1]) + _s.WaveMax[i-1])*M_PI/180;
 
-	/*printf("i = %d WaveMAx[i] = %f WaveMax[i-1] = %f WaveProb[i] = %f Angle= %f\n",
-	  i,WaveMax[i],WaveMax[i-1],WaveProb[i], Angle*180/pi);*/
+	/*printf("i = %d WaveMAx[i] = %f _s.WaveMax[i-1] = %f _s.WaveProb[i] = %f Angle= %f\n",
+	  i,_s.WaveMax[i],_s.WaveMax[i-1],_s.WaveProb[i], Angle*180/pi);*/
 
     }
     else{
@@ -766,7 +777,7 @@ void FindBeachCells(int YStart)
 	if ((_s.NextY < 1) || ((_s.NextY == _s.Y[0])&&(_s.NextX==_s.X[0])) || (z > MaxBeachLength -2))
 	{
 	    /*printf("!!!!!!!Fell Off!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! x = %d !!!!!!!!!!!!!", _s.NextX);*/
-	    FellOffArray = 'y';
+	    _s.FellOffArray = 'y';
 	    ZeroVars();
 	    return;
 	}
@@ -781,7 +792,7 @@ void FindBeachCells(int YStart)
     }
 	
     _s.TotalBeachCells = z; 
-    FellOffArray = 'n';		
+    _s.FellOffArray = 'n';		
 
     DEBUG_PRINT( DEBUG_1, "Total Beach: %d  \n \n", _s.TotalBeachCells); 
 
@@ -3219,23 +3230,23 @@ void ReadWaveIn(void)
 
     for (i=0 ; i<= 36; i++)
     {
-	WaveMax[i] =0;
-	WaveProb[i] = 0;
+	_s.WaveMax[i] =0;
+	_s.WaveProb[i] = 0;
     }
 
     ReadWaveFile = fopen(readwavename,"r");printf("CHECK READ WAVE\n");
 
-    fscanf(ReadWaveFile, " %d \n", &NumWaveBins);
+    fscanf(ReadWaveFile, " %d \n", &_s.NumWaveBins);
 	
-    printf("Wave Bins %d \n",NumWaveBins);
+    printf("Wave Bins %d \n",_s.NumWaveBins);
 
-    WaveMax[0] = -90;
-    WaveProb[0] = 0;
+    _s.WaveMax[0] = -90;
+    _s.WaveProb[0] = 0;
 
-    for (i=1 ; i<= NumWaveBins ; i++)
+    for (i=1 ; i<= _s.NumWaveBins ; i++)
     {
-	fscanf(ReadWaveFile, " %f %f", &WaveMax[i] , &WaveProb[i]);
-	printf("i= %d  Wave= %f Prob= %f \n",i, WaveMax[i], WaveProb[i]);
+	fscanf(ReadWaveFile, " %f %f", &_s.WaveMax[i] , &_s.WaveProb[i]);
+	printf("i= %d  Wave= %f Prob= %f \n",i, _s.WaveMax[i], _s.WaveProb[i]);
     }	
 
     fclose(ReadWaveFile);
