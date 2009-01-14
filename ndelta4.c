@@ -190,6 +190,9 @@ typedef struct
 
    int NextX; /* used to iterate FindNextCell in global array - */
    int NextY;
+
+   int TotalBeachCells; /* Number of cells describing beach at particular iteration */
+   int ShadowXMax; /* used to determine maximum extent of beach cells */
 }
 Deltas_state;
 
@@ -220,8 +223,8 @@ Deltas_state _s;
 //int	CurrentTimeStep = 0;  	/* Time step of current calculation */ 
 ///*FindBeachCells,FindNextCell*/int	NextX;			/* Global variables used to iterate FindNextCell in global array - */
 ///*FindBeachCells,FindNextCell*/int	NextY;			/*	would've used pointer but wouldn't work	*/
-int 	TotalBeachCells;	/* Number of cells describing beach at particular iteration */
-int 	ShadowXMax; 		/* used to determine maximum extent of beach cells */
+//int 	TotalBeachCells;	/* Number of cells describing beach at particular iteration */
+//int 	ShadowXMax; 		/* used to determine maximum extent of beach cells */
 float 	WaveAngle;		/* wave angle for current time step */	
 /* run */int	FindStart;		/* Used to tell FindBeach at what Y value to start looking */
 /*run,FindBeachCells*/char	FellOffArray;		/* Flag used to determine if accidentally went off array */
@@ -325,7 +328,7 @@ deltas_init()
     int seed = 44;
     char StartFromFile = 'n'; /* start from saved file? */
 
-    ShadowXMax = Xmax-5;
+    _s.ShadowXMax = Xmax-5;
 
     srandom(seed);
 
@@ -713,7 +716,7 @@ void FindBeachCells(int YStart)
 /* Determines locations of beach cells moving from left to right direction 	*/
 /* This function will affect and determine the global arrays:  _s.X[] and _s.Y[]	*/
 /* This function calls FindNextCell   						*/
-/* This will define TotalBeachCells for this time step				*/
+/* This will define _s.TotalBeachCells for this time step				*/
 
 {
     int 	y, z, xstart;	/* local iterators */	
@@ -774,10 +777,10 @@ void FindBeachCells(int YStart)
 
     }
 	
-    TotalBeachCells = z; 
+    _s.TotalBeachCells = z; 
     FellOffArray = 'n';		
 
-    DEBUG_PRINT( DEBUG_1, "Total Beach: %d  \n \n", TotalBeachCells); 
+    DEBUG_PRINT( DEBUG_1, "Total Beach: %d  \n \n", _s.TotalBeachCells); 
 
 }
 
@@ -1051,8 +1054,8 @@ void ShadowSweep(void)
 	
 /*  Moves along beach and tests to see if cells are in shadow 		*/
 /*  This function will use and determine the Global array:  _s.InShadow[]	*/
-/*  This function will use and adjust the variable:   ShadowXMax	*/
-/*  This function will use but not adjust the variable:  TotalBeachCells */
+/*  This function will use and adjust the variable:   _s.ShadowXMax	*/
+/*  This function will use but not adjust the variable:  _s.TotalBeachCells */
 
 {
 
@@ -1060,15 +1063,15 @@ void ShadowSweep(void)
 
     /* Find maximum extent of beach to use as a limit for shadow searching */
 	
-    ShadowXMax = XMaxBeach(ShadowXMax) + 3;
+    _s.ShadowXMax = XMaxBeach(_s.ShadowXMax) + 3;
 	
-    DEBUG_PRINT( DEBUG_3, "ShadowXMax: %d   XMaxBeach: %d \n", ShadowXMax, XMaxBeach(ShadowXMax));
+    DEBUG_PRINT( DEBUG_3, "_s.ShadowXMax: %d   XMaxBeach: %d \n", _s.ShadowXMax, XMaxBeach(_s.ShadowXMax));
 
     /* Determine if beach cells are in shadow */
 
-    for (i=0;  i <= TotalBeachCells; i++)
+    for (i=0;  i <= _s.TotalBeachCells; i++)
     {
-	_s.InShadow[i] = FindIfInShadow(i, ShadowXMax);	
+	_s.InShadow[i] = FindIfInShadow(i, _s.ShadowXMax);	
     }
 
 }
@@ -1399,9 +1402,9 @@ void  DetermineAngles(void)
     y2 = _s.Y[0] + 0.5;
 
     /* Compute _s.ShorelineAngle[]  */
-    /* 	not equal to TotalBeachCells because angle between cell and rt neighbor */
+    /* 	not equal to _s.TotalBeachCells because angle between cell and rt neighbor */
 
-    for (i=0 ; i < TotalBeachCells ; i++)
+    for (i=0 ; i < _s.TotalBeachCells ; i++)
     {
 		
 	x1 = x2;
@@ -1494,7 +1497,7 @@ void  DetermineAngles(void)
 
     }
 
-    for (k=1 ; k < TotalBeachCells ; k++)
+    for (k=1 ; k < _s.TotalBeachCells ; k++)
     {
 	/* compute SurroundingAngle array */
 	/* 02/04 AA averaging doesn't work on bottom of spits */
@@ -1523,7 +1526,7 @@ void  DetermineAngles(void)
 
     DEBUG_PRINT( DEBUG_4, "\nUp/Down   Wave Angle:%f\n", WaveAngle * radtodeg);
 
-    for (j=1 ; j < TotalBeachCells  ; j++)
+    for (j=1 ; j < _s.TotalBeachCells  ; j++)
     {
 	DEBUG_PRINT( DEBUG_4, "i: %d  Shad: %c Ang[i]: %3.1f  Sur: %3.1f  Effect: %3f  ",
 			   j,_s.InShadow[j], _s.ShorelineAngle[j]*radtodeg, 
@@ -1574,7 +1577,7 @@ void DetermineSedTransport(void)
 
     DEBUG_PRINT( DEBUG_5, "\nSEDTRANS: %d  @  %f \n\n", _s.CurrentTimeStep, WaveAngle * radtodeg);
 
-    for (i=1 ; i < TotalBeachCells-1 ; i++)
+    for (i=1 ; i < _s.TotalBeachCells-1 ; i++)
     {
 	DEBUG_PRINT( DEBUG_5, "\n  i: %d  ",i);		
 
@@ -1841,13 +1844,13 @@ void TransportSedimentSweep(void)
 
     DEBUG_PRINT( DEBUG_7A, "\n\n TransSedSweep  Ang %f  %d\n", WaveAngle * radtodeg, _s.CurrentTimeStep);
 	
-    for (i=0; i < TotalBeachCells-1 ; i++)
+    for (i=0; i < _s.TotalBeachCells-1 ; i++)
     {
 	
 	if (sweepsign == 1)
 	    ii = i;
 	else
-	    ii = TotalBeachCells-1-i;
+	    ii = _s.TotalBeachCells-1-i;
 
 	DEBUG_PRINT( DEBUG_7A, "i: %d  ss: %d  X: %d  Y: %d  In: %.1f  Out: %.1f\n", ii, sweepsign,
 			   _s.X[i], _s.Y[i], _s.VolumeIn[i], _s.VolumeOut[i]);
@@ -2328,7 +2331,7 @@ void FixBeach(void)
     }
 
 
-    FixXMax = ShadowXMax + ceil(DepthShoreface/CellWidth/ShorefaceSlope) +3;
+    FixXMax = _s.ShadowXMax + ceil(DepthShoreface/CellWidth/ShorefaceSlope) +3;
     if (FixXMax > Xmax)
 	FixXMax = Xmax; 
 
@@ -3023,7 +3026,7 @@ void PrintLocalConds(int x, int y, int in)
 
     if (in<0)
     {
-	for (i=0; i <= TotalBeachCells; i++)
+	for (i=0; i <= _s.TotalBeachCells; i++)
 	    if ((_s.X[i]==x) && (_s.Y[i]==y))
 		isee = i;
     }
@@ -3464,12 +3467,12 @@ void CheckOverwashSweep(void)
 	}
 
 	OWflag = 0;
-	for (i=1; i < TotalBeachCells-1 ; i++)
+	for (i=1; i < _s.TotalBeachCells-1 ; i++)
 	{
 		if (sweepsign == 1)
 			ii = i;
 		else
-			ii = TotalBeachCells-1-i;
+			ii = _s.TotalBeachCells-1-i;
 
 		/* To do test shoreline should be facing seaward 					*/
 		/* don't worry about shadow here, as overwash is not set to a time scale with AST 	*/
@@ -3978,7 +3981,7 @@ float GetOverwashDepth(int xin, int yin, float xinfl, float yinfl, int ishore)
 		i = 2;
 		FoundFlag = 0;
 		
-		while ((i < TotalBeachCells-1) && !(FoundFlag))
+		while ((i < _s.TotalBeachCells-1) && !(FoundFlag))
 		{
 			if ((_s.X[i] == xtest) && (_s.Y[i] == ytest))
 			{
