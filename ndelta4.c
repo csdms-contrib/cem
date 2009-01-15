@@ -547,7 +547,7 @@ deltas_run( Deltas_state* _s )
 		PauseRun( _s, 1,1,-1);			
 	    }
 
-	    DEBUG_PRINT( DEBUG_3, "End of Time Step: %d \n", _s->CurrentTimeStep);
+	    DEBUG_PRINT( DEBUG_0, "End of Time Step: %d \n", _s->CurrentTimeStep);
 		
 	    /* Age Empty Cells */
 
@@ -1054,7 +1054,7 @@ void ShadowSweep( Deltas_state* _s )
 	
     _s->ShadowXMax = XMaxBeach( _s, _s->ShadowXMax) + 3;
 	
-    DEBUG_PRINT( DEBUG_3, "_s->ShadowXMax: %d   XMaxBeach: %d \n", _s->ShadowXMax, XMaxBeach(_s->ShadowXMax));
+    DEBUG_PRINT( DEBUG_2, "_s->ShadowXMax: %d   XMaxBeach: %d \n", _s->ShadowXMax, XMaxBeach(_s->ShadowXMax));
 
     /* Determine if beach cells are in shadow */
 
@@ -1150,7 +1150,7 @@ char FindIfInShadow( Deltas_state* _s, int icheck, int ShadMax)
     else
 	ysign = 1;
 		
-    DEBUG_PRINT( DEBUG_3, "\nI: %d----------x: %d  Y: %d  Wang:  %f Slope: %f sign: %d \n",
+    DEBUG_PRINT( DEBUG_2a, "\nI: %d----------x: %d  Y: %d  Wang:  %f Slope: %f sign: %d \n",
 			icheck, _s->X[icheck],_s->Y[icheck],_s->WaveAngle*radtodeg,slope, ysign); 
 	
     /* 03/04 AA: depending on local orientations, starting point will differ */
@@ -1166,28 +1166,28 @@ char FindIfInShadow( Deltas_state* _s, int icheck, int ShadMax)
     {
 	xin = xinint + _s->PercentFull[xinint][yinint];
 	yin = yinint + 0.5;
-	DEBUG_PRINT( DEBUG_3, "-- Regular xin: %f  yin: %f\n",xin,yin);
+	DEBUG_PRINT( DEBUG_2a, "-- Regular xin: %f  yin: %f\n",xin,yin);
     }
     else if (_s->AllBeach[xinint][yinint-1] == 'y')
 	/* on right side */
     {
 	xin = xinint + 0.5;
 	yin = yinint + _s->PercentFull[xinint][yinint];
-	DEBUG_PRINT( DEBUG_3, "-- Right xin: %f  yin: %f\n",xin,yin);
+	DEBUG_PRINT( DEBUG_2a, "-- Right xin: %f  yin: %f\n",xin,yin);
     }
     else if (_s->AllBeach[xinint][yinint+1] == 'y')
 	/* on left side */
     {
 	xin = xinint + 0.5;
 	yin = yinint + 1.0 - _s->PercentFull[xinint][yinint];
-	DEBUG_PRINT( DEBUG_3, "-- Left xin: %f  yin: %f\n",xin,yin);
+	DEBUG_PRINT( DEBUG_2a, "-- Left xin: %f  yin: %f\n",xin,yin);
     }
     else if (_s->AllBeach[xinint+1][yinint] == 'y')
 	/* gotta be on the bottom now */
     {
 	xin = xinint + 1 - _s->PercentFull[xinint][yinint];
 	yin = yinint + 0.5;
-	DEBUG_PRINT( DEBUG_3, "-- Under xin: %f  yin: %f\n",xin,yin);
+	DEBUG_PRINT( DEBUG_2a, "-- Under xin: %f  yin: %f\n",xin,yin);
     }
     else
 	/* debug ain't just an insect */
@@ -1215,7 +1215,7 @@ char FindIfInShadow( Deltas_state* _s, int icheck, int ShadMax)
 	Xside = x + fabs(NextYInt - y) / slope;
 	DistanceSide = ((NextYInt - y)*(NextYInt - y) + (Xside - x)*(Xside - x));
 	
-	DEBUG_PRINT( DEBUG_3, "x: %f  y: %f  X:%d  Y: %d  Yd: %f  DistD: %f Xs: %f DistS: %f\n",
+	DEBUG_PRINT( DEBUG_2a, "x: %f  y: %f  X:%d  Y: %d  Yd: %f  DistD: %f Xs: %f DistS: %f\n",
 			    x,y,NextXInt,NextYInt, Yup,DistanceUp,Xside,DistanceSide); 
 
 	if (DistanceUp < DistanceSide)
@@ -1225,7 +1225,7 @@ char FindIfInShadow( Deltas_state* _s, int icheck, int ShadMax)
 	    y = Yup;
 	    xtestint = NextXInt;	
 	    ytestint = floor(y);
-	    DEBUG_PRINT( DEBUG_3, " up ");
+	    DEBUG_PRINT( DEBUG_2a, " up ");
 	}
 	else
 	    /* next cell is the side cell */
@@ -1234,10 +1234,10 @@ char FindIfInShadow( Deltas_state* _s, int icheck, int ShadMax)
 	    y = NextYInt;
 	    xtestint = floor(x);
 	    ytestint = y + (ysign-1)/2;
-	    DEBUG_PRINT( DEBUG_3, " side ");
+	    DEBUG_PRINT( DEBUG_2a, " side ");
 	}
 		
-	DEBUG_PRINT( DEBUG_3, "	x: %f  y: %f  xtesti: %d ytesti: %d \n\n",x,y,xtestint,ytestint); 
+	DEBUG_PRINT( DEBUG_2a, "	x: %f  y: %f  xtesti: %d ytesti: %d \n\n",x,y,xtestint,ytestint); 
 			
 			
 	/* Now Test */
@@ -1273,14 +1273,14 @@ char FindIfInShadow( Deltas_state* _s, int icheck, int ShadMax)
 		yout = NextYInt;
 	    }
 
-	    /*DEBUG_PRINT( DEBUG_3, "In Allbeach xin: %2.2f yin: %2.2f xout: %2.2f yout: %2.2f\n",
+	    /*DEBUG_PRINT( DEBUG_2a, "In Allbeach xin: %2.2f yin: %2.2f xout: %2.2f yout: %2.2f\n",
 	      x,y,xout,yout);
-	      DEBUG_PRINT( DEBUG_3, "In Allbeach xin: %2.2f yin: %2.2f xout: %2.2f yout: %2.2f\n",
+	      DEBUG_PRINT( DEBUG_2a, "In Allbeach xin: %2.2f yin: %2.2f xout: %2.2f yout: %2.2f\n",
 	      (xout-xtestint-0.5),(x-xtestint-0.5),(yout-ytestint-0.5),(y-ytestint-0.5));*/
 
 	    if(( (xout-xtestint-0.5) * (x-xtestint-0.5) < 0 ) || ((yout-ytestint-0.5) * (y-ytestint-0.5) < 0)) 
 	    {
-		DEBUG_PRINT( DEBUG_3, "  Shaddowded ");
+		DEBUG_PRINT( DEBUG_2a, "  Shaddowded ");
 		return 'y';
 	    }
 	}	
