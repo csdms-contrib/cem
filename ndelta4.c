@@ -27,6 +27,8 @@ Program Notes:
 #endif
 #include <unistd.h>
 #include <ncurses.h>
+#include <limits.h>
+#include <string.h>
 
 #undef DEBUG_ON
 
@@ -57,19 +59,10 @@ static void DEBUG_PRINT( int exp, const char* format, ... )
 #define Asym         0.7  /**< Fractional portion of waves coming from positive (left) direction */
 #define Highness     0.1  /**< All New! .5 = even dist, > .5 high angle domination */
 #define Duration     1    /**< Number of time steps calculations loop at same wave angle */
-#define StopAfter    2600 /**< Stop after what number of time steps */
+#define STOP_AFTER   2600 /**< Stop after what number of time steps */
 
 #define SAVE_FILENAME "fileout"
 #define READ_FILENAME ""
-
-typedef struct
-{
-   char savefilename[24]; /**< Name of save file. */
-   char readfilename[24]; /**< Namve of file to read input from. */
-}
-Deltas_io;
-
-Deltas_io _io = { SAVE_FILENAME, READ_FILENAME };
 
 #define WAVE_IN (0) /**< Input Wave Distribution file? */
 
@@ -180,24 +173,17 @@ typedef struct
    int NumWaveBins;    /**< For Input Wave - number of bins */
    float WaveMax[36];  /**< Max Angle for specific bin */
    float WaveProb[36]; /**< Probability of Certain Bin */
+
 }
 Deltas_vars;
 
 typedef struct
 {
-   float xcellwidth;
-   float ycellwidth;
-   int   xplotoff;
-   int   yplotoff;
-}
-Deltas_graphics;
-Deltas_graphics _g;
-
-typedef struct
-{
    /** Input/output file names. */
-   char savefilename[24]; /**< Name of save file. */
-   char readfilename[24]; /**< Namve of file to read input from. */
+   //char savefilename[24]; /**< Name of save file. */
+   //char readfilename[24]; /**< Namve of file to read input from. */
+   char* savefilename; /**< Name of save file. */
+   char* readfilename; /**< Namve of file to read input from. */
 
    /** Overall Shoreface Configuration Arrays - Data file information */
    char AllBeach[Xmax][2*Ymax]; /**< Flag indicating of cell is entirely beach */
@@ -249,12 +235,11 @@ typedef struct
    int   xplotoff;
    int   yplotoff;
 
+   char state[256];
 }
 Deltas_state;
-//Deltas_state _s = { SAVE_FILENAME, READ_FILENAME };
 
 /* Function Prototypes */
-
 void    AdjustShore( Deltas_state* _s, int i);
 void	AgeCells( Deltas_state* _s );
 void 	ButtonEnter( Deltas_state* _s );
@@ -295,17 +280,95 @@ int 	XMaxBeach( Deltas_state* _s, int Max);
 void	ZeroVars( Deltas_state* _s );
 
 int deltas_init    ( Deltas_state* );
-int deltas_run     ( Deltas_state* );
+int deltas_run     ( Deltas_state*, int );
 int deltas_finalize( Deltas_state* );
+
+void
+deltas_init_state( Deltas_state* s )
+{
+   s->savefilename = NULL;
+   s->readfilename = NULL;
+
+   s->CurrentTimeStep = 0;
+
+   s->NextX = 0;
+   s->NextY = 0;
+
+   s->TotalBeachCells = 0;
+   s->ShadowXMax = 0;
+   s->WaveAngle = 0.;
+   s->FindStart = 0;
+
+   s->FellOffArray = 0;
+
+   s->MassInitial = 0.;
+   s->MassCurrent = 0.;
+
+   s->NumWaveBins = 0.;
+
+   s->xcellwidth = 0.;
+   s->ycellwidth = 0.;
+   s->xplotoff = 0.;
+   s->yplotoff = 0.;
+
+   {
+      int i, j;
+      for ( i=0; i<Xmax ; i++ )
+         for ( j=0; j<2*Ymax ; j++ )
+         {
+            s->AllBeach[i][j] = '\0';
+            s->PercentFull[i][j] = 0.;
+            s->Age[i][j] = 0;
+            s->CellDepth[i][j] = 0.;
+         }
+
+      for ( i=0; i<MaxBeachLength ; i++ )
+      {
+         s->X[i] = 0.;
+         s->Y[i] = 0.;
+         s->InShadow[i] = '\0';
+         s->ShorelineAngle[i] = 0.;
+         s->SurroundingAngle[i] = 0.;
+         s->UpWind[i] = '\0';
+         s->VolumeIn[i] = 0.;
+         s->VolumeOut[i] = 0.;
+      }
+   }
+
+   initstate( 44, s->state, 256 );
+
+   return;
+}
 
 int
 main( void )
 {
-   Deltas_state s = { SAVE_FILENAME, READ_FILENAME };
+   Deltas_state s_0;
+   Deltas_state s_1;
 
-   deltas_init( &s );
-   deltas_run( &s );
-   deltas_finalize( &s );
+   deltas_init_state( &s_0 );
+   deltas_init_state( &s_1 );
+
+   s_0.savefilename = strdup( "fileout_0" );
+   s_0.readfilename = strdup( "" );
+
+   s_1.savefilename = strdup( "fileout_1" );
+   s_1.readfilename = strdup( "" );
+
+   deltas_init( &s_0 );
+   deltas_init( &s_1 );
+
+   {
+      int i;
+      for ( i=0; i<=100; i++ )
+      {
+         deltas_run( &s_0, i*26 );
+         deltas_run( &s_1, i*52 );
+      }
+   }
+
+   deltas_finalize( &s_0 );
+   deltas_finalize( &s_1 );
 
    return EXIT_SUCCESS;
 }
@@ -322,9 +385,12 @@ deltas_init( Deltas_state* _s )
     int seed = 44;
     char StartFromFile = 'n'; /* start from saved file? */
 
+    _s->CurrentTimeStep = 0;
+
     _s->ShadowXMax = Xmax-5;
 
-    srandom(seed);
+    //srandom(seed);
+    setstate( _s->state );
 
     /* Start from file or not? */
     if (PromptStart == 'y')
@@ -340,7 +406,7 @@ deltas_init( Deltas_state* _s )
 	    scanf("%s", _s->savefilename);
 	    printf("What time step are we starting at?");
 	    scanf("%d", &_s->CurrentTimeStep);
-	    ReadSandFromFile(_s );
+	    ReadSandFromFile( _s );
 	}
 	
 	if (StartFromFile == 'n')
@@ -416,7 +482,7 @@ deltas_init( Deltas_state* _s )
 #define AGE_UPDATE        (10) /**< Time space for updating age of non-beach cells */
 
 int
-deltas_run( Deltas_state* _s )
+deltas_run( Deltas_state* _s, int until )
 { /* PRIMARY PROGRAM LOOP */
     int	xx;			/* duration loop variable */
     int StartSavingAt   = START_SAVING_AT;
@@ -425,6 +491,19 @@ deltas_run( Deltas_state* _s )
     int SaveFile        = SAVE_FILE;
     int SaveLine        = SAVE_LINE;
     int AgeUpdate       = AGE_UPDATE;
+    int StopAfter       = until;
+
+    setstate( _s->state );
+
+    if ( _s->CurrentTimeStep > until )
+    {
+       DEBUG_PRINT( TRUE, "Stop time is less than start time." );
+       return -1;
+    }
+    else if ( _s->CurrentTimeStep == until )
+       return 0;
+    else
+       StopAfter = until;
 
     while ( _s->CurrentTimeStep < StopAfter )
     {
@@ -1115,10 +1194,10 @@ char FindIfInShadow( Deltas_state* _s, int icheck, int ShadMax)
     float	slope;			/* search line slope - slope of zero goes staight forward */
     int	ysign;			/* holder for going left or right alongshore */
     float	x,y;			/* holders for 'real' location of x and y */
-    float	xin, yin;		/* starting 'real' locations */
+    float	xin=-9999, yin=-9999;		/* starting 'real' locations */
     int	xinint, yinint;		/* integer locations for starting location */
     int	xtestint,ytestint;	/* cell looking at */
-    float 	xtest,ytest;		/* 'real' location of testing */
+    float 	xtest=-9999,ytest=-9999;		/* 'real' location of testing */
     float	xout,yout;		/* used in AllBeach check - exit coordinates */
     int	NextXInt, NextYInt;	/* holder vairables for cell to check */
     float 	Yup, DistanceUp;	/* when going to next x cell, what other values */
@@ -1195,6 +1274,9 @@ char FindIfInShadow( Deltas_state* _s, int icheck, int ShadMax)
 	printf("Shadowstart Broke !!!! ");
 	PauseRun( _s, xinint,yinint,icheck);
     }
+
+    DEBUG_PRINT( xin<-9998, "xin is uninitialized!" );
+    DEBUG_PRINT( yin<-9998, "yin is uninitialized!" );
 
     x = xin;
     y = yin;
@@ -1356,6 +1438,9 @@ char FindIfInShadow( Deltas_state* _s, int icheck, int ShadMax)
 		/*PauseRun(xtestint,ytestint,icheck);*/
 	    }
 
+            DEBUG_PRINT( xtest<-9998, "xtest is uninitialized!" );
+            DEBUG_PRINT( ytest<-9998, "ytest is uninitialized!" );
+
 	}
     }	
     return 'n';
@@ -1399,8 +1484,10 @@ void  DetermineAngles( Deltas_state* _s )
 	x2int = _s->X[i+1];
 	y2int = _s->Y[i+1];
 
-	if (_s->AllBeach[x2int-1][y2int] == 'y' || ((_s->AllBeach[x2int][y2int-1] == 'y') && 
-						(_s->AllBeach[x2int][y2int+1] == 'y')) && (_s->AllBeach[x2int+1][y2int] == 'n'))
+	if ( _s->AllBeach[x2int-1][y2int] == 'y' ||
+             ( (_s->AllBeach[x2int][y2int-1] == 'y') &&
+               (_s->AllBeach[x2int][y2int+1] == 'y') ) &&
+             (_s->AllBeach[x2int+1][y2int] == 'n'))
 	    /* 'regular condition' - if between  */
 	    /* plus 'stuck in the middle' situation (unlikely scenario)*/
 	{
@@ -1553,7 +1640,7 @@ void DetermineSedTransport( Deltas_state* _s )
 {
 
     int i;			/* Loop variable */
-    float ShoreAngleUsed;	/* Temporary holder for shoreline angle 				*/
+    float ShoreAngleUsed = -9999;	/* Temporary holder for shoreline angle 				*/
     int CalcCell;		/* Cell sediment coming from to go across boundary i 			*/
     int Next,Last;		/* Indicators so test can go both left/right			 	*/
     int Correction;		/* Term needed for shoreline angle and i+1 case, angle stored at i 	*/
@@ -1653,7 +1740,8 @@ void DetermineSedTransport( Deltas_state* _s )
 		ShoreAngleUsed = _s->ShorelineAngle[CalcCell+Correction];
 		DEBUG_PRINT( DEBUG_5, "DN  ShoreAngle: %3.1f  ", ShoreAngleUsed *radtodeg);
 	    }
-			
+
+            DEBUG_PRINT( ShoreAngleUsed<-9998, "ShoreAngleUsed is uninitialized!" );
 
 	    /* !!! Do not do transport on unerneath c'cause it gets all messed up */
 	    if (fabs(ShoreAngleUsed) > SedTansLimit/radtodeg)
@@ -1868,7 +1956,7 @@ NEW - AA 05/04 fully utilize shoreface depths
 void AdjustShore( Deltas_state* _s, int i)
 {
 
-    float	Depth;		/* Depth of convergence*/
+    float	Depth=-9999;		/* Depth of convergence*/
     float	DeltaArea;	/* Holds change in area for cell (m^2)*/
     float	Distance;	/* distance from shore to intercept of equilib. profile and overall slope (m)*/
     float	PercentIn;
@@ -1880,7 +1968,7 @@ void AdjustShore( Deltas_state* _s, int i)
     /* variables for loop */
     float	slope;			/* slope of zero goes staight back */
     int	ysign;			/* holder for going left or right alongshore */
-    float	x,y;			/* holders for 'real' location of x and y */
+    float	x = -9999,y = -9999;			/* holders for 'real' location of x and y */
     int	xtest,ytest;		/* cell looking at */
     int	NextXInt, NextYInt;	/* holder vairables for cell to check */
     float 	Ydown, DistanceDown;	/* when going to next x cell, what other values */
@@ -2033,13 +2121,18 @@ void AdjustShore( Deltas_state* _s, int i)
 	    }
 	}
     }		
-		
+
+    DEBUG_PRINT( Depth<-9998, "Depth is uninitialized!" );
     Depth += LandHeight;
 	
 
     if (Depth < DepthShoreface)
     {
 	printf("too deep");
+
+        DEBUG_PRINT( x<-9998, "x is uninitialized!" );
+        DEBUG_PRINT( y<-9998, "y is uninitialized!" );
+
 	PauseRun( _s, x,y,-1);
     }
 
@@ -2981,7 +3074,7 @@ void SaveLineToFile( Deltas_state* _s )
 void PrintLocalConds( Deltas_state* _s, int x, int y, int in)
 { 
 
-    int i,j,k,isee;
+    int i,j,k,isee = INT_MIN;
     float vol = CellWidth*CellWidth*DepthShoreface;
 
     printf("\n x: %d  y: %d  z: %d\n\n", x,y,in);
@@ -2997,6 +3090,7 @@ void PrintLocalConds( Deltas_state* _s, int x, int y, int in)
     else
 	isee = in;
 
+    DEBUG_PRINT( isee==INT_MIN, "isee is uninitialized!" );
 
     for (i= x+2 ; i > x-3 ; i--)
     {
@@ -3095,8 +3189,7 @@ Can Print or Plot Out Useful info
 */
 void PauseRun( Deltas_state* _s, int x, int y, int in)
 {
-		
-    int xsee=1,ysee=-1,isee=-1,i;
+    //int xsee=1,ysee=-1,isee=-1,i;
 
     printf("\nPaused x: %d  y: %d Time: %d\n",x,y,_s->CurrentTimeStep);
 
@@ -3115,7 +3208,7 @@ void ButtonEnter( Deltas_state* _s )
 {
 
     char newdigit = 'z';
-    int flag = 0;	
+    //int flag = 0;	
     int i = 1;
     char digits[7] = "";
 
@@ -3734,7 +3827,6 @@ void DoOverwash( Deltas_state* _s, int xfrom,int yfrom, int xto, int yto, float 
 	float MaxOver = 0.2; 		/*Maximum overwash step size (enforced at backbarrier) */
 	/*float DepthBackBarrier = 6.0;  	 m current set depth for backbarrier (temp - make into function)*/
 	float DepthBB;			/* holds effective backbarrier depth */
-	short	vertex[2];
 	
 	DepthBB = GetOverwashDepth( _s, xto,yto,xintto,yintto,ishore);
 
@@ -3776,6 +3868,7 @@ void DoOverwash( Deltas_state* _s, int xfrom,int yfrom, int xto, int yto, float 
 #ifdef DEBUG_ON
 	if (DEBUG_10B && ( DO_GRAPHICS == 'y'))	
 	{
+	   short vertex[2];
 		/*bgnpolygon();
 			RGBcolor(250,0,0);
 			vertex[0] = (yfrom+0.2)*CELL_PIXEL_SIZE;
@@ -3828,7 +3921,7 @@ float GetOverwashDepth( Deltas_state* _s, int xin, int yin, float xinfl, float y
 	float	slope;			/* slope of zero goes staight back */
 	int	ysign;			/* holder for going left or right alongshore */
 	float	x,y;			/* holders for 'real' location of x and y */
-	int	xtest,ytest;		/* cell looking at */
+	int	xtest=INT_MIN,ytest=INT_MIN;		/* cell looking at */
 	int	NextXInt, NextYInt;	/* holder vairables for cell to check */
 	float 	Ydown, DistanceDown;	/* when going to next x cell, what other values */
 	float 	Xside, DistanceSide;	/* when gpoing to next y cell,other values */
@@ -3928,6 +4021,9 @@ float GetOverwashDepth( Deltas_state* _s, int xin, int yin, float xinfl, float y
 				BackFlag = 1;
 		}
 	
+                DEBUG_PRINT( xtest==INT_MIN, "xtest is uninitialized!" );
+                DEBUG_PRINT( ytest==INT_MIN, "ytest is uninitialized!" );
+
 		/* Try to find the i for the cell found */
 		/* If you have a better idea how to do this, go ahead */
 
