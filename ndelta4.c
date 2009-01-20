@@ -2324,15 +2324,15 @@ void FixBeach( Deltas_state* _s )
     if (FixXMax > Xmax)
 	FixXMax = Xmax; 
 
-    for (x = FixXMax; x >= 0 ; x--)
+    for (x = FixXMax-1; x >= 0 ; x--)
     {
-	for (i = 0; i <= 2*Ymax ; i++)
+        for (i = 0; i < 2*Ymax ; i++)
 	{
 
 	    if (sweepsign == 1)
 		y = i;
 	    else
-		y = 2*Ymax-i;
+                y = 2*Ymax-i-1;
 
 	    /* ye olde depth fix */
 	    if ((_s->PercentFull[x][y] <= 0) && (_s->CellDepth[x][y] > DepthShoreface) && 
