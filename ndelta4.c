@@ -22,13 +22,16 @@ Program Notes:
 #include <math.h>
 #include <time.h>
 #ifdef WITH_OPENGL
-#include <GL/glx.h> 
-#include <GL/gl.h> 
+# include <GL/glx.h> 
+# include <GL/gl.h> 
 #endif
 #include <unistd.h>
 #include <ncurses.h>
 #include <limits.h>
 #include <string.h>
+
+//#include "deltas_api.h"
+#include "deltas.h"
 
 #undef DEBUG_ON
 
@@ -52,14 +55,14 @@ static void DEBUG_PRINT( int exp, const char* format, ... )
 #endif
 
 /*  Run Control Parameters */
-#define TimeStep     0.2  /**< days - reflects rate of sediment transport per
+#define TimeStep     (0.2)  /**< days - reflects rate of sediment transport per
                              time step */
-#define OffShoreWvHt 2    /**< meters */
-#define Period       7    /**< seconds */
-#define Asym         0.7  /**< Fractional portion of waves coming from positive (left) direction */
-#define Highness     0.1  /**< All New! .5 = even dist, > .5 high angle domination */
-#define Duration     1    /**< Number of time steps calculations loop at same wave angle */
-#define STOP_AFTER   2600 /**< Stop after what number of time steps */
+#define OffShoreWvHt (2)    /**< meters */
+#define Period       (7)    /**< seconds */
+#define Asym         (0.7)  /**< Fractional portion of waves coming from positive (left) direction */
+#define Highness     (0.1)  /**< All New! .5 = even dist, > .5 high angle domination */
+#define Duration     (1)    /**< Number of time steps calculations loop at same wave angle */
+#define STOP_AFTER   (2600) /**< Stop after what number of time steps */
 
 #define SAVE_FILENAME "fileout"
 #define READ_FILENAME ""
@@ -68,28 +71,27 @@ static void DEBUG_PRINT( int exp, const char* format, ... )
 
 /* Delta Info */
 
-#define SedRate 0.02
-#define StreamSpot Ymax
+#define SED_RATE       (0.02)
+#define StreamSpot     (Ymax)
 
 /* Aspect Parameters */
-
-#define CellWidth       100.0  /**< size of cells (meters) */
-#define CritBWidth      350.0    /**< width barrier maintains due to overwash (m) important scaling param! */
-#define Xmax            200      /**< number of cells in x (cross-shore) direction */
-#define Ymax            500     /**< number of cells in y (longshore) direction */
-#define MaxBeachLength  8*Ymax  /**< maximum length of arrays that contain beach data at each time step */
-#define ShelfSlope      0.001   /**< slope of continental shelf */
-#define ShorefaceSlope  0.01    /**< for now, linear slope of shoreface */
+#define CellWidth       (100.0) /**< size of cells (meters) */
+#define CritBWidth      (350.0) /**< width barrier maintains due to overwash (m) important scaling param! */
+#define Xmax            (200)   /**< number of cells in x (cross-shore) direction */
+#define Ymax            (500)   /**< number of cells in y (longshore) direction */
+#define MaxBeachLength  (8*Ymax)/**< maximum length of arrays that contain beach data at each time step */
+#define ShelfSlope      (0.001) /**< slope of continental shelf */
+#define ShorefaceSlope  (0.01)  /**< for now, linear slope of shoreface */
                                 /**< future : shoreface exponent m^1/3, from depth of ~10m at ~1000 meters */
-#define DepthShoreface  10.0    /**< minimum depth of shoreface due to wave action (meters) */   
-#define InitBeach       30      /**< cell where intial conditions changes from beach to ocean */ 
-#define InitialDepth    9.0     /**< theoretical depth in meters of continental shelf at x = InitBeach */
-#define LandHeight      1.0     /**< elevation of land above MHW  */
-#define InitCType       0       /**< type of initial conds 0 = sandy, 1 = barrier */
-#define InitBWidth      4       /**< initial minimum width of barrier (Cells) */
-#define OWType        1         /**< 0 = use depth array, 1 = use geometric rule */
-#define OWMinDepth	0.1	/**<  littlest overwash of all */
-#define FindCellError	5	/**< if we run off of array, how far over do we try again? */
+#define DepthShoreface  (10.0)  /**< minimum depth of shoreface due to wave action (meters) */   
+#define InitBeach       (30)    /**< cell where intial conditions changes from beach to ocean */ 
+#define InitialDepth    (9.0)   /**< theoretical depth in meters of continental shelf at x = InitBeach */
+#define LandHeight      (1.0)   /**< elevation of land above MHW  */
+#define InitCType       (0)     /**< type of initial conds 0 = sandy, 1 = barrier */
+#define InitBWidth      (4)     /**< initial minimum width of barrier (Cells) */
+#define OWType          (1)     /**< 0 = use depth array, 1 = use geometric rule */
+#define OWMinDepth	(0.1)	/**<  littlest overwash of all */
+#define FindCellError	(5)     /**< if we run off of array, how far over do we try again? */
 
 /* Plotting Controls */
 #define CELL_PIXEL_SIZE (4)
@@ -126,62 +128,33 @@ static void DEBUG_PRINT( int exp, const char* format, ... )
 int	OWflag = 0;     /**< debugger */
 
 /* Universal Constants */
-#define GRAV            (9.80665)
-#define radtodeg        (180.0/M_PI) /**< transform rads to degrees */
+#define GRAV              (9.80665)
+#define radtodeg          (180.0/M_PI) /**< transform rads to degrees */
+
+#define SEED              (44)  /**< random seed  control value = 1 */
+#define START_FROM_FILE   ('n') /**< start from saved file? */
+
+#define START_SAVING_AT   (0)    /**< time step to begin saving files */
+#define SAVE_SPACING      (2500) /**< space between saved files */
+#define SAVE_LINE_SPACING (1000) /**< space between saved line files */
+#define SAVE_FILE         (1)    /**< save full file? */
+#define SAVE_LINE         (0)    /**< Save line */
+
+#define AGE_UPDATE        (10) /**< Time space for updating age of non-beach cells */
+
+#define SED_TRANS_LIMIT (90) /**< beyond what absolute slope don't do sed trans (degrees)*/
+
+#define SAVE_LINE_NAME "lineout"
+#define AGE_MAX (1000000) /**< Maximum 'age' of cells - loops back to zero */
+#define READ_WAVE_NAME "WIS_509_150.dat"
+#define AGE_SHADE_SPACING (10000) /**< For graphics - how many time steps means back to original shade */
+#define OVERWASH_LIMIT (75) /**< beyond what angle don't do overwash */
 
 typedef struct
 {
-   /** Overall Shoreface Configuration Arrays - Data file information */
-   char AllBeach[Xmax][2*Ymax]; /**< Flag indicating of cell is entirely beach */
-   float PercentFull[Xmax][2*Ymax]; /**< Fractional amount of shore cell full of
-                                       sediment */
-   int Age[Xmax][2*Ymax]; /**< Age since cell was deposited */
-   float CellDepth[Xmax][2*Ymax]; /**< Depth array (m) (ADA 6/3) */
+   float SedRate; /**< Sedimentation rate as percent per time step. */
 
-   /** Computational Arrays (determined for each time step) */
-   int X[MaxBeachLength]; /**< X Position of ith beach element */
-   int Y[MaxBeachLength]; /**< Y Position of ith beach element */
-   char	InShadow[MaxBeachLength];	 /**< Is ith beach element in shadow? */
-   float ShorelineAngle[MaxBeachLength]; /**< Angle between cell and right (z+1)
-                                            neighbor */
-   float SurroundingAngle[MaxBeachLength];/**< Cell-orientated angle based upon
-                                             left and right neighbor */
-   char UpWind[MaxBeachLength]; /**< Upwind or downwind condition used to
-                                   calculate sediment transport */
-   float VolumeIn[MaxBeachLength];  /**< Sediment volume into ith beach
-                                       element */	
-   float VolumeOut[MaxBeachLength]; /**< Sediment volume out of ith beach
-                                       element */
-
-   /** Miscellaneous State Variables */
-   int CurrentTimeStep; /**< Time step of current calculation */ 
-
-   int NextX; /**< used to iterate FindNextCell in global array - */
-   int NextY;
-
-   int TotalBeachCells; /**< Number of cells describing beach at particular iteration */
-   int ShadowXMax; /**< used to determine maximum extent of beach cells */
-   float WaveAngle; /**< wave angle for current time step */	
-
-   int FindStart; /**< Used to tell FindBeach at what Y value to start looking */
-
-   char FellOffArray; /**< Flag used to determine if accidentally went off array */
-
-   float MassInitial; /**< For conservation of mass calcs */
-   float MassCurrent;
-
-   int NumWaveBins;    /**< For Input Wave - number of bins */
-   float WaveMax[36];  /**< Max Angle for specific bin */
-   float WaveProb[36]; /**< Probability of Certain Bin */
-
-}
-Deltas_vars;
-
-typedef struct
-{
    /** Input/output file names. */
-   //char savefilename[24]; /**< Name of save file. */
-   //char readfilename[24]; /**< Namve of file to read input from. */
    char* savefilename; /**< Name of save file. */
    char* readfilename; /**< Namve of file to read input from. */
 
@@ -237,55 +210,53 @@ typedef struct
 
    char state[256];
 }
-Deltas_state;
+State;
 
 /* Function Prototypes */
-void    AdjustShore( Deltas_state* _s, int i);
-void	AgeCells( Deltas_state* _s );
-void 	ButtonEnter( Deltas_state* _s );
-void	CheckOverwash( Deltas_state* _s, int icheck);
-void	CheckOverwashSweep( Deltas_state* _s );
-void    DeliverSediment( Deltas_state* _s );
-void	DetermineAngles( Deltas_state* _s );
-void 	DetermineSedTransport( Deltas_state* _s );
-void	DoOverwash( Deltas_state* _s, int xfrom,int yfrom, int xto, int yto,  float xintto, float yintto, float distance, int ishore);
-void 	FindBeachCells( Deltas_state* _s, int YStart);
-char 	FindIfInShadow( Deltas_state* _s, int icheck, int ShadMax);
-void 	FindNextCell( Deltas_state* _s, int x, int y, int z);
-float 	FindWaveAngle( Deltas_state* _s );
-void	FixBeach( Deltas_state* _s );
-float 	GetOverwashDepth( Deltas_state* _s, int xin, int yin, float xintto, float yintto, int ishore);
-void    GraphCells( Deltas_state* _s );
-void	InitConds( Deltas_state* _s );
-void	InitPert( Deltas_state* _s );
-float	MassCount( Deltas_state* _s );
-void	OopsImEmpty( Deltas_state* _s, int x, int y);
-void 	OopsImFull( Deltas_state* _s, int x, int y);
-void    OpenWindow( Deltas_state* _s );
-void	PauseRun( Deltas_state* _s, int x, int y, int in);
-void	PeriodicBoundaryCopy( Deltas_state* _s );
-void    PutPixel( Deltas_state* _s, float x, float y, float R, float G, float B);
-void 	PrintLocalConds( Deltas_state* _s, int x, int y, int in);
+void    AdjustShore( State* _s, int i);
+void	AgeCells( State* _s );
+void 	ButtonEnter( State* _s );
+void	CheckOverwash( State* _s, int icheck);
+void	CheckOverwashSweep( State* _s );
+void    DeliverSediment( State* _s );
+void	DetermineAngles( State* _s );
+void 	DetermineSedTransport( State* _s );
+void	DoOverwash( State* _s, int xfrom,int yfrom, int xto, int yto,  float xintto, float yintto, float distance, int ishore);
+void 	FindBeachCells( State* _s, int YStart);
+char 	FindIfInShadow( State* _s, int icheck, int ShadMax);
+void 	FindNextCell( State* _s, int x, int y, int z);
+float 	FindWaveAngle( State* _s );
+void	FixBeach( State* _s );
+float 	GetOverwashDepth( State* _s, int xin, int yin, float xintto, float yintto, int ishore);
+void    GraphCells( State* _s );
+void	InitConds( State* _s );
+void	InitPert( State* _s );
+float	MassCount( State* _s );
+void	OopsImEmpty( State* _s, int x, int y);
+void 	OopsImFull( State* _s, int x, int y);
+void    OpenWindow( State* _s );
+void	PauseRun( State* _s, int x, int y, int in);
+void	PeriodicBoundaryCopy( State* _s );
+void    PutPixel( State* _s, float x, float y, float R, float G, float B);
+void 	PrintLocalConds( State* _s, int x, int y, int in);
 float 	Raise(float b, float e);
 float	RandZeroToOne( );
-void	ReadSandFromFile( Deltas_state* _s );
-void	ReadWaveIn( Deltas_state* _s );
-void	SaveSandToFile( Deltas_state* _s );
-void	SaveLineToFile( Deltas_state* _s );
-void    ScreenInit( Deltas_state* _s );
-void 	SedTrans( Deltas_state* _s, int From, int To, float ShoreAngle, char MaxT);
-void 	ShadowSweep( Deltas_state* _s );
-void 	TransportSedimentSweep( Deltas_state* _s );
-int 	XMaxBeach( Deltas_state* _s, int Max);
-void	ZeroVars( Deltas_state* _s );
-
-int deltas_init    ( Deltas_state* );
-int deltas_run     ( Deltas_state*, int );
-int deltas_finalize( Deltas_state* );
+void	ReadSandFromFile( State* _s );
+void	ReadWaveIn( State* _s );
+void	SaveSandToFile( State* _s );
+void	SaveLineToFile( State* _s );
+void    ScreenInit( State* _s );
+void 	SedTrans( State* _s, int From, int To, float ShoreAngle, char MaxT);
+void 	ShadowSweep( State* _s );
+void 	TransportSedimentSweep( State* _s );
+int 	XMaxBeach( State* _s, int Max);
+void	ZeroVars( State* _s );
 
 void
-deltas_init_state( Deltas_state* s )
+deltas_init_state( State* s )
 {
+   s->SedRate = SED_RATE;
+
    s->savefilename = NULL;
    s->readfilename = NULL;
 
@@ -340,47 +311,88 @@ deltas_init_state( Deltas_state* s )
    return;
 }
 
+void
+deltas_free_state( State* s )
+{
+   if ( s->savefilename )
+      free( s->savefilename );
+   if ( s->readfilename )
+      free( s->readfilename );
+
+   return;
+}
+/*
+Deltas_state*
+deltas_new( void )
+{
+   State* s = malloc( sizeof(State) );
+
+   deltas_init_state( (Deltas_state*)s );
+
+   return (Deltas_state*)s;
+}
+
+Deltas_state*
+deltas_destroy( Deltas_state* s )
+{
+   if ( s )
+   {
+      deltas_free_state( (State*)s );
+      free( s );
+   }
+   return NULL;
+}
+
+void
+deltas_set_save_file( Deltas_state* s, char* file )
+{
+   State* _s = (State*)s;
+   _s->savefilename = strdup( file );
+}
+
+void
+deltas_set_read_file( Deltas_state* s, char* file )
+{
+   State* _s = (State*)s;
+   _s->readfilename = strdup( file );
+}
+
 int
 main( void )
 {
-   Deltas_state s_0;
-   Deltas_state s_1;
+   Deltas_state* s_0 = deltas_new();
+   Deltas_state* s_1 = deltas_new();
 
-   deltas_init_state( &s_0 );
-   deltas_init_state( &s_1 );
+   deltas_init( s_0 );
+   deltas_init( s_1 );
 
-   s_0.savefilename = strdup( "fileout_0" );
-   s_0.readfilename = strdup( "" );
-
-   s_1.savefilename = strdup( "fileout_1" );
-   s_1.readfilename = strdup( "" );
-
-   deltas_init( &s_0 );
-   deltas_init( &s_1 );
+   deltas_set_save_file( s_0, "fileout_0" );
+   deltas_set_save_file( s_1, "fileout_1" );
 
    {
       int i;
       for ( i=0; i<=100; i++ )
       {
-         deltas_run( &s_0, i*26 );
-         deltas_run( &s_1, i*52 );
+         deltas_run_until( s_0, i*26 );
+         deltas_run_until( s_1, i*52 );
       }
    }
 
-   deltas_finalize( &s_0 );
-   deltas_finalize( &s_1 );
+   deltas_finalize( s_0 );
+   deltas_finalize( s_1 );
+
+   deltas_destroy( s_0 );
+   deltas_destroy( s_1 );
 
    return EXIT_SUCCESS;
 }
-
-#define SEED             (44)  /**< random seed  control value = 1 */
-#define START_FROM_FILE  ('n') /**< start from saved file? */
+*/
 
 /** Initialize variables for a simulation.
 
 */
 int
-deltas_init( Deltas_state* _s )
+initialize( State* _s )
 { /* Initialize Variables and Device */
     int seed = 44;
     char StartFromFile = 'n'; /* start from saved file? */
@@ -473,16 +485,8 @@ deltas_init( Deltas_state* _s )
     return TRUE;
 }
 
-#define START_SAVING_AT   (0)    /**< time step to begin saving files */
-#define SAVE_SPACING      (2500) /**< space between saved files */
-#define SAVE_LINE_SPACING (1000) /**< space between saved line files */
-#define SAVE_FILE         (1)    /**< save full file? */
-#define SAVE_LINE         (0)    /**< Save line */
-
-#define AGE_UPDATE        (10) /**< Time space for updating age of non-beach cells */
-
 int
-deltas_run( Deltas_state* _s, int until )
+run_until( State* _s, int until )
 { /* PRIMARY PROGRAM LOOP */
     int	xx;			/* duration loop variable */
     int StartSavingAt   = START_SAVING_AT;
@@ -680,14 +684,14 @@ GraphCells();*/
 }
 
 int
-deltas_finalize( Deltas_state* _s )
+finalize( State* _s )
 {
     printf("Run Complete.  Output file: %s\n" , _s->savefilename);
     return TRUE;
 }
 
 /** calculates wave angle for given time step */
-float FindWaveAngle( Deltas_state* _s )
+float FindWaveAngle( State* _s )
 {
 
     float 	Angle;
@@ -782,7 +786,7 @@ Determines locations of beach cells moving from left to right direction
 This function will affect and determine the global arrays:  _s->X[] and _s->Y[]
 This function calls FindNextCell
 This will define _s->TotalBeachCells for this time step				*/
-void FindBeachCells( Deltas_state* _s, int YStart)
+void FindBeachCells( State* _s, int YStart)
 {
     int 	y, z, xstart;	/* local iterators */	
 
@@ -858,7 +862,7 @@ next beach cell
 This function will use but not affect the global arrays:  AllBeach [][],
 _s->X[], and _s->Y[]
 */
-void FindNextCell( Deltas_state* _s, int x, int y, int z)
+void FindNextCell( State* _s, int x, int y, int z)
 {
 
     if ( _s->AllBeach[x-1][y] == 'n')
@@ -1124,7 +1128,7 @@ This function will use and determine the Global array:  _s->InShadow[]
 This function will use and adjust the variable:   _s->ShadowXMax
 This function will use but not adjust the variable:  _s->TotalBeachCells
 */
-void ShadowSweep( Deltas_state* _s )
+void ShadowSweep( State* _s )
 {
 
     int	i;
@@ -1149,7 +1153,7 @@ void ShadowSweep( Deltas_state* _s )
 Starts searching at a point 3 rows higher than input Max
 Function returns integer value equal to max extent of 'allbeach'
 */
-int XMaxBeach( Deltas_state* _s, int Max)
+int XMaxBeach( State* _s, int Max)
 {
     int xtest, ytest;
 	
@@ -1188,7 +1192,7 @@ New 3/04 - correctly take acocunt for sideways and underneath shadows - aa
 This function will use but not affect the global arrays:
 _s->AllBeach[][] and _s->PercentFull[][]
 This function refers to global variable:  _s->WaveAngle				*/
-char FindIfInShadow( Deltas_state* _s, int icheck, int ShadMax)
+char FindIfInShadow( State* _s, int icheck, int ShadMax)
 {
 
     float	slope;			/* search line slope - slope of zero goes staight forward */
@@ -1456,7 +1460,7 @@ This function will use but not affect the following arrays and values:
 ADA Revised underside, SurroundingAngle 6/03, 2/04 fixed
 ADA Revised angle calc 5/04
 */
-void  DetermineAngles( Deltas_state* _s )
+void  DetermineAngles( State* _s )
 {
 
     int i,j,k;  			/* Local loop variables */
@@ -1622,8 +1626,6 @@ void  DetermineAngles( Deltas_state* _s )
 
 }
 
-#define SED_TRANS_LIMIT (90) /**< beyond what absolute slope don't do sed trans (degrees)*/
-
 /**
 Loop function to determine which neigbor/situation to use for sediment
 transport calcs
@@ -1636,7 +1638,7 @@ This function will use but not affect the following arrays and values:
    _s->X[], _s->Y[], _s->InShadow[], _s->UpWind[], _s->ShorelineAngle[]
    _s->PercentFull[][], _s->AllBeach[][], _s->WaveAngle
 */
-void DetermineSedTransport( Deltas_state* _s )
+void DetermineSedTransport( State* _s )
 {
 
     int i;			/* Loop variable */
@@ -1778,7 +1780,7 @@ This function will use the global values defining the wave field:
    _s->WaveAngle, Period, OffShoreWvHt
 Revised 6/02 - New iterative calc for refraction and breaking, parameters revised
 */
-void SedTrans( Deltas_state* _s, int From, int To, float ShoreAngle, char MaxT)
+void SedTrans( State* _s, int From, int To, float ShoreAngle, char MaxT)
 {
 
     /* Coefficients - some of these are important*/
@@ -1901,7 +1903,7 @@ Uses but doesn't change:
 sweepsign added to ensure that direction of actuating changes does not
 produce unwanted artifacts (e.g. make sure symmetrical
 */
-void TransportSedimentSweep( Deltas_state* _s )
+void TransportSedimentSweep( State* _s )
 {
 
     int i,ii;
@@ -1953,7 +1955,7 @@ Uses but does not adjust arrays:
 Uses global variables: ShelfSlope, CellWidth, ShorefaceSlope, InitialDepth
 NEW - AA 05/04 fully utilize shoreface depths
 */
-void AdjustShore( Deltas_state* _s, int i)
+void AdjustShore( State* _s, int i)
 {
 
     float	Depth=-9999;		/* Depth of convergence*/
@@ -2159,7 +2161,7 @@ Backup plan - steal from all neighboring percent full > 0
 Function adjusts primary data arrays:
    _s->AllBeach[][] and _s->PercentFull[][]
 */
-void OopsImEmpty( Deltas_state* _s, int x, int y)
+void OopsImEmpty( State* _s, int x, int y)
 {
 
     int emptycells = 0;
@@ -2273,7 +2275,7 @@ if not 0% full, then fill all non-allbeach
 Function adjusts primary data arrays:
    _s->AllBeach[][] and _s->PercentFull[][]
 */
-void OopsImFull( Deltas_state* _s, int x, int y)
+void OopsImFull( State* _s, int x, int y)
 {
 
     int fillcells = 0;
@@ -2392,7 +2394,7 @@ Uses but does not change
    _s->AllBeach[][]
 sandrevx.c - added sweepsign to reduce chances of asymmetrical artifacts
 */
-void FixBeach( Deltas_state* _s )
+void FixBeach( State* _s )
 {
 
     int i,x,y,sweepsign;
@@ -2586,7 +2588,7 @@ Uses
    _s->AllBeach[][] and _s->PercentFull[][]
 and InitialDepth, CellWidth, ShelfSlope
 */
-float MassCount( Deltas_state* _s )
+float MassCount( State* _s )
 {
 
     int 	x,y;
@@ -2640,7 +2642,7 @@ float RandZeroToOne( void )
 Flat beach with zone of AllBeach = 'y' separated by AllBeach = 'n'
 Bounding layer set to random fraction of fullness
 */
-void InitConds( Deltas_state* _s )
+void InitConds( State* _s )
 {
     int 	x,y;
     printf("Condition Initial \n");
@@ -2780,7 +2782,7 @@ void InitConds( Deltas_state* _s )
 
 /** Andrew's initial bump
 */
-void InitPert( Deltas_state* _s )
+void InitPert( State* _s )
 {
 	
     int x,y;	
@@ -2857,7 +2859,7 @@ void InitPert( Deltas_state* _s )
 /** Simulates periodic boundary conditions by copying middle section to front
 and end of arrays
 */
-void PeriodicBoundaryCopy( Deltas_state* _s )	
+void PeriodicBoundaryCopy( State* _s )	
 {
     int	x,y;
 
@@ -2882,7 +2884,7 @@ void PeriodicBoundaryCopy( Deltas_state* _s )
 
 /** Resets all arrays recalculated at each time step to 'zero' conditions
 */
-void ZeroVars( Deltas_state* _s )
+void ZeroVars( State* _s )
 {
 
     int z;
@@ -2903,7 +2905,7 @@ void ZeroVars( Deltas_state* _s )
 /**  Reads saved output file,
    _s->AllBeach[][] & _s->PercentFull[][]
 */
-void ReadSandFromFile( Deltas_state* _s )	
+void ReadSandFromFile( State* _s )	
 {
     int x,y;
     FILE *ReadSandFile;
@@ -2954,7 +2956,7 @@ Saves current
 data arrays to file
 
 Save file name will add extension '.' and the _s->CurrentTimeStep		*/
-void SaveSandToFile( Deltas_state* _s )
+void SaveSandToFile( State* _s )
 {
     int	x,y;
     char savename[40];
@@ -2994,13 +2996,11 @@ void SaveSandToFile( Deltas_state* _s )
 }
 
 
-#define SAVE_LINE_NAME "lineout"
-
 /**  Saves data line of shoreline position rather than entire array
 
 Main concern is to have only one data point at each alongshore location
 Save file name will add extension '.' and the _s->CurrentTimeStep		*/
-void SaveLineToFile( Deltas_state* _s )
+void SaveLineToFile( State* _s )
 {
 
     int	y,x,xtop,i;
@@ -3071,7 +3071,7 @@ void SaveLineToFile( Deltas_state* _s )
 	
 /** Prints Local Array Conditions aound x,y
 */
-void PrintLocalConds( Deltas_state* _s, int x, int y, int in)
+void PrintLocalConds( State* _s, int x, int y, int in)
 { 
 
     int i,j,k,isee = INT_MIN;
@@ -3187,7 +3187,7 @@ void PrintLocalConds( Deltas_state* _s, int x, int y, int in)
 
 Can Print or Plot Out Useful info
 */
-void PauseRun( Deltas_state* _s, int x, int y, int in)
+void PauseRun( State* _s, int x, int y, int in)
 {
     //int xsee=1,ysee=-1,isee=-1,i;
 
@@ -3204,7 +3204,7 @@ void PauseRun( Deltas_state* _s, int x, int y, int in)
 	
 }
  
-void ButtonEnter( Deltas_state* _s )
+void ButtonEnter( State* _s )
 {
 
     char newdigit = 'z';
@@ -3234,11 +3234,9 @@ void ButtonEnter( Deltas_state* _s )
 }
 
 
-#define AGE_MAX (1000000) /**< Maximum 'age' of cells - loops back to zero */
-
 /** Age Cells
 */
-void AgeCells( Deltas_state* _s )
+void AgeCells( State* _s )
 {
     int x,y;
     int	AgeMax = AGE_MAX;
@@ -3252,11 +3250,9 @@ void AgeCells( Deltas_state* _s )
 				
 }
 
-#define READ_WAVE_NAME "WIS_509_150.dat"
-
 /** Input Wave Distribution
 */
-void ReadWaveIn( Deltas_state* _s )
+void ReadWaveIn( State* _s )
 {
     int i;
     char readwavename[24] = READ_WAVE_NAME;
@@ -3294,7 +3290,7 @@ Bool WaitForNotify( Display *d, XEvent *e, char *arg)
    return (e->type == MapNotify) && (e->xmap.window == (Window)arg);
 }
 
-void OpenWindow( Deltas_state* _s )
+void OpenWindow( State* _s )
 {
 
     static  int  attributeListSgl[]  =  {GLX_RGBA, GLX_RED_SIZE, 1, GLX_GREEN_SIZE, 1, GLX_BLUE_SIZE, 1, None };
@@ -3353,7 +3349,7 @@ if (vi == NULL) {
 }
 
 
-void PutPixel( Deltas_state* _s, float x, float y, float R, float G, float B)
+void PutPixel( State* _s, float x, float y, float R, float G, float B)
 {
 
     float xstart, ystart;
@@ -3375,11 +3371,9 @@ void PutPixel( Deltas_state* _s, float x, float y, float R, float G, float B)
 
 
 
-#define AGE_SHADE_SPACING (10000) /**< For graphics - how many time steps means back to original shade */
-
 /** Plots entire Array
 */ 
-void GraphCells( Deltas_state* _s )
+void GraphCells( State* _s )
 { 
     int x,y;
     float Red,Green,Blue,backRed,backGreen,backBlue;
@@ -3445,7 +3439,7 @@ void GraphCells( Deltas_state* _s )
 
 /** this is for the keyboard thingies to work
 */
-void ScreenInit( Deltas_state* _s ) 
+void ScreenInit( State* _s ) 
 {
     WINDOW *mainwnd;
     WINDOW *screen;
@@ -3466,7 +3460,7 @@ void ScreenInit( Deltas_state* _s )
 
 At certain alongshore location, add certain amount of sed to the coast
 */
-void DeliverSediment( Deltas_state* _s )
+void DeliverSediment( State* _s )
 {
 
 	int x,y;
@@ -3479,18 +3473,15 @@ void DeliverSediment( Deltas_state* _s )
 		x += 1;
 	}
 
-	_s->PercentFull[x][y] += SedRate;
+	_s->PercentFull[x][y] += _s->SedRate;
 
 }
-
-#define OVERWASH_LIMIT (75) /**< beyond what angle don't do overwash */
-
 
 /** Just a loop to call overwash check founction CheckOverwash
 
 Nothing done here, but can be down when CheckOVerwash is called
 */
-void CheckOverwashSweep( Deltas_state* _s )
+void CheckOverwashSweep( State* _s )
 {
    float OverwashLimit = OVERWASH_LIMIT;
 
@@ -3545,7 +3536,7 @@ Uses
 Need to change sweepsign because filling cells should affect neighbors
 'x' and 'y' hold real-space values, will be mapped onto ineger array
 */
-void CheckOverwash( Deltas_state* _s, int icheck)
+void CheckOverwash( State* _s, int icheck)
 	{
 
 	float	slope;			/* slope of zero goes staight back */
@@ -3821,7 +3812,7 @@ for 'true' overwash based on shoreline angles
 will change and use
    _s->PercentFull[][] and AllBeach [][]
 */
-void DoOverwash( Deltas_state* _s, int xfrom,int yfrom, int xto, int yto, float xintto, float yintto, float widthin, int ishore)
+void DoOverwash( State* _s, int xfrom,int yfrom, int xto, int yto, float xintto, float yintto, float widthin, int ishore)
 {
 	float BBneed, delBB, delShore; 	/* local variables */
 	float MaxOver = 0.2; 		/*Maximum overwash step size (enforced at backbarrier) */
@@ -3913,7 +3904,7 @@ OWType = 0 take the depth at neightbor to the backing cell
 OWType = 1 geometric rule based upon distance from back to shoreline
 AA 5/04
 */
-float GetOverwashDepth( Deltas_state* _s, int xin, int yin, float xinfl, float yinfl, int ishore)
+float GetOverwashDepth( State* _s, int xin, int yin, float xinfl, float yinfl, int ishore)
 {
 	int	xdepth;
 	float 	Depth;
