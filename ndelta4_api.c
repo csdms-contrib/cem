@@ -4,7 +4,8 @@
 #include "deltas.h"
 #include "deltas_api.h"
 
-/** \file The Caperiffic API
+/** \file
+\brief The Caperiffic API
 */
 
 Deltas_state*
@@ -28,11 +29,15 @@ deltas_destroy( Deltas_state* s )
    return NULL;
 }
 
-int
+Deltas_state*
 deltas_init( Deltas_state* s )
 {
-   State* p = (State*)s;
-   return initialize( p );
+   if ( !s )
+      s = deltas_new();
+
+   initialize( (State*)s );
+
+   return s;
 }
 
 int
@@ -43,11 +48,15 @@ deltas_run_until( Deltas_state* s, float time_in_days )
    return run_until( p, until_time_step );
 }
 
-int
-deltas_finalize( Deltas_state* s )
+Deltas_state*
+deltas_finalize( Deltas_state* s, int free )
 {
-   State* p = (State*)s;
-   return finalize( p );
+   finalize( (State*)s );
+
+   if ( free )
+      s = deltas_destroy( s );
+
+   return s;
 }
 
 Deltas_state*

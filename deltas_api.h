@@ -1,6 +1,14 @@
 #if !defined( DELTAS_API_H )
 #define DELTAS_API_H 
 
+#if !defined(TRUE)
+#define TRUE (1)
+#endif
+
+#if !defined(FALSE)
+#define FALSE (0)
+#endif
+
 /** An opaque data structure that holds the state of an instance of a 
 deltas model.
 */
@@ -12,9 +20,9 @@ Deltas_state;
 Deltas_state* deltas_new     ( void );
 Deltas_state* deltas_destroy ( Deltas_state* );
 
-int           deltas_init     ( Deltas_state* );
+Deltas_state* deltas_init     ( Deltas_state* );
 int           deltas_run_until( Deltas_state*, float );
-int           deltas_finalize ( Deltas_state* );
+Deltas_state* deltas_finalize ( Deltas_state*, int );
 
 Deltas_state* deltas_set_save_file( Deltas_state*, char* );
 Deltas_state* deltas_set_read_file( Deltas_state*, char* );
