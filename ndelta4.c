@@ -30,7 +30,6 @@ Program Notes:
 #include <limits.h>
 #include <string.h>
 
-//#include "deltas_api.h"
 #include "deltas.h"
 
 #undef DEBUG_ON
@@ -150,68 +149,6 @@ int	OWflag = 0;     /**< debugger */
 #define AGE_SHADE_SPACING (10000) /**< For graphics - how many time steps means back to original shade */
 #define OVERWASH_LIMIT (75) /**< beyond what angle don't do overwash */
 
-typedef struct
-{
-   float SedRate; /**< Sedimentation rate as percent per time step. */
-
-   /** Input/output file names. */
-   char* savefilename; /**< Name of save file. */
-   char* readfilename; /**< Namve of file to read input from. */
-
-   /** Overall Shoreface Configuration Arrays - Data file information */
-   char AllBeach[Xmax][2*Ymax]; /**< Flag indicating of cell is entirely beach */
-   float PercentFull[Xmax][2*Ymax]; /**< Fractional amount of shore cell full of
-                                       sediment */
-   int Age[Xmax][2*Ymax]; /**< Age since cell was deposited */
-   float CellDepth[Xmax][2*Ymax]; /**< Depth array (m) (ADA 6/3) */
-
-   /** Computational Arrays (determined for each time step) */
-   int X[MaxBeachLength]; /**< X Position of ith beach element */
-   int Y[MaxBeachLength]; /**< Y Position of ith beach element */
-   char	InShadow[MaxBeachLength];	 /**< Is ith beach element in shadow? */
-   float ShorelineAngle[MaxBeachLength]; /**< Angle between cell and right (z+1)
-                                            neighbor */
-   float SurroundingAngle[MaxBeachLength];/**< Cell-orientated angle based upon
-                                             left and right neighbor */
-   char UpWind[MaxBeachLength]; /**< Upwind or downwind condition used to
-                                   calculate sediment transport */
-   float VolumeIn[MaxBeachLength];  /**< Sediment volume into ith beach
-                                       element */	
-   float VolumeOut[MaxBeachLength]; /**< Sediment volume out of ith beach
-                                       element */
-
-   /** Miscellaneous State Variables */
-   int CurrentTimeStep; /**< Time step of current calculation */ 
-
-   int NextX; /**< used to iterate FindNextCell in global array - */
-   int NextY;
-
-   int TotalBeachCells; /**< Number of cells describing beach at particular iteration */
-   int ShadowXMax; /**< used to determine maximum extent of beach cells */
-   float WaveAngle; /**< wave angle for current time step */	
-
-   int FindStart; /**< Used to tell FindBeach at what Y value to start looking */
-
-   char FellOffArray; /**< Flag used to determine if accidentally went off array */
-
-   float MassInitial; /**< For conservation of mass calcs */
-   float MassCurrent;
-
-   int NumWaveBins;    /**< For Input Wave - number of bins */
-   float WaveMax[36];  /**< Max Angle for specific bin */
-   float WaveProb[36]; /**< Probability of Certain Bin */
-
-
-   /** Graphics variables. */
-   float xcellwidth;
-   float ycellwidth;
-   int   xplotoff;
-   int   yplotoff;
-
-   char state[256];
-}
-State;
-
 /* Function Prototypes */
 void    AdjustShore( State* _s, int i);
 void	AgeCells( State* _s );
@@ -321,72 +258,6 @@ deltas_free_state( State* s )
 
    return;
 }
-/*
-Deltas_state*
-deltas_new( void )
-{
-   State* s = malloc( sizeof(State) );
-
-   deltas_init_state( (Deltas_state*)s );
-
-   return (Deltas_state*)s;
-}
-
-Deltas_state*
-deltas_destroy( Deltas_state* s )
-{
-   if ( s )
-   {
-      deltas_free_state( (State*)s );
-      free( s );
-   }
-   return NULL;
-}
-
-void
-deltas_set_save_file( Deltas_state* s, char* file )
-{
-   State* _s = (State*)s;
-   _s->savefilename = strdup( file );
-}
-
-void
-deltas_set_read_file( Deltas_state* s, char* file )
-{
-   State* _s = (State*)s;
-   _s->readfilename = strdup( file );
-}
-
-int
-main( void )
-{
-   Deltas_state* s_0 = deltas_new();
-   Deltas_state* s_1 = deltas_new();
-
-   deltas_init( s_0 );
-   deltas_init( s_1 );
-
-   deltas_set_save_file( s_0, "fileout_0" );
-   deltas_set_save_file( s_1, "fileout_1" );
-
-   {
-      int i;
-      for ( i=0; i<=100; i++ )
-      {
-         deltas_run_until( s_0, i*26 );
-         deltas_run_until( s_1, i*52 );
-      }
-   }
-
-   deltas_finalize( s_0 );
-   deltas_finalize( s_1 );
-
-   deltas_destroy( s_0 );
-   deltas_destroy( s_1 );
-
-   return EXIT_SUCCESS;
-}
-*/
 
 /** Initialize variables for a simulation.
 
@@ -403,6 +274,7 @@ initialize( State* _s )
 
     //srandom(seed);
     setstate( _s->state );
+    srandom( SEED );
 
     /* Start from file or not? */
     if (PromptStart == 'y')
@@ -498,6 +370,7 @@ run_until( State* _s, int until )
     int StopAfter       = until;
 
     setstate( _s->state );
+    srandom( SEED );
 
     if ( _s->CurrentTimeStep > until )
     {
