@@ -13,8 +13,11 @@ main( int argc, char *argv[] )
   {
     Deltas_state* s = deltas_init( NULL );
 
-    deltas_set_save_file( s, "fileout_0" );
+    //deltas_set_save_file( s, "fileout_0" );
+    deltas_set_save_file( s, args->out_prefix );
 
+    deltas_run_until( s, args->stop_time );
+/*
     {
       int i;
       const double dt = 5.2;
@@ -22,6 +25,7 @@ main( int argc, char *argv[] )
       for ( i=0; i<=100; i++ )
         deltas_run_until( s, i*dt );
     }
+*/
 
     deltas_finalize( s, TRUE );
   }

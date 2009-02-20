@@ -4,6 +4,8 @@
 typedef struct
 {
   int verbose;
+  float stop_time;
+  char* out_prefix;
 }
 cem_args_st;
 
