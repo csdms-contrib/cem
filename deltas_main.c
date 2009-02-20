@@ -1,23 +1,32 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <deltas_api.h>
+#include <deltas_cli.h>
 
 int
-main( void )
+main( int argc, char *argv[] )
 {
-  Deltas_state* s = deltas_init( NULL );
+  cem_args_st* args;
 
-  deltas_set_save_file( s, "fileout_0" );
+  args = parse_command_line( argc, argv );
 
   {
-    int i;
-    const double dt = 5.2;
+    Deltas_state* s = deltas_init( NULL );
 
-    for ( i=0; i<=100; i++ )
-      deltas_run_until( s, i*dt );
+    deltas_set_save_file( s, "fileout_0" );
+
+    {
+      int i;
+      const double dt = 5.2;
+
+      for ( i=0; i<=100; i++ )
+        deltas_run_until( s, i*dt );
+    }
+
+    deltas_finalize( s, TRUE );
   }
 
-  deltas_finalize( s );
+  free( args );
 
   return EXIT_SUCCESS;
 }
