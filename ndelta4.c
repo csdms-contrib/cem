@@ -263,7 +263,7 @@ deltas_free_state( State* s )
 
 */
 int
-initialize( State* _s )
+_cem_initialize( State* _s )
 { /* Initialize Variables and Device */
     int seed = 44;
     char StartFromFile = 'n'; /* start from saved file? */
@@ -358,7 +358,7 @@ initialize( State* _s )
 }
 
 int
-run_until( State* _s, int until )
+_cem_run_until( State* _s, int until )
 { /* PRIMARY PROGRAM LOOP */
     int	xx;			/* duration loop variable */
     int StartSavingAt   = START_SAVING_AT;
@@ -557,7 +557,7 @@ GraphCells();*/
 }
 
 int
-finalize( State* _s )
+_cem_finalize( State* _s )
 {
     printf("Run Complete.  Output file: %s\n" , _s->savefilename);
     return TRUE;

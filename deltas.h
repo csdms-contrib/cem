@@ -69,9 +69,9 @@ typedef struct
 }
 State;
 
-int initialize( State* s );
-int run_until ( State* s, int until );
-int finalize  ( State* s );
+int _cem_initialize( State* s );
+int _cem_run_until ( State* s, int until );
+int _cem_finalize  ( State* s );
 
 void deltas_init_state( State* s );
 void deltas_free_state( State* s );

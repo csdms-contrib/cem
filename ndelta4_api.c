@@ -35,7 +35,7 @@ deltas_init( Deltas_state* s )
    if ( !s )
       s = deltas_new();
 
-   initialize( (State*)s );
+   _cem_initialize( (State*)s );
 
    return s;
 }
@@ -45,13 +45,13 @@ deltas_run_until( Deltas_state* s, float time_in_days )
 {
    State* p = (State*)s;
    int until_time_step = time_in_days / TimeStep;
-   return run_until( p, until_time_step );
+   return _cem_run_until( p, until_time_step );
 }
 
 Deltas_state*
 deltas_finalize( Deltas_state* s, int free )
 {
-   finalize( (State*)s );
+   _cem_finalize( (State*)s );
 
    if ( free )
       s = deltas_destroy( s );
