@@ -37,7 +37,7 @@ include_directories( ${CMAKE_CURRENT_SOURCE_DIR} )
 set( deltas_lib_SRCS
   deltas_cli.c
   ndelta4.c
-  ndelta4_api.c)
+  deltas_api.c)
 
 add_library( deltas ${deltas_lib_SRCS} )
 target_link_libraries( deltas m ${OPENGL_LIBRARIES} )
