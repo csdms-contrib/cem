@@ -125,3 +125,36 @@ deltas_get_depth( Deltas_state* s )
    return p->CellDepth[0];
 }
 
+float*
+deltas_get_percent (Deltas_state* s)
+{
+   State* p = (State*)s;
+   return p->PercentFull[0];
+}
+
+double
+deltas_get_angle_asymmetry (Deltas_state* s)
+{
+  State* p = (State*)s;
+  return p->angle_asymmetry;
+}
+
+double
+deltas_get_angle_highness (Deltas_state* s)
+{
+  State* p = (State*)s;
+  return p->angle_highness;
+}
+
+int
+deltas_get_nx (Deltas_state* s)
+{
+  return Xmax;
+}
+
+int
+deltas_get_ny (Deltas_state* s)
+{
+  return 2*Ymax;
+}
+
