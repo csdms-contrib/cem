@@ -57,6 +57,35 @@ install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/run_deltas
         RENAME deltas
         COMPONENT deltas)
 
+########### Python bindings ###############
+
+# You may need to use -DCMAKE_INCLUDE_PATH and -DCMAKE_LIBRARY_PATH
+# to find the correct libraries/include paths
+find_package (SWIG REQUIRED)
+include (${SWIG_USE_FILE})
+
+find_package (PythonLibs 2.6 EXACT)
+include_directories (${PYTHON_INCLUDE_PATH})
+include_directories (${CMAKE_CURRENT_SOURCE_DIR})
+
+set (CMAKE_SWIG_FLAGS "")
+
+#set_source_files_properties (deltas_mod.i PROPERTIES CPLUSPLUS ON) 
+#set_source_files_properties (deltas_mod.i PROPERTIES SWIG_FLAGS "-includeall")
+swig_add_module (deltas_mod python deltas_mod.i ndelta4.c deltas_api.c)
+swig_link_libraries (deltas_mod ${PYTHON_LIBRARIES})
+
+#add_library( _deltas_mod deltas_mod_wrap.c ndelta4.c deltas_api.c )
+#target_link_libraries( deltas_mod _deltas_mod)
+
+message ("Python include path " ${PYTHON_INCLUDE_PATH})
+message ("Python libs " ${PYTHON_LIBRARIES})
+message ("Python lib path " ${PYTHON_LIBRARY_PATH})
+
+install (FILES ${CMAKE_BINARY_DIR}/deltas_mod.py
+               ${CMAKE_BINARY_DIR}/_deltas_mod.so
+         DESTINATION lib/deltas-python COMPONENT deltas)
+
 ########### Install files ###############
 
 install(FILES deltas_api.h deltas_cli.h
