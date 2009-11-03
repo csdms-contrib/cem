@@ -59,9 +59,9 @@ static void DEBUG_PRINT( int exp, const char* format, ... )
 #define OffShoreWvHt (2)    /**< meters */
 #define Period       (7)    /**< seconds */
 //#define Asym         (1.0)  /**< Fractional portion of waves coming from positive (left) direction */
-#define Asym         (.7)  /**< Fractional portion of waves coming from positive (left) direction */
+#define ASYM         (.7)  /**< Fractional portion of waves coming from positive (left) direction */
 //#define Highness     (0.1)  /**< All New! .5 = even dist, > .5 high angle domination */
-#define Highness     (0.7)  /**< All New! .5 = even dist, > .5 high angle domination */
+#define HIGHNESS     (0.7)  /**< All New! .5 = even dist, > .5 high angle domination */
 #define Duration     (1)    /**< Number of time steps calculations loop at same wave angle */
 #define STOP_AFTER   (2600) /**< Stop after what number of time steps */
 
@@ -138,7 +138,7 @@ int	OWflag = 0;     /**< debugger */
 #define START_SAVING_AT   (0)    /**< time step to begin saving files */
 #define SAVE_SPACING      (2500) /**< space between saved files */
 #define SAVE_LINE_SPACING (1000) /**< space between saved line files */
-#define SAVE_FILE         (1)    /**< save full file? */
+#define SAVE_FILE         (0)    /**< save full file? */
 #define SAVE_LINE         (0)    /**< Save line */
 
 #define AGE_UPDATE        (10) /**< Time space for updating age of non-beach cells */
@@ -195,8 +195,8 @@ void
 deltas_init_state( State* s )
 {
    s->SedRate = SED_RATE;
-   s->angle_highness = Highness;
-   s->angle_asymmetry = Asym;
+   s->angle_highness = HIGHNESS;
+   s->angle_asymmetry = ASYM;
 
    s->savefilename = NULL;
    s->readfilename = NULL;
@@ -373,8 +373,8 @@ _cem_run_until( State* _s, int until )
     int AgeUpdate       = AGE_UPDATE;
     int StopAfter       = until;
 
-    setstate( _s->state );
-    srandom( SEED );
+    //setstate( _s->state );
+    //srandom( SEED );
 
     if ( _s->CurrentTimeStep > until )
     {
@@ -2550,7 +2550,7 @@ void InitConds( State* _s )
 		    else
 		    {
 			_s->PercentFull[x][y] = RandZeroToOne();
-			printf("x: %d  Y: %d  Per: %f\n",x,y,_s->PercentFull[x][y]);
+			//printf("x: %d  Y: %d  Per: %f\n",x,y,_s->PercentFull[x][y]);
 		    }
 		    _s->AllBeach[x][y] = 'n';
 		    _s->CellDepth[x][y] = - LandHeight;
