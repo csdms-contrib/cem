@@ -58,8 +58,10 @@ static void DEBUG_PRINT( int exp, const char* format, ... )
                              time step */
 #define OffShoreWvHt (2)    /**< meters */
 #define Period       (7)    /**< seconds */
-#define Asym         (0.7)  /**< Fractional portion of waves coming from positive (left) direction */
-#define Highness     (0.1)  /**< All New! .5 = even dist, > .5 high angle domination */
+//#define Asym         (1.0)  /**< Fractional portion of waves coming from positive (left) direction */
+#define Asym         (.7)  /**< Fractional portion of waves coming from positive (left) direction */
+//#define Highness     (0.1)  /**< All New! .5 = even dist, > .5 high angle domination */
+#define Highness     (0.7)  /**< All New! .5 = even dist, > .5 high angle domination */
 #define Duration     (1)    /**< Number of time steps calculations loop at same wave angle */
 #define STOP_AFTER   (2600) /**< Stop after what number of time steps */
 
@@ -109,7 +111,7 @@ static void DEBUG_PRINT( int exp, const char* format, ... )
 #define NoPauseRun        (1)    /**< Disbale PauseRun subroutine */
 #define InitialPert       (0)    /**< Start with a bump? */
 #define InitialSmooth     (0)    /**< Smooth starting conditions */
-#define WaveAngleSign     (1)    /**< used to change sign of wave angles */
+#define WaveAngleSign     (0.7)    /**< used to change sign of wave angles */
 
 #define DEBUG_0   (0)  /**< Main program steps */
 #define DEBUG_1   (0)  /**< Find Next Cell */
@@ -193,6 +195,8 @@ void
 deltas_init_state( State* s )
 {
    s->SedRate = SED_RATE;
+   s->angle_highness = Highness;
+   s->angle_asymmetry = Asym;
 
    s->savefilename = NULL;
    s->readfilename = NULL;
@@ -622,7 +626,7 @@ float FindWaveAngle( State* _s )
 
 	AsymRandom = RandZeroToOne( );
 
-	if ( AsymRandom <= Asym )
+	if ( AsymRandom <= _s->angle_asymmetry )
 	    Sign = 1;
 	else
 	    Sign = -1;
@@ -634,13 +638,14 @@ float FindWaveAngle( State* _s )
 	
 	AngleRandom = RandZeroToOne( );
 		
-	if (AngleRandom > Highness)
+	if (AngleRandom > _s->angle_highness)
 	{
-	    Angle = Sign * ((AngleRandom-Highness)/(1-Highness)) * M_PI / 4.0;
+	    Angle = Sign * ((AngleRandom-_s->angle_highness) /
+                            (1-_s->angle_highness)) * M_PI / 4.0;
 	}
 	else
 	{
-	    Angle = Sign * ((AngleRandom/Highness)*M_PI/4.0 + M_PI/4.0);
+	    Angle = Sign * ((AngleRandom/_s->angle_highness)*M_PI/4.0 + M_PI/4.0);
 	}
 
 	/*printf("Highness sub: %f AngleRandom: %f \n", Highness, AngleRandom);

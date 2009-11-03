@@ -4,6 +4,10 @@
 #include "deltas.h"
 #include "deltas_api.h"
 
+#ifdef SWIG
+%include deltas_api.h
+#endif
+
 /** \file
 \brief The Caperiffic API
 */
@@ -87,6 +91,22 @@ deltas_set_sed_rate( Deltas_state* s, float rate )
 {
    State* p = (State*)s;
    p->SedRate = rate;
+   return s;
+}
+
+Deltas_state*
+deltas_set_angle_asymmetry (Deltas_state* s, float angle_asymmetry)
+{
+   State* p = (State*)s;
+   p->angle_asymmetry = angle_asymmetry;
+   return s;
+}
+
+Deltas_state*
+deltas_set_angle_highness (Deltas_state* s, float angle_highness)
+{
+   State* p = (State*)s;
+   p->angle_highness = angle_highness;
    return s;
 }
 

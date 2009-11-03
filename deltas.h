@@ -10,6 +10,8 @@
 typedef struct
 {
    float SedRate; /**< Sedimentation rate as percent per time step. */
+   float angle_highness; /**< Fraction of high-angle waves. */
+   float angle_asymmetry; /**< Fraction of waves coming from the left. */
 
    /** Input/output file names. */
    char* savefilename; /**< Name of save file. */
