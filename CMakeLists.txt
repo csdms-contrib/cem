@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 2.6)
 
 project( deltas )
 
+set (BUILD_SHARED_LIBS ON)
+
 add_subdirectory( data )
 
 ########### enable/disable graphics  ###############
