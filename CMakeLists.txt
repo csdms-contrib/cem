@@ -61,6 +61,10 @@ install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/run_deltas
 
 ########### Python bindings ###############
 
+option (PYTHON_BINDINGS "Use SWIG to build Python bindings" OFF)
+
+if (PYTHON_BINDINGS )
+
 # You may need to use -DCMAKE_INCLUDE_PATH and -DCMAKE_LIBRARY_PATH
 # to find the correct libraries/include paths
 find_package (SWIG REQUIRED)
@@ -87,6 +91,7 @@ message ("Python lib path " ${PYTHON_LIBRARY_PATH})
 install (FILES ${CMAKE_BINARY_DIR}/deltas_mod.py
                ${CMAKE_BINARY_DIR}/_deltas_mod.so
          DESTINATION lib/deltas-python COMPONENT deltas)
+endif (PYTHON_BINDINGS )
 
 ########### Install files ###############
 
