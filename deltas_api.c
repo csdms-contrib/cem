@@ -111,6 +111,14 @@ deltas_set_angle_highness (Deltas_state* s, float angle_highness)
 }
 
 Deltas_state*
+deltas_set_wave_angle (Deltas_state* s, float wave_angle)
+{
+  State* p = (State*)s;
+  p->WaveAngle = wave_angle;
+  return s;
+}
+
+Deltas_state*
 deltas_set_depth( Deltas_state* s, float* depth )
 {
    State* p = (State*)s;
@@ -144,6 +152,13 @@ deltas_get_angle_highness (Deltas_state* s)
 {
   State* p = (State*)s;
   return p->angle_highness;
+}
+
+double
+deltas_get_wave_angle (Deltas_state* s)
+{
+  State* p = (State*)s;
+  return p->WaveAngle;
 }
 
 int
