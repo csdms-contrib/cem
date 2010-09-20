@@ -1,10 +1,23 @@
 cmake_minimum_required(VERSION 2.6)
 
-project( deltas )
+project (deltas)
 
 set (BUILD_SHARED_LIBS ON)
 
 add_subdirectory( data )
+
+########### Look for glib-2.0 ###############
+
+if (DEFINED CMAKE_GLIB_DIR)
+  set (ENV{PKG_CONFIG_PATH}
+       "$ENV{PKG_CONFIG_PATH}:${CMAKE_GLIB_DIR}/lib/pkgconfig")
+endif (DEFINED CMAKE_GLIB_DIR)
+
+include (FindPkgConfig)
+pkg_check_modules (GLIB2 glib-2.0)
+pkg_check_modules (GTHREAD2 gthread-2.0)
+include_directories (${GLIB2_INCLUDE_DIRS} ${GTHREAD2_INCLUDE_DIRS})
+link_directories (${GLIB2_LIBRARY_DIRS} ${GTHREAD2_LIBRARY_DIRS})
 
 ########### enable/disable graphics  ###############
 
@@ -46,6 +59,18 @@ target_link_libraries( deltas m ${OPENGL_LIBRARIES} )
 
 install(TARGETS deltas DESTINATION lib COMPONENT deltas)
 
+########### libwaves ###############
+
+include_directories (${CMAKE_CURRENT_SOURCE_DIR})
+
+set (waves_lib_SRCS
+  waves_api.c
+  waves.c)
+
+add_library (waves ${waves_lib_SRCS})
+target_link_libraries (waves m glib-2.0)
+
+install(TARGETS waves DESTINATION lib COMPONENT waves)
 
 ########### deltas main program ###############
 
@@ -58,6 +83,18 @@ install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/run_deltas
         DESTINATION bin
         RENAME deltas
         COMPONENT deltas)
+
+########### waves main program ###############
+
+set (waves_SRCS waves_main.c waves_cli.c)
+
+add_executable(run_waves ${waves_SRCS})
+target_link_libraries(run_waves waves)
+
+install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/run_waves
+        DESTINATION bin
+        RENAME waves
+        COMPONENT waves)
 
 ########### Python bindings ###############
 
@@ -99,3 +136,6 @@ install(FILES deltas_api.h deltas_cli.h
         DESTINATION include
         COMPONENT deltas)
 
+install(FILES waves_api.h waves_cli.h
+        DESTINATION include
+        COMPONENT deltas)
