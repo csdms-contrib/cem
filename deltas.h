@@ -3,15 +3,23 @@
 
 #define Xmax            (200)   /**< number of cells in x (cross-shore) direction */
 #define Ymax            (500)   /**< number of cells in y (longshore) direction */
+#define CellWidth       (100.0) /**< size of cells (meters) */
 #define MaxBeachLength  (8*Ymax)/**< maximum length of arrays that contain beach data at each time step */
 #define TimeStep     (0.2)  /**< days - reflects rate of sediment transport per
                              time step */
 
 typedef struct
 {
+   int use_sed_flux; /**< Use SedFlux rather than SedRate */
+   float SedFlux; /**< Sediment flux in kg/s. */
    float SedRate; /**< Sedimentation rate as percent per time step. */
    float angle_highness; /**< Fraction of high-angle waves. */
    float angle_asymmetry; /**< Fraction of waves coming from the left. */
+   float wave_height; /**< Height of incoming waves in meters. */
+   float wave_period; /**< Period of incoming waves in seconds. */
+   float shoreface_slope; /**< Gradient of the shoreface. */
+   float shelf_slope; /**< Gradient of the shelf. */
+   float shoreface_depth; /**< Water depth of the shoreface in meters. */
 
    /** Input/output file names. */
    char* savefilename; /**< Name of save file. */
@@ -23,6 +31,7 @@ typedef struct
                                        sediment */
    int Age[Xmax][2*Ymax]; /**< Age since cell was deposited */
    float CellDepth[Xmax][2*Ymax]; /**< Depth array (m) (ADA 6/3) */
+   float InitDepth[Xmax][2*Ymax]; /**< Save initial depths (m) (EWHH 2010/8/11) */
 
    /** Computational Arrays (determined for each time step) */
    int X[MaxBeachLength]; /**< X Position of ith beach element */
@@ -47,6 +56,8 @@ typedef struct
 
    int TotalBeachCells; /**< Number of cells describing beach at particular iteration */
    int ShadowXMax; /**< used to determine maximum extent of beach cells */
+
+   int external_waves;
    float WaveAngle; /**< wave angle for current time step */	
 
    int FindStart; /**< Used to tell FindBeach at what Y value to start looking */
@@ -67,7 +78,8 @@ typedef struct
    int   xplotoff;
    int   yplotoff;
 
-   char state[256];
+   //char state[256];
+   char* state;
 }
 State;
 

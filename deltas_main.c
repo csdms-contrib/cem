@@ -29,7 +29,18 @@ main( int argc, char *argv[] )
 
     deltas_finalize( s, TRUE );
   }
+/*
+  {
+    Deltas_state* s = deltas_init( NULL );
 
+    //deltas_set_save_file( s, "fileout_0" );
+    deltas_set_save_file( s, args->out_prefix );
+
+    deltas_run_until( s, args->stop_time );
+
+    deltas_finalize( s, TRUE );
+  }
+*/
   free( args );
 
   return EXIT_SUCCESS;

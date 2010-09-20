@@ -72,11 +72,11 @@ static void DEBUG_PRINT( int exp, const char* format, ... )
 
 /* Delta Info */
 
+#define SED_FLUX       (0.0) /**< Sediment flux in kg/s */
 #define SED_RATE       (0.02)
 #define StreamSpot     (Ymax)
 
 /* Aspect Parameters */
-#define CellWidth       (100.0) /**< size of cells (meters) */
 #define CritBWidth      (350.0) /**< width barrier maintains due to overwash (m) important scaling param! */
 #define Xmax            (200)   /**< number of cells in x (cross-shore) direction */
 #define Ymax            (500)   /**< number of cells in y (longshore) direction */
@@ -84,7 +84,7 @@ static void DEBUG_PRINT( int exp, const char* format, ... )
 #define ShelfSlope      (0.001) /**< slope of continental shelf */
 #define ShorefaceSlope  (0.01)  /**< for now, linear slope of shoreface */
                                 /**< future : shoreface exponent m^1/3, from depth of ~10m at ~1000 meters */
-#define DepthShoreface  (10.0)  /**< minimum depth of shoreface due to wave action (meters) */   
+#define DepthShoreface (10.0)  /**< minimum depth of shoreface due to wave action (meters) */   
 #define InitBeach       (30)    /**< cell where intial conditions changes from beach to ocean */ 
 #define InitialDepth    (9.0)   /**< theoretical depth in meters of continental shelf at x = InitBeach */
 #define LandHeight      (1.0)   /**< elevation of land above MHW  */
@@ -138,7 +138,7 @@ int	OWflag = 0;     /**< debugger */
 #define START_SAVING_AT   (0)    /**< time step to begin saving files */
 #define SAVE_SPACING      (2500) /**< space between saved files */
 #define SAVE_LINE_SPACING (1000) /**< space between saved line files */
-#define SAVE_FILE         (0)    /**< save full file? */
+#define SAVE_FILE         (1)    /**< save full file? */
 #define SAVE_LINE         (0)    /**< Save line */
 
 #define AGE_UPDATE        (10) /**< Time space for updating age of non-beach cells */
@@ -158,6 +158,7 @@ void 	ButtonEnter( State* _s );
 void	CheckOverwash( State* _s, int icheck);
 void	CheckOverwashSweep( State* _s );
 void    DeliverSediment( State* _s );
+void    DeliverSedimentFlux( State* _s );
 void	DetermineAngles( State* _s );
 void 	DetermineSedTransport( State* _s );
 void	DoOverwash( State* _s, int xfrom,int yfrom, int xto, int yto,  float xintto, float yintto, float distance, int ishore);
@@ -194,9 +195,16 @@ void	ZeroVars( State* _s );
 void
 deltas_init_state( State* s )
 {
+   s->use_sed_flux = FALSE;
+   s->SedFlux = SED_FLUX;
    s->SedRate = SED_RATE;
    s->angle_highness = HIGHNESS;
    s->angle_asymmetry = ASYM;
+   s->wave_height = OffShoreWvHt;
+   s->wave_period = Period;
+   s->shoreface_slope = ShorefaceSlope;
+   s->shoreface_depth = DepthShoreface;
+   s->shelf_slope = ShelfSlope;
 
    s->savefilename = NULL;
    s->readfilename = NULL;
@@ -208,7 +216,10 @@ deltas_init_state( State* s )
 
    s->TotalBeachCells = 0;
    s->ShadowXMax = 0;
+
+   s->external_waves = FALSE;
    s->WaveAngle = 0.;
+
    s->FindStart = 0;
 
    s->FellOffArray = 0;
@@ -232,6 +243,7 @@ deltas_init_state( State* s )
             s->PercentFull[i][j] = 0.;
             s->Age[i][j] = 0;
             s->CellDepth[i][j] = 0.;
+            s->InitDepth[i][j] = 0.;
          }
 
       for ( i=0; i<MaxBeachLength ; i++ )
@@ -247,6 +259,7 @@ deltas_init_state( State* s )
       }
    }
 
+   s->state = (char*) malloc (sizeof (char)*256);
    initstate( 44, s->state, 256 );
 
    return;
@@ -392,7 +405,8 @@ _cem_run_until( State* _s, int until )
 
 	/*  Calculate Wave Angle */
 
-	_s->WaveAngle = FindWaveAngle( _s );
+  if (!_s->external_waves)
+	  _s->WaveAngle = FindWaveAngle( _s );
 
 	/*  Loop for Duration at the current wave sign and wave angle */
 
@@ -453,7 +467,10 @@ _cem_run_until( State* _s, int until )
 	    TransportSedimentSweep( _s );
 	    DEBUG_PRINT( DEBUG_0, "Transswept: %d \n", _s->CurrentTimeStep);
 
-	    DeliverSediment( _s );
+      if (_s->use_sed_flux)
+        DeliverSedimentFlux (_s);
+      else
+	      DeliverSediment (_s);
 
 	    FixBeach( _s );
 	    DEBUG_PRINT( DEBUG_0, "Fixed Beach: %d \n", _s->CurrentTimeStep);
@@ -535,18 +552,29 @@ GraphCells();*/
 	    _s->CurrentTimeStep ++;
 
 	    /* SAVE FILE ? */
-
+/*
 	    if (((_s->CurrentTimeStep%SaveSpacing == 0 && _s->CurrentTimeStep >= StartSavingAt) 
 		 || (_s->CurrentTimeStep == StopAfter)) && SaveFile)
 	    {	
 		SaveSandToFile( _s );
 	    }
-
+*/
+      if (SaveFile)
+	      if (_s->CurrentTimeStep%SaveSpacing == 0 &&
+            _s->CurrentTimeStep >= StartSavingAt) 
+		      SaveSandToFile (_s);
+/*
 	    if (((_s->CurrentTimeStep%SaveLineSpacing == 0 && _s->CurrentTimeStep >= StartSavingAt) 
 		 || (_s->CurrentTimeStep == StopAfter)) && SaveLine)
 	    {
 		SaveLineToFile( _s );
 	    }
+*/
+      if (SaveLine)
+	      if (_s->CurrentTimeStep%SaveLineSpacing == 0 &&
+            _s->CurrentTimeStep >= StartSavingAt) 
+		      SaveLineToFile( _s );
+          
 
 
 			
@@ -564,6 +592,7 @@ int
 _cem_finalize( State* _s )
 {
     printf("Run Complete.  Output file: %s\n" , _s->savefilename);
+    free (_s->state);
     return TRUE;
 }
 
@@ -1663,7 +1692,7 @@ void SedTrans( State* _s, int From, int To, float ShoreAngle, char MaxT)
 
     /* Coefficients - some of these are important*/
 
-    float	StartDepth = 3*OffShoreWvHt;/* m, depth to begin refraction calcs (needs to be beyond breakers)	*/
+    float	StartDepth = 3*_s->wave_height;/* m, depth to begin refraction calcs (needs to be beyond breakers)	*/
     float 	RefractStep = .2;	/* m, step size to iterate depth for refraction calcs			*/
     float 	KBreak = 0.5;		/* coefficient for wave breaking threshold 				*/
     float 	rho = 1020;		/* kg/m3 - density of water and dissolved matter				*/
@@ -1709,16 +1738,16 @@ void SedTrans( State* _s, int From, int To, float ShoreAngle, char MaxT)
     {
 	/* Calculate Deep Water Celerity & Length, Komar 5.11 c = gT / pi, L = CT	*/
 		
-	CDeep = GRAV * Period / (2.0 * M_PI);
-	LDeep = CDeep * Period;
+	CDeep = GRAV * _s->wave_period / (2.0 * M_PI);
+	LDeep = CDeep * _s->wave_period;
 	DEBUG_PRINT( DEBUG_6, "CDeep = %2.2f LDeep = %2.2f \n",CDeep, LDeep);
 
 	while(!Broken)
 	{
 	    /* non-iterative eqn for L, from Fenton & McKee 		*/	
 
-	    WaveLength = LDeep * Raise(tanh(Raise(Raise(2.0*M_PI/Period,2)*Depth/GRAV,.75)),2.0/3.0);
-	    C = WaveLength/Period;
+	    WaveLength = LDeep * Raise(tanh(Raise(Raise(2.0*M_PI/_s->wave_period,2)*Depth/GRAV,.75)),2.0/3.0);
+	    C = WaveLength/_s->wave_period;
 	    DEBUG_PRINT( DEBUG_6, "DEPTH: %2.2f Wavelength = %2.2f C = %2.2f ", Depth, WaveLength,C);
 			
 	    /* Determine n = 1/2(1+2kh/tanh(kh)) Komar 5.21			*/
@@ -1736,7 +1765,7 @@ void SedTrans( State* _s, int From, int To, float ShoreAngle, char MaxT)
 
 	    /* Determine Wave height from refract calcs - Komar 5.49			*/
 	
-	    WvHeight = OffShoreWvHt * Raise(CDeep*cos(AngleDeep)/(C*2.0*n*cos(Angle)),.5);
+	    WvHeight = _s->wave_height * Raise(CDeep*cos(AngleDeep)/(C*2.0*n*cos(Angle)),.5);
 	    DEBUG_PRINT( DEBUG_6, " WvHeight : %2.3f\n",WvHeight);
 
 	    if (WvHeight > Depth*KBreak)
@@ -1858,7 +1887,7 @@ void AdjustShore( State* _s, int i)
     if (_s->VolumeIn[i] <= _s->VolumeOut[i])
 	/* eroding, just have to use shoreface depth */
     {
-	Depth = DepthShoreface;
+	Depth = _s->shoreface_depth;
     }
     else
 	/* accreting, good god */
@@ -1866,7 +1895,7 @@ void AdjustShore( State* _s, int i)
 	/* where should we intersect shoreface depth ? */
 	
 	/* uncomplicated way - assume starting in middle of cell */
-	Distance = DepthShoreface/CellWidth/ShorefaceSlope;
+	Distance = _s->shoreface_depth/CellWidth/_s->shoreface_slope;
 	Xintfloat = _s->X[i] + 0.5 + Distance * cos(_s->SurroundingAngle[i]);
 	Xintint = floor(Xintfloat);
 	Yintfloat = _s->Y[i] + 0.5 - Distance * sin(_s->SurroundingAngle[i]);
@@ -1878,7 +1907,7 @@ void AdjustShore( State* _s, int i)
 
 	if ((Yintint < 0) || (Yintint > 2*Ymax))
 	{
-	    Depth = DepthShoreface;
+	    Depth = _s->shoreface_depth;
 	    if ((Yintint > Ymax/2) && (Yintint < 3/2*Ymax))
 	    {
 		printf("Periodic Boundary conditions and Depth Out of Bounds");
@@ -1887,18 +1916,18 @@ void AdjustShore( State* _s, int i)
 	}
 	else if ((Xintint < 0) || (Xintint > Xmax))
 	{
-	    Depth = DepthShoreface;
+	    Depth = _s->shoreface_depth;
 	    printf("-- Warning - depth location off of x array: X %d Y %d",Xintint,Yintint);
 	    PauseRun( _s, _s->X[i],_s->Y[i],i);
 	}
 	else if (_s->CellDepth[Xintint][Yintint] <= 0)
 	    /* looking back on land */
 	{
-	    Depth = DepthShoreface;
+	    Depth = _s->shoreface_depth;
 	    DEBUG_PRINT( DEBUG_7A, "=== Shoreface is Shore, eh? Accreti:  xs: %d  ys: %d  Xint:%d  Yint: %d  Dint: %f \n",
 				_s->X[i],_s->Y[i],Xintint,Yintint,_s->CellDepth[Xintint][Yintint]);
 	}
-	else if (_s->CellDepth[Xintint][Yintint] < DepthShoreface)
+	else if (_s->CellDepth[Xintint][Yintint] < _s->shoreface_depth)
 	{
 	    printf("Shallow but underwater Depth %f",_s->CellDepth[Xintint][Yintint]);
 	    PauseRun( _s, Xintint,Yintint,01);
@@ -1938,7 +1967,7 @@ void AdjustShore( State* _s, int i)
 	    ytest = Yintint;
 	    ShorefaceFlag = 0;	
 	
-	    while (( _s->CellDepth[xtest][ytest] > DepthShoreface) && !(ShorefaceFlag))
+	    while (( _s->CellDepth[xtest][ytest] > _s->shoreface_depth) && !(ShorefaceFlag))
 	    {
 		NextXInt = ceil(x) -1;	
 		if (ysign > 0)	
@@ -1973,14 +2002,14 @@ void AdjustShore( State* _s, int i)
 		    ytest = y + (ysign-1)/2;			
 		}
 						
-		if (_s->CellDepth[xtest][ytest] > DepthShoreface)	
+		if (_s->CellDepth[xtest][ytest] > _s->shoreface_depth)	
 		    /* Deep hole - fill 'er in - mass came from previous maths */ 
 		{
 
 		    DEBUG_PRINT( DEBUG_7A, "=== Deep Hole, eh? Accreti:  xs: %d  ys: %d  Xint:%d  Yint: %d  Dint: %f Xfill: %d Yfill: %d Dt: %f\n",
 					_s->X[i],_s->Y[i],Xintint,Yintint,_s->CellDepth[Xintint][Yintint],xtest,ytest,
 					_s->CellDepth[xtest][ytest]); 
-		    _s->CellDepth[xtest][ytest] = DepthShoreface;
+		    _s->CellDepth[xtest][ytest] = _s->shoreface_depth;
 					
 		    /*PauseRun(xtest,ytest,i);*/
 
@@ -2006,7 +2035,7 @@ void AdjustShore( State* _s, int i)
     Depth += LandHeight;
 	
 
-    if (Depth < DepthShoreface)
+    if (Depth < _s->shoreface_depth)
     {
 	printf("too deep");
 
@@ -2138,7 +2167,7 @@ void OopsImEmpty( State* _s, int x, int y)
 
     _s->AllBeach[x][y] = 'n';
     _s->PercentFull[x][y] = 0.0;
-    _s->CellDepth[x][y] = DepthShoreface;
+    _s->CellDepth[x][y] = _s->shoreface_depth;
 
     DEBUG_PRINT( DEBUG_8, "\n");
 
@@ -2293,7 +2322,7 @@ void FixBeach( State* _s )
     }
 
 
-    FixXMax = _s->ShadowXMax + ceil(DepthShoreface/CellWidth/ShorefaceSlope) +3;
+    FixXMax = _s->ShadowXMax + ceil(_s->shoreface_depth/CellWidth/_s->shoreface_slope) +3;
     if (FixXMax > Xmax)
 	FixXMax = Xmax; 
 
@@ -2308,14 +2337,14 @@ void FixBeach( State* _s )
                 y = 2*Ymax-i-1;
 
 	    /* ye olde depth fix */
-	    if ((_s->PercentFull[x][y] <= 0) && (_s->CellDepth[x][y] > DepthShoreface) && 
-		(_s->CellDepth[x-1][y] == DepthShoreface))
+	    if ((_s->PercentFull[x][y] <= 0) && (_s->CellDepth[x][y] > _s->shoreface_depth) && 
+		(_s->CellDepth[x-1][y] == _s->shoreface_depth))
 	    {
-		if ((_s->CellDepth[x+1][y] == DepthShoreface) && (_s->CellDepth[x][y-1] == DepthShoreface)
-		    && (_s->CellDepth[x][y+1] == DepthShoreface))
+		if ((_s->CellDepth[x+1][y] == _s->shoreface_depth) && (_s->CellDepth[x][y-1] == _s->shoreface_depth)
+		    && (_s->CellDepth[x][y+1] == _s->shoreface_depth))
 		{
 		    /* Fill Hole */
-		    _s->CellDepth[x][y] = DepthShoreface;
+		    _s->CellDepth[x][y] = _s->shoreface_depth;
 		}
 	    }
 	    if (_s->PercentFull[x][y]> 100)
@@ -2412,7 +2441,7 @@ void FixBeach( State* _s )
 
 		_s->PercentFull[x][y] = 0;
 		_s->AllBeach[x][y] = 'n';
-		_s->CellDepth[x][y] = DepthShoreface;
+		_s->CellDepth[x][y] = _s->shoreface_depth;
 
 		DEBUG_PRINT( DEBUG_9, "\n");
 
@@ -2482,7 +2511,7 @@ float MassCount( State* _s )
 	{
 	    /*if ((_s->PercentFull[x][y] > 0) && (_s->PercentFull[x][y] < 1.0))
 	      MassHere = _s->PercentFull[x][y] * (refdepth - _s->CellDepth[x][y]) + 
-	      (1 - _s->PercentFull[x][y])*(refdepth - DepthShoreface);
+	      (1 - _s->PercentFull[x][y])*(refdepth - _s->shoreface_depth);
 	      else 
 	      MassHere = refdepth - _s->CellDepth[x][y];*/
 
@@ -2533,7 +2562,7 @@ void InitConds( State* _s )
 	    for (x = 0; x <= Xmax; x++)
 	    {
 
-		_s->CellDepth[x][y] = InitialDepth + ((x-InitBeach) * CellWidth * ShelfSlope);
+		_s->CellDepth[x][y] = InitialDepth + ((x-InitBeach) * CellWidth * _s->shelf_slope);
 			
 		if (x < InitBeach)
 		{  	 
@@ -2559,9 +2588,9 @@ void InitConds( State* _s )
 		{
 		    _s->PercentFull[x][y] = 0;
 		    _s->AllBeach[x][y] = 'n';
-		    if (_s->CellDepth[x][y] < DepthShoreface)
+		    if (_s->CellDepth[x][y] < _s->shoreface_depth)
 		    {
-			_s->CellDepth[x][y] = DepthShoreface;
+			_s->CellDepth[x][y] = _s->shoreface_depth;
 		    }
 		}
 		else
@@ -2583,7 +2612,7 @@ void InitConds( State* _s )
 	    for (x = 0; x < Xmax; x++)
 	    {
 
-		_s->CellDepth[x][y] = InitialDepth + ((x-InitBeach) * CellWidth * ShelfSlope);
+		_s->CellDepth[x][y] = InitialDepth + ((x-InitBeach) * CellWidth * _s->shelf_slope);
 			
 		if (_s->CellDepth[x][y] <= 0)
 		    /* This must be land due to continental shelf intersection */
@@ -2597,9 +2626,9 @@ void InitConds( State* _s )
 		{
 		    _s->PercentFull[x][y] = 0;
 		    _s->AllBeach[x][y] = 'n';
-		    if (_s->CellDepth[x][y] < DepthShoreface)
+		    if (_s->CellDepth[x][y] < _s->shoreface_depth)
 		    {
-			_s->CellDepth[x][y] = DepthShoreface;
+			_s->CellDepth[x][y] = _s->shoreface_depth;
 		    }
 		}
 		else if (x == InitBeach)
@@ -2655,6 +2684,16 @@ void InitConds( State* _s )
 	}
     }
 
+  /* Save initial depths */
+  {
+    int i, j;
+    const int i_len = Xmax;
+    const int j_len = 2*Ymax;
+	  for (i=0; i<i_len; i++)
+	    for (j=0; j<j_len; j++)
+        _s->InitDepth[i][j] = _s->CellDepth[i][j];
+  }
+  return;
 }
 	
 
@@ -2953,7 +2992,7 @@ void PrintLocalConds( State* _s, int x, int y, int in)
 { 
 
     int i,j,k,isee = INT_MIN;
-    float vol = CellWidth*CellWidth*DepthShoreface;
+    float vol = CellWidth*CellWidth*_s->shoreface_depth;
 
     printf("\n x: %d  y: %d  z: %d\n\n", x,y,in);
 
@@ -2985,7 +3024,7 @@ void PrintLocalConds( State* _s, int x, int y, int in)
 	for (j = y-2 ; j < y+3 ; j++)
 	{
 	    printf("  	%f", _s->CellDepth[i][j]);
-	    if (_s->CellDepth[i][j] == DepthShoreface)
+	    if (_s->CellDepth[i][j] == _s->shoreface_depth)
 		printf("y");
 	    else
 		printf("n");
@@ -3355,6 +3394,64 @@ void DeliverSediment( State* _s )
 
 }
 
+/** Deposit sediment by flux
+
+Uses state variable SedFlux (in kg/s) to deposit sediment at the shore.
+
+@param _s A CEM state
+*/
+void
+DeliverSedimentFlux (State* _s)
+{
+
+	int x,y;
+	
+	x = 0;
+	y = StreamSpot;
+
+	while (_s->AllBeach[x][y] == 'y')
+	{
+		x += 1;
+	}
+
+  /** Convert flux to m/s then to fraction full
+
+      Assume sediment is deposited on the sea floor with a density of
+      1500 kg/m^3.
+  */
+  {
+    double sed_rate;
+    double meters_of_sediment;
+    double fraction;
+
+    sed_rate = _s->SedFlux / (1500.*CellWidth*CellWidth);
+    meters_of_sediment = sed_rate * 86400.*TimeStep;
+    //fraction = meters_of_sediment / (_s->InitDepth[x][y]+2*LandHeight);
+    //fraction = meters_of_sediment / _s->InitDepth[x][y];
+    fraction = meters_of_sediment;
+
+    if (fraction<0)
+    {
+      //fprintf (stderr, "Fraction is less than zero (%f)\n", fraction);
+      //fprintf (stderr, "Meters of sediment is %f\n", meters_of_sediment);
+      //fprintf (stderr, "Initial depth is is %f\n", _s->InitDepth[x][y]);
+      //fraction = 1.-_s->PercentFull[x][y];
+      fraction = SED_RATE;
+      //fprintf (stderr, "Fraction is %f\n", fraction);
+    }
+
+    //fprintf (stderr, "fraction is %f\n", fraction);
+    //fprintf (stderr, "percent full is %f\n", _s->PercentFull[x][y]);
+	  _s->PercentFull[x][y] += fraction;
+	  //_s->PercentFull[x][y] += SED_RATE;
+    //if (_s->PercentFull[x][y] > 1)
+    //  fprintf (stderr, "percent full is %f\n", _s->PercentFull[x][y]);
+    //fflush (stderr);
+  }
+
+  return;
+}
+
 /** Just a loop to call overwash check founction CheckOverwash
 
 Nothing done here, but can be down when CheckOVerwash is called
@@ -3702,26 +3799,26 @@ void DoOverwash( State* _s, int xfrom,int yfrom, int xto, int yto, float xintto,
 	/* calculated value of most that backbarrier ca nmove given geometry (true, non-iterative solution) */
 	
 
-	if (DepthBB == DepthShoreface)
+	if (DepthBB == _s->shoreface_depth)
 	{
 		BBneed = MaxOver;
 	}
 	else
 	{
-		BBneed = (CritBWidth - widthin) / CellWidth /  (1 - (DepthBB / DepthShoreface));
+		BBneed = (CritBWidth - widthin) / CellWidth /  (1 - (DepthBB / _s->shoreface_depth));
 	}
 
 
 	if (BBneed <= MaxOver)
 	/* do all overwash */
 	{
-		delShore = BBneed * DepthBB / DepthShoreface;
+		delShore = BBneed * DepthBB / _s->shoreface_depth;
 		delBB = BBneed;
 	}
 	else
 	/* only do overwash to max change) */
 	{
-		delShore = MaxOver * DepthBB / DepthShoreface ;
+		delShore = MaxOver * DepthBB / _s->shoreface_depth ;
 		delBB = MaxOver;
 		
 	}
@@ -3731,7 +3828,7 @@ void DoOverwash( State* _s, int xfrom,int yfrom, int xto, int yto, float xintto,
 		, xfrom, yfrom,xto,yto,widthin );
 	DEBUG_PRINT( DEBUG_10B, "DepthBB: %f  BBNeed: %f DelShore: %f  DelBB: %f\n",
 			DepthBB, BBneed,delShore,delBB );
-	/*if (DepthBB == DepthShoreface) PauseRun(xto,yto,-1);*/
+	/*if (DepthBB == _s->shoreface_depth) PauseRun(xto,yto,-1);*/
 
 #ifdef WITH_OPENGL
 #ifdef DEBUG_ON
@@ -3815,7 +3912,7 @@ float GetOverwashDepth( State* _s, int xin, int yin, float xinfl, float yinfl, i
 			xdepth --;
 		}
 	
-		if (Depth == DepthShoreface)
+		if (Depth == _s->shoreface_depth)
 		{
 			Depth = 6.0;
 		}
@@ -3914,7 +4011,7 @@ float GetOverwashDepth( State* _s, int xin, int yin, float xinfl, float yinfl, i
 		/* The search for the backbarrier went out of bounds - not good, assume big = depthshoreface 	*/
 		/* Periodic B.C.'s should make this not so important 						*/
 		{
-			Depth = DepthShoreface;
+			Depth = _s->shoreface_depth;
 			DEBUG_PRINT( DEBUG_10B, "\nbackbarrier out of bounds: xin: %d yin: %d xbi: %d ybi: %d xinf: %f yinf: %f Per: %f Dist:  Depth: %f\n",
 			xin, yin, xtest, ytest, xinfl, yinfl,_s->PercentFull[xtest][ytest], Depth);
 			/*PauseRun(xin,yin,-1);*/
@@ -3929,7 +4026,7 @@ float GetOverwashDepth( State* _s, int xin, int yin, float xinfl, float yinfl, i
 			/* The backbarrier intersection isn't on the shoreline */
 			/* Assume 1/2 of the length applies to this case */
 			{
-				Depth = BBDistance/2 * ShorefaceSlope * CellWidth;
+				Depth = BBDistance/2 * _s->shoreface_slope * CellWidth;
 				DEBUG_PRINT( DEBUG_10B, "\nNot Found backi: %d bx: %d by: %d Depth:%f",
 					Backi,xtest,ytest,Depth);
 			}
@@ -3965,9 +4062,9 @@ float GetOverwashDepth( State* _s, int xin, int yin, float xinfl, float yinfl, i
 		{
 			Depth = OWMinDepth;
 		}
-		else if (Depth > DepthShoreface)
+		else if (Depth > _s->shoreface_depth)
 		{
-			Depth = DepthShoreface;
+			Depth = _s->shoreface_depth;
 		}
 			DEBUG_PRINT( DEBUG_10B, "\nOverwash Depth2: xin: %d yin: %d xbi: %d ybi: %d xinf: %f yinf: %f Per: %f Dist: %f  Depth: %f\n",
 			xin, yin, xtest, ytest, xinfl, yinfl,_s->PercentFull[xtest][ytest],BBDistance, Depth);	
@@ -3976,6 +4073,6 @@ float GetOverwashDepth( State* _s, int xin, int yin, float xinfl, float yinfl, i
 
 	printf("OWDepth all broken");
 	PauseRun( _s, xin,yin,-1);
-	return DepthShoreface;
+	return _s->shoreface_depth;
 }
 
