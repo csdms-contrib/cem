@@ -21,6 +21,15 @@ typedef struct
    float shelf_slope; /**< Gradient of the shelf. */
    float shoreface_depth; /**< Water depth of the shoreface in meters. */
 
+   int n_rivers;
+   float* river_flux;
+   int* river_x;
+   int* river_y;
+
+   int stream_spot;
+
+   float cell_width; /**< Size of cell in meters */
+
    /** Input/output file names. */
    char* savefilename; /**< Name of save file. */
    char* readfilename; /**< Namve of file to read input from. */

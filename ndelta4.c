@@ -61,7 +61,7 @@ static void DEBUG_PRINT( int exp, const char* format, ... )
 //#define Asym         (1.0)  /**< Fractional portion of waves coming from positive (left) direction */
 #define ASYM         (.7)  /**< Fractional portion of waves coming from positive (left) direction */
 //#define Highness     (0.1)  /**< All New! .5 = even dist, > .5 high angle domination */
-#define HIGHNESS     (0.7)  /**< All New! .5 = even dist, > .5 high angle domination */
+#define HIGHNESS     (0.3)  /**< All New! .5 = even dist, > .5 high angle domination */
 #define Duration     (1)    /**< Number of time steps calculations loop at same wave angle */
 #define STOP_AFTER   (2600) /**< Stop after what number of time steps */
 
@@ -138,7 +138,7 @@ int	OWflag = 0;     /**< debugger */
 #define START_SAVING_AT   (0)    /**< time step to begin saving files */
 #define SAVE_SPACING      (2500) /**< space between saved files */
 #define SAVE_LINE_SPACING (1000) /**< space between saved line files */
-#define SAVE_FILE         (1)    /**< save full file? */
+#define SAVE_FILE         (0)    /**< save full file? */
 #define SAVE_LINE         (0)    /**< Save line */
 
 #define AGE_UPDATE        (10) /**< Time space for updating age of non-beach cells */
@@ -158,6 +158,10 @@ void 	ButtonEnter( State* _s );
 void	CheckOverwash( State* _s, int icheck);
 void	CheckOverwashSweep( State* _s );
 void    DeliverSediment( State* _s );
+void DeliverRivers (State* _s);
+void AddRiverFlux( State* _s, int xin, int yin, float sedin);
+float FindFluvialShorefaceDepth( State* _s, int i);
+void ActualizeFluvialSed( State* _s, int xin, int yin, float Depth, float SedIn);
 void    DeliverSedimentFlux( State* _s );
 void	DetermineAngles( State* _s );
 void 	DetermineSedTransport( State* _s );
@@ -205,6 +209,19 @@ deltas_init_state( State* s )
    s->shoreface_slope = ShorefaceSlope;
    s->shoreface_depth = DepthShoreface;
    s->shelf_slope = ShelfSlope;
+
+   s->river_flux = (float*)malloc (sizeof(float)*Xmax*2*Ymax);
+   s->river_x = (int*)malloc (sizeof(int)*Xmax*2*Ymax);
+   s->river_y = (int*)malloc (sizeof(int)*Xmax*2*Ymax);
+   s->n_rivers = 1;
+
+   s->stream_spot = StreamSpot;
+
+   s->cell_width = CellWidth;
+
+   s->river_flux[0] = SED_FLUX;
+   s->river_x[0] = 0;
+   s->river_y[0] = 0;
 
    s->savefilename = NULL;
    s->readfilename = NULL;
@@ -272,6 +289,9 @@ deltas_free_state( State* s )
       free( s->savefilename );
    if ( s->readfilename )
       free( s->readfilename );
+   free (s->river_flux);
+   free (s->river_x);
+   free (s->river_y);
 
    return;
 }
@@ -423,6 +443,42 @@ _cem_run_until( State* _s, int until )
 
 	    PeriodicBoundaryCopy( _s );
 
+			ZeroVars( _s );
+			/* Initialize for Find Beach Cells  (make sure strange beach does not cause trouble */
+
+			_s->FellOffArray = 'y';
+			_s->FindStart = 1;
+			
+			/*  Look for beach - if you fall off of array, bump over a little and try again */
+
+			while (_s->FellOffArray == 'y')
+			{	
+				FindBeachCells( _s, _s->FindStart);
+				/*printf("FoundCells: %d GetO = %c \n", _s->FindStart,_s->FellOffArray);*/
+				_s->FindStart += FindCellError;
+				if (_s->FellOffArray == 'y')
+				{
+					/*printf("NOODLE  !!!!!FoundCells: %d GetO = %c \n", _s->FindStart,_s->FellOffArray); */
+					/*PauseRun(1,1,-1);*/
+				}
+			
+				/* Get Out if no good beach spots exist - finish program*/
+				
+				if (_s->FindStart > Ymax/2+1)
+				{
+					printf("Stopped Finding Beach - done %d %d",_s->FindStart,Ymax/2-5); 
+					SaveSandToFile( _s );
+					return 1;
+				}
+			}
+	
+      if (_s->use_sed_flux)
+        DeliverRivers (_s);
+      else
+	      DeliverSediment (_s);
+
+	    FixBeach( _s );
+
 	    ZeroVars( _s );
 			
 	    /* Initialize for Find Beach Cells  (make sure strange beach does not cause trouble */
@@ -467,14 +523,8 @@ _cem_run_until( State* _s, int until )
 	    TransportSedimentSweep( _s );
 	    DEBUG_PRINT( DEBUG_0, "Transswept: %d \n", _s->CurrentTimeStep);
 
-      if (_s->use_sed_flux)
-        DeliverSedimentFlux (_s);
-      else
-	      DeliverSediment (_s);
-
 	    FixBeach( _s );
 	    DEBUG_PRINT( DEBUG_0, "Fixed Beach: %d \n", _s->CurrentTimeStep);
-
 
 		/* OVERWASH */
 		/* because shoreline config may have been changed, need to refind shoreline and recalc angles*/
@@ -591,7 +641,8 @@ GraphCells();*/
 int
 _cem_finalize( State* _s )
 {
-    printf("Run Complete.  Output file: %s\n" , _s->savefilename);
+    if (_s->savefilename)
+      printf("Run Complete.  Output file: %s\n" , _s->savefilename);
     free (_s->state);
     return TRUE;
 }
@@ -3341,7 +3392,7 @@ void GraphCells( State* _s )
 
     x = 0;
 
-    y = StreamSpot;
+    y = _s->stream_spot;
 
     while (_s->AllBeach[x][y] == 'y')
     {
@@ -3383,7 +3434,7 @@ void DeliverSediment( State* _s )
 	int x,y;
 	
 	x = 0;
-	y = StreamSpot;
+	y = _s->stream_spot;
 
 	while (_s->AllBeach[x][y] == 'y')
 	{
@@ -3391,6 +3442,167 @@ void DeliverSediment( State* _s )
 	}
 
 	_s->PercentFull[x][y] += _s->SedRate;
+
+}
+
+void
+DeliverRivers (State* _s)
+{
+  int i;
+
+  for (i=0; i<_s->n_rivers; i++)
+  {
+//fprintf (stderr, "  river flux [%d] = %f\n", i, _s->river_flux[i]);
+    AddRiverFlux (_s, _s->river_x[i], _s->river_y[i], _s->river_flux[i]);
+  }
+}
+
+float FindFluvialShorefaceDepth( State* _s, int i)
+/* this function taken from AdjustShore but made just for river flux */
+/* removed 'fixing the shoreface' situation */
+
+{
+
+  float	Depth=-9999;		/* Depth of convergence*/ 
+  float	Distance;	        /* distance from shore to intercept of equilib. profile and overall slope (m)*/
+  int	Xintint, Yintint;	/* integer representing location shoreface cell */
+  float	Xintfloat,Yintfloat;	/* floaters for shoreface cell */
+  float	slope;			/* slope of zero goes staight back *
+
+ 
+/* must be accreting, so use that case */
+    
+  /* where should we intersect shoreface depth ? */
+	
+  /* uncomplicated way - assume starting in middle of cell */
+  Distance = _s->shoreface_depth/CellWidth/_s->shoreface_slope;
+  Xintfloat = _s->X[i] + 0.5 + Distance * cos(_s->SurroundingAngle[i]);
+  Xintint = floor(Xintfloat);
+  Yintfloat = _s->Y[i] + 0.5 - Distance * sin(_s->SurroundingAngle[i]);
+  Yintint = floor(Yintfloat);
+
+  DEBUG_PRINT( DEBUG_7A, "xs: %d  ys: %d  Xint: %f Xint:%d Yint: %f Yint: %d  Dint: %f SAng: %f Sin = %f\n",
+	       _s->X[i],_s->Y[i],Xintfloat,Xintint,Yintfloat,Yintint,_s->CellDepth[Xintint][Yintint],_s->SurroundingAngle[i]*radtodeg,sin(_s->SurroundingAngle[i]));
+
+  if ((Yintint < 0) || (Yintint > 2*Ymax))
+    {
+      Depth = _s->shoreface_depth;
+      if ((Yintint > Ymax/2) && (Yintint < 3/2*Ymax))
+	{
+	  printf("Periodic Boundary conditions and Depth Out of Bounds");
+	  PauseRun( _s, _s->X[i],_s->Y[i],i);
+	}
+    }
+  else if ((Xintint < 0) || (Xintint > Xmax))
+    {
+      Depth = _s->shoreface_depth;
+      printf("-- Warning - depth location off of x array: X %d Y %d",Xintint,Yintint);
+      PauseRun( _s, _s->X[i],_s->Y[i],i);
+    }
+  else if (_s->CellDepth[Xintint][Yintint] <= 0)
+    /* looking back on land */
+    {
+      Depth = _s->shoreface_depth;
+      DEBUG_PRINT( DEBUG_7A, "=== Shoreface is Shore, eh? Accreti:  xs: %d  ys: %d  Xint:%d  Yint: %d  Dint: %f \n",
+		   _s->X[i],_s->Y[i],Xintint,Yintint,_s->CellDepth[Xintint][Yintint]);
+    }
+  else if (_s->CellDepth[Xintint][Yintint] < _s->shoreface_depth)
+    {
+      printf("Shallow but underwater Depth %f",_s->CellDepth[Xintint][Yintint]);
+      PauseRun( _s, Xintint,Yintint,01);
+    }
+  else
+    {
+      Depth = _s->CellDepth[Xintint][Yintint];
+    }
+		       
+
+DEBUG_PRINT( Depth<-9998, "Depth is uninitialized!" );
+
+return Depth;
+
+}
+
+void ActualizeFluvialSed( State* _s, int xin, int yin, float Depth, float SedIn)
+/* AAshton 09/10 newly added for fluvial case */
+
+{
+
+  float	DeltaArea;	/* Holds change in area for cell (m^2)*/ 
+  float SedFixed; /* fixed for correct units */
+
+  // convert to m^3/day, then number of days simulated
+  SedFixed = SedIn / (2650 * 0.6) * 86400 * TimeStep;  /* assuming some things about the sed delivered */
+
+  DeltaArea = SedFixed/Depth;
+/*
+if (SedIn>1e6)
+{
+fprintf (stderr, "Adding sediment:\n");
+fprintf (stderr, "  qs = %f\n", SedIn);
+fprintf (stderr, "  dA = %f\n", DeltaArea);
+fprintf (stderr, "  df = %f\n", DeltaArea/(CellWidth*CellWidth));
+fprintf (stderr, "  (x,y) = %d, %d\n", xin, yin);
+}
+*/
+  _s->PercentFull[xin][yin] += DeltaArea/(CellWidth*CellWidth);
+}
+
+void AddRiverFlux( State* _s, int xin, int yin, float sedin)
+/* sedin in units of kg/s */
+{
+  int iflag = -1;
+  int i = 0;
+  float Depth4River;
+
+  // try to find the location along the shoreline array
+  // note, this probably should be actuated before actuating the full sediment flux.
+  // note part two that in this case we maybe can skip the OopsImFull
+
+  while ((iflag == -1) && (i<_s->TotalBeachCells-1))
+  {
+    if ((xin == _s->X[i]) && (yin == _s->Y[i]))
+	    iflag = i;
+    i++;
+  }
+
+  if (iflag == -1)
+  { 
+    int x;
+//    fprintf (stderr, "  [%d][%d] is not on the coast!\n", xin, yin);
+    if (_s->AllBeach[xin][yin] == 'y')
+    {
+//      fprintf (stderr, "  Looking seaward\n");
+      for (x=xin; _s->AllBeach[x][yin] == 'y'; x++);
+//      fprintf (stderr, "  Found [%d][%d]\n", x, yin);
+    }
+    else
+    {
+//      fprintf (stderr, "  Looking landward\n");
+      for (x=xin; x>=0 && _s->AllBeach[x][yin] != 'y'; x--);
+      x += 1;
+//      fprintf (stderr, "  Found [%d][%d]\n", x, yin);
+    }
+    AddRiverFlux (_s, x, yin, sedin);
+    return;
+  }
+
+  if (iflag == -1)
+    Depth4River = _s->shoreface_depth;
+  else
+    Depth4River = FindFluvialShorefaceDepth(_s, iflag);	
+
+  //Depth4River = _s->shoreface_depth;
+
+  Depth4River += LandHeight; /* LandHeight should be in _s?? */
+
+  ActualizeFluvialSed( _s, xin, yin, Depth4River, sedin);
+
+  // note here to maybe skip this if done before doing ast flux
+  if (_s->PercentFull[xin][yin]> 1) 
+	{
+	    OopsImFull( _s, xin, yin);
+	}
 
 }
 
@@ -3407,7 +3619,7 @@ DeliverSedimentFlux (State* _s)
 	int x,y;
 	
 	x = 0;
-	y = StreamSpot;
+	y = _s->stream_spot;
 
 	while (_s->AllBeach[x][y] == 'y')
 	{

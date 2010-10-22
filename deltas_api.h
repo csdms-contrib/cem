@@ -28,7 +28,11 @@ Deltas_state* deltas_set_save_file( Deltas_state*, char* );
 Deltas_state* deltas_set_read_file( Deltas_state*, char* );
 Deltas_state* deltas_set_depth    ( Deltas_state*, float*);
 Deltas_state* deltas_set_sed_rate ( Deltas_state*, float );
+Deltas_state* deltas_find_river_mouth (Deltas_state* s, int n);
+void deltas_avulsion (Deltas_state* s, double* qs, double river_flux);
 Deltas_state* deltas_set_sed_flux ( Deltas_state*, float );
+Deltas_state* deltas_set_river_sed_flux (Deltas_state* s, float flux, int n);
+Deltas_state* deltas_set_river_position (Deltas_state* s, int x, int y, int n);
 Deltas_state* deltas_set_angle_asymmetry (Deltas_state* s,
                                           float angle_asymmetry);
 Deltas_state* deltas_set_angle_highness (Deltas_state* s, float angle_highness);
@@ -52,6 +56,7 @@ double* deltas_get_value_res (Deltas_state* s, const char* value,
 const float* deltas_get_depth (Deltas_state*);
 const float* deltas_get_percent (Deltas_state*);
 double* deltas_get_depth_dup (Deltas_state*);
+double* deltas_get_elevation_dup (Deltas_state* s);
 double* deltas_get_percent_dup (Deltas_state*);
 float  deltas_get_sed_rate ( Deltas_state* );
 double deltas_get_angle_asymmetry (Deltas_state*);
