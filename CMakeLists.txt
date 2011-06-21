@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 2.6)
 
 project (deltas)
+include (CTest)
 
 set (BUILD_SHARED_LIBS ON)
 
