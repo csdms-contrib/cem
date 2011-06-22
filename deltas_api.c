@@ -310,7 +310,7 @@ const char* _deltas_exchange_items[] =
   NULL
 };
 
-const const char**
+const char**
 deltas_get_exchange_items (void)
 {
   return _deltas_exchange_items;

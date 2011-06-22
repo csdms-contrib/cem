@@ -38,7 +38,7 @@ double waves_get_wave_angle_min (Waves_state*);
 double waves_get_height (Waves_state*);
 double waves_get_period (Waves_state*);
 
-const const char** waves_get_exchange_items (void);
+const char** waves_get_exchange_items (void);
 double waves_get_value (Waves_state * self, const char* value);
 
 double waves_get_current_time (Waves_state* self);

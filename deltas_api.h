@@ -43,7 +43,7 @@ Deltas_state* deltas_set_shoreface_slope (Deltas_state* s, float shoreface_slope
 Deltas_state* deltas_set_shelf_slope (Deltas_state* s, float shelf_slope);
 Deltas_state* deltas_set_shoreface_depth (Deltas_state* s, float shoreface_depth);
 
-const const char** deltas_get_exchange_items (void);
+const char** deltas_get_exchange_items (void);
 double* deltas_get_value_grid (Deltas_state* s, const char* value);
 double* deltas_get_value_data (Deltas_state* s, const char* value, int lower[2],
                               int upper[2], int stride[2]);

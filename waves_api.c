@@ -236,7 +236,7 @@ const char* _waves_exchange_items[] =
   NULL
 };
 
-const const char**
+const char**
 waves_get_exchange_items (void)
 {
   return _waves_exchange_items;
