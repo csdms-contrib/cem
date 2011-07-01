@@ -26,6 +26,10 @@ Deltas_state* deltas_finalize ( Deltas_state*, int );
 
 Deltas_state* deltas_set_save_file( Deltas_state*, char* );
 Deltas_state* deltas_set_read_file( Deltas_state*, char* );
+Deltas_state* deltas_init_grid_shape (Deltas_state* s, int dimen[2]);
+Deltas_state* deltas_init_cell_width (Deltas_state* s, double dx);
+Deltas_state* deltas_init_grid (Deltas_state* s, double* z);
+Deltas_state* deltas_set_grid (Deltas_state*, float*, int[2]);
 Deltas_state* deltas_set_depth    ( Deltas_state*, float*);
 Deltas_state* deltas_set_sed_rate ( Deltas_state*, float );
 Deltas_state* deltas_find_river_mouth (Deltas_state* s, int n);

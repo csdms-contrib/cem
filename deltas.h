@@ -1,10 +1,11 @@
 #if !defined( DELTAS_H )
 #define DELTAS_H
 
-#define Xmax            (200)   /**< number of cells in x (cross-shore) direction */
-#define Ymax            (500)   /**< number of cells in y (longshore) direction */
-#define CellWidth       (100.0) /**< size of cells (meters) */
-#define MaxBeachLength  (8*Ymax)/**< maximum length of arrays that contain beach data at each time step */
+//#define Xmax            (200)   /**< number of cells in x (cross-shore) direction */
+//#define Ymax            (500)   /**< number of cells in y (longshore) direction */
+//#define CellWidth       (100.0) /**< size of cells (meters) */
+#define DEFAULT_CELL_WIDTH (100.0) /**< size of cells (meters) */
+//#define MaxBeachLength  (8*Ymax)/**< maximum length of arrays that contain beach data at each time step */
 #define TimeStep     (0.2)  /**< days - reflects rate of sediment transport per
                              time step */
 
@@ -21,6 +22,10 @@ typedef struct
    float shelf_slope; /**< Gradient of the shelf. */
    float shoreface_depth; /**< Water depth of the shoreface in meters. */
 
+   int nx; /**< Number of cells in x (cross-shore) direction */
+   int ny; /**< Number of cells in y (long-shore) direction */
+   int max_beach_len; /**< Max number of cells that can make up the coastline */
+
    int n_rivers;
    float* river_flux;
    int* river_x;
@@ -34,28 +39,29 @@ typedef struct
    char* savefilename; /**< Name of save file. */
    char* readfilename; /**< Namve of file to read input from. */
 
-   /** Overall Shoreface Configuration Arrays - Data file information */
-   char AllBeach[Xmax][2*Ymax]; /**< Flag indicating of cell is entirely beach */
-   float PercentFull[Xmax][2*Ymax]; /**< Fractional amount of shore cell full of
+   /** Overall Shoreface Configuration Arrays - Data file information
+       This grids will be of size (nx, ny).
+    */
+   
+   char** AllBeach; /**< Flag indicating of cell is entirely beach */
+   float** PercentFull; /**< Fractional amount of shore cell full of
                                        sediment */
-   int Age[Xmax][2*Ymax]; /**< Age since cell was deposited */
-   float CellDepth[Xmax][2*Ymax]; /**< Depth array (m) (ADA 6/3) */
-   float InitDepth[Xmax][2*Ymax]; /**< Save initial depths (m) (EWHH 2010/8/11) */
+   int** Age; /**< Age since cell was deposited */
+   float** CellDepth; /**< Depth array (m) (ADA 6/3) */
+   float** InitDepth; /**< Save initial depths (m) (EWHH 2010/8/11) */
 
    /** Computational Arrays (determined for each time step) */
-   int X[MaxBeachLength]; /**< X Position of ith beach element */
-   int Y[MaxBeachLength]; /**< Y Position of ith beach element */
-   char	InShadow[MaxBeachLength];	 /**< Is ith beach element in shadow? */
-   float ShorelineAngle[MaxBeachLength]; /**< Angle between cell and right (z+1)
+   int* X; /**< X Position of ith beach element */
+   int* Y; /**< Y Position of ith beach element */
+   char*	InShadow;	 /**< Is ith beach element in shadow? */
+   float* ShorelineAngle; /**< Angle between cell and right (z+1)
                                             neighbor */
-   float SurroundingAngle[MaxBeachLength];/**< Cell-orientated angle based upon
+   float* SurroundingAngle;/**< Cell-orientated angle based upon
                                              left and right neighbor */
-   char UpWind[MaxBeachLength]; /**< Upwind or downwind condition used to
+   char* UpWind; /**< Upwind or downwind condition used to
                                    calculate sediment transport */
-   float VolumeIn[MaxBeachLength];  /**< Sediment volume into ith beach
-                                       element */	
-   float VolumeOut[MaxBeachLength]; /**< Sediment volume out of ith beach
-                                       element */
+   float* VolumeIn;  /**< Sediment volume into ith beach element */	
+   float* VolumeOut; /**< Sediment volume out of ith beach element */
 
    /** Miscellaneous State Variables */
    int CurrentTimeStep; /**< Time step of current calculation */ 

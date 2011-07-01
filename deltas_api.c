@@ -84,6 +84,113 @@ deltas_set_read_file( Deltas_state* s, char* name )
    return s;
 }
 
+Deltas_state*
+deltas_init_grid_shape (Deltas_state* s, int dimen[2])
+{
+  State* p = (State*)s;
+  if (s && (p->nx==0 && p->ny==0))
+  {
+    int i;
+    const len = dimen[0]*(dimen[1]*2);
+
+    p->nx = dimen[0];
+    p->ny = dimen[1];
+    p->max_beach_len = len;
+
+    p->AllBeach = (char**)malloc (sizeof (char*)*p->nx);
+    p->PercentFull = (float**)malloc (sizeof (float*)*p->nx);
+    p->Age = (int**)malloc (sizeof (int*)*p->nx);
+    p->CellDepth = (float**)malloc (sizeof (float*)*p->nx);
+    p->InitDepth = (float**)malloc (sizeof (float*)*p->nx);
+  
+    p->AllBeach[0] = (char*)malloc (sizeof (char)*len);
+    p->PercentFull[0] = (float*)malloc (sizeof (float)*len);
+    p->Age[0] = (int*)malloc (sizeof (int)*len);
+    p->CellDepth[0] = (float*)malloc (sizeof (float)*len);
+    p->InitDepth[0] = (float*)malloc (sizeof (float)*len);
+
+    for (i=1; i<p->nx; i++)
+    {
+      p->AllBeach[i] = p->AllBeach[i-1] + p->ny;
+      p->PercentFull[i] = p->PercentFull[i-1] + p->ny;
+      p->Age[i] = p->Age[i-1] + p->ny;
+      p->CellDepth[i] = p->CellDepth[i-1] + p->ny;
+      p->InitDepth[i] = p->InitDepth[i-1] + p->ny;
+    }
+
+     p->river_flux = (float*)malloc (sizeof(float)*len);
+     p->river_x = (int*)malloc (sizeof(int)*len);
+     p->river_y = (int*)malloc (sizeof(int)*len);
+     p->n_rivers = 1;
+
+     p->X = (int*)malloc (sizeof (int)*len);
+     p->Y = (int*)malloc (sizeof (int)*len);
+     p->InShadow = (char*)malloc (sizeof (char)*len);
+     p->ShorelineAngle = (float*)malloc (sizeof (float)*len);
+     p->SurroundingAngle = (float*)malloc (sizeof (float)*len);
+     p->UpWind = (char*)malloc (sizeof (char)*len);
+     p->VolumeIn = (float*)malloc (sizeof (float)*len);
+     p->VolumeOut = (float*)malloc (sizeof (float)*len);
+  }
+
+  return s;
+}
+
+Deltas_state*
+deltas_init_cell_width (Deltas_state* s, double dx)
+{
+  State* p = (State*)s;
+  if (s)
+  {
+    p->cell_width = dx;
+  }
+  return s;
+}
+
+Deltas_state*
+deltas_init_grid (Deltas_state* s, double* z)
+{
+  State* p = (State*)s;
+  if (s && (p->nx>0 && p->ny>0))
+  {
+    int i;
+    const int len = p->nx*p->ny*2;
+    for (i=0; i<len; i++)
+      p->InitDepth[0][i] = z[i];
+  }
+
+  return s;
+}
+
+Deltas_state*
+deltas_destroy_grid (Deltas_state* s)
+{
+  State* p = (State*)s;
+
+  if (p)
+  {
+    p->nx = 0;
+    p->ny = 0;
+
+    free (p->AllBeach[0]);
+    free (p->AllBeach);
+
+    free (p->Age[0]);
+    free (p->Age);
+
+    free (p->PercentFull[0]);
+    free (p->PercentFull);
+
+    free (p->CellDepth[0]);
+    free (p->CellDepth);
+
+    free (p->InitDepth[0]);
+    free (p->InitDepth);
+  }
+
+  return s;
+}
+
 float
 deltas_get_sed_rate( Deltas_state* s )
 {
@@ -392,7 +499,7 @@ deltas_get_depth( Deltas_state* s )
 }
 
 double*
-dup_subgrid (Deltas_state* s, float src[][2*Ymax])
+dup_subgrid (Deltas_state* s, float** src)
 {
   double *dest = NULL;
 
@@ -545,13 +652,16 @@ deltas_get_current_time (Deltas_state* s)
 int
 deltas_get_nx (Deltas_state* s)
 {
-  return Xmax;
+  State* p = (State*)s;
+  return p->nx;
 }
 
 int
 deltas_get_ny (Deltas_state* s)
 {
-  return 2*Ymax;
+  State* p = (State*)s;
+  return p->ny;
+  //return 2*Ymax;
 }
 
 int
@@ -579,13 +689,17 @@ deltas_get_len (Deltas_state* s, int dimen)
 double
 deltas_get_dx (Deltas_state* s)
 {
-  return CellWidth;
+  State* p = (State*)s;
+  return p->cell_width;
+  //return CellWidth;
 }
 
 double
 deltas_get_dy (Deltas_state* s)
 {
-  return CellWidth;
+  State* p = (State*)s;
+  return p->cell_width;
+  //return CellWidth;
 }
 
 void
