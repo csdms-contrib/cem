@@ -256,6 +256,10 @@ waves_get_value (Waves_state * self, const char* value)
     val = waves_get_wave_angle_max (self);
   else if (strcasecmp (value, "INCOMING_ANGLE_MIN")==0)
     val = waves_get_wave_angle_min (self);
+  else if (strcasecmp (value, "sea_surface_wave_height")==0)
+    val = waves_get_height (self);
+  else if (strcasecmp (value, "sea_surface_wave_period")==0)
+    val = waves_get_period (self);
   else
     fprintf (stderr, "ERROR: %s: Bad value string.", value);
 
