@@ -88,10 +88,13 @@ Deltas_state*
 deltas_init_grid_shape (Deltas_state* s, int dimen[2])
 {
   State* p = (State*)s;
+fprintf (stderr, "*** Grid size is (%d,%d)\n", p->nx, p->ny);
+fprintf (stderr, "*** Requested size is (%d,%d)\n", dimen[0], dimen[1]);
   if (s && (p->nx==0 && p->ny==0))
   {
     int i;
-    const len = dimen[0]*(dimen[1]*2);
+    const int len = dimen[0]*(dimen[1]*2);
+    const int stride = dimen[1]*2;
 
     p->nx = dimen[0];
     p->ny = dimen[1];
@@ -111,11 +114,11 @@ deltas_init_grid_shape (Deltas_state* s, int dimen[2])
 
     for (i=1; i<p->nx; i++)
     {
-      p->AllBeach[i] = p->AllBeach[i-1] + p->ny;
-      p->PercentFull[i] = p->PercentFull[i-1] + p->ny;
-      p->Age[i] = p->Age[i-1] + p->ny;
-      p->CellDepth[i] = p->CellDepth[i-1] + p->ny;
-      p->InitDepth[i] = p->InitDepth[i-1] + p->ny;
+      p->AllBeach[i] = p->AllBeach[i-1] + stride;
+      p->PercentFull[i] = p->PercentFull[i-1] + stride;
+      p->Age[i] = p->Age[i-1] + stride;
+      p->CellDepth[i] = p->CellDepth[i-1] + stride;
+      p->InitDepth[i] = p->InitDepth[i-1] + stride;
     }
 
      p->river_flux = (float*)malloc (sizeof(float)*len);
@@ -132,6 +135,7 @@ deltas_init_grid_shape (Deltas_state* s, int dimen[2])
      p->VolumeIn = (float*)malloc (sizeof (float)*len);
      p->VolumeOut = (float*)malloc (sizeof (float)*len);
   }
+fprintf (stderr, "*** New grid size is (%d,%d)\n", p->nx, p->ny);
 
   return s;
 }
@@ -300,8 +304,8 @@ deltas_set_sediment_flux_grid (Deltas_state* s, double* qs)
   const int lower[2] = {deltas_get_ny (s)/4, 0};
   const int stride[2] = {1, deltas_get_ny (s)/2};
   int dimen[3];
-//fprintf (stderr, "Set flux grid\n");
-//fprintf (stderr, "Start.\n"); fflush (stderr);
+fprintf (stderr, "Set flux grid\n");
+fprintf (stderr, "Start.\n"); fflush (stderr);
   deltas_get_value_dimen (s, NULL, dimen);
 
   len = dimen[0]*dimen[1]*dimen[2];
@@ -313,19 +317,19 @@ deltas_set_sediment_flux_grid (Deltas_state* s, double* qs)
       p->river_flux[n] = qs[i];
       p->river_x[n] = i/stride[1];
       p->river_y[n] = i%stride[1] + lower[0];
-//fprintf (stderr, "  river position = %d, %d\n", p->river_x[n], p->river_y[n]);
+fprintf (stderr, "  river position = %d, %d\n", p->river_x[n], p->river_y[n]);
 
-//fprintf (stderr, "n = %d\n", n);
-//fprintf (stderr, "i = %d\n", i);
-//fprintf (stderr, "river_x = %d\n", p->river_x[n]);
-//fprintf (stderr, "river_y = %d\n", p->river_y[n]);
-//fprintf (stderr, "qs[%d] = %f\n", i, qs[i]);
+fprintf (stderr, "n = %d\n", n);
+fprintf (stderr, "i = %d\n", i);
+fprintf (stderr, "river_x = %d\n", p->river_x[n]);
+fprintf (stderr, "river_y = %d\n", p->river_y[n]);
+fprintf (stderr, "qs[%d] = %f\n", i, qs[i]);
       n++;
     }
   }
   p->n_rivers = n;
-//fprintf (stderr, "Number of rivers = %d\n", n);
-//fprintf (stderr, "Done.\n"); fflush (stderr);
+fprintf (stderr, "Number of rivers = %d\n", n);
+fprintf (stderr, "Done.\n"); fflush (stderr);
 
   return s;
 }
@@ -660,7 +664,7 @@ int
 deltas_get_ny (Deltas_state* s)
 {
   State* p = (State*)s;
-  return p->ny;
+  return p->ny*2;
   //return 2*Ymax;
 }
 
