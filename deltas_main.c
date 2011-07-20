@@ -6,14 +6,14 @@
 int
 main (int argc, char *argv[])
 {
-  cem_args_st* args;
+  cem_args_st *args;
 
   args = parse_command_line (argc, argv);
 
   {
     //Deltas_state* s = deltas_init (NULL);
-    Deltas_state* s = deltas_new ();
-    int dimen[2] = {200, 500};
+    Deltas_state *s = deltas_new ();
+    int dimen[2] = { 200, 500 };
 
     fprintf (stderr, "Set grid shape\n");
     deltas_init_grid_shape (s, dimen);
@@ -31,14 +31,18 @@ main (int argc, char *argv[])
 //    deltas_run_until( s, args->stop_time );
     {
       int i;
+
       const double dt = 5.2;
+
       const double river_flux = 250.;
-      const int len = deltas_get_nx (s)*deltas_get_ny (s)/2;
-      double* qs = (double*)malloc (sizeof(double)*len);
+
+      const int len = deltas_get_nx (s) * deltas_get_ny (s) / 2;
+
+      double *qs = (double *)malloc (sizeof (double) * len);
 
       deltas_use_sed_flux (s);
 
-      for (i=0; i<=args->stop_time; i++)
+      for (i = 0; i <= args->stop_time; i++)
       {
         fprintf (stderr, "Run (%d)\n", i);
         //deltas_set_river_sed_flux (s, river_flux, 0);
@@ -58,4 +62,3 @@ main (int argc, char *argv[])
 
   return EXIT_SUCCESS;
 }
-

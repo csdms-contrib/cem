@@ -3,7 +3,7 @@
  *
  *       Filename:  waves_cli.h
  *
- *    Description:  
+ *    Description:
  *
  *        Version:  1.0
  *        Created:  04/16/2010 04:50:44 PM
@@ -34,7 +34,6 @@ typedef struct
 }
 waves_args_st;
 
-waves_args_st* parse_command_line (int argc, char* argv[], GError** error);
+waves_args_st *parse_command_line (int argc, char *argv[], GError ** error);
 
 #endif
-

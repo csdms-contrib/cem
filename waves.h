@@ -13,19 +13,21 @@ typedef struct
   gint now;
   double time_step;
 
-  double* angles;
+  double *angles;
   gint len;
-  GRand* rand;
+  GRand *rand;
   guint seed;
 }
 State;
 
-int _waves_initialize (State* s);
-int _waves_run_until (State* s, int until);
-int _waves_finalize (State* s);
+int _waves_initialize (State * s);
 
-void waves_init_state (State* s);
-void waves_free_state (State* s);
+int _waves_run_until (State * s, int until);
+
+int _waves_finalize (State * s);
+
+void waves_init_state (State * s);
+
+void waves_free_state (State * s);
 
 #endif
-

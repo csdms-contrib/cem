@@ -14,7 +14,9 @@
 #define CEM_DEFAULT_OUT_PREFIX "fileout"
 
 static int verbose_flag = 0;
+
 static int version_flag = 0;
+
 static int help_flag = 0;
 
 static struct option cem_long_opts[] = {
@@ -26,7 +28,7 @@ static struct option cem_long_opts[] = {
   {"out-prefix", required_argument, NULL, 'o'},
   {NULL, 0, NULL, 0}
 };
-  
+
 static char *help_msg[] = {
   "Usage: deltas [options]",
   "Options:",
@@ -38,92 +40,88 @@ static char *help_msg[] = {
   "  --out-prefix or -o   Prefix for output files",
   NULL
 };
-      
+
 /** Parse command line options for deltas.
 
 Usage: deltas [options]
 
 Use: 'deltas --help' for a full list of command line options.
-*/    
+*/
 cem_args_st *
 parse_command_line (int argc, char *argv[])
 {
   cem_args_st *args = NULL;
 
   if (argv)
+  {
+    int ch;
+
+    float end = CEM_DEFAULT_END_TIME;
+
+    char *out_prefix = NULL;
+
+    while ((ch = getopt_long (argc, argv, "vVh?", cem_long_opts, NULL)) != -1)
     {
-      int ch;
-      float end = CEM_DEFAULT_END_TIME;
-      char* out_prefix = NULL;
+      switch (ch)
+      {
+      case 's':
+        sscanf (optarg, "%f", &end);
+        break;
+      case 'o':
+        out_prefix = strdup (optarg);
+        break;
+      case 'v':
+        version_flag = 1;
+        break;
+      case 'V':
+        verbose_flag = 1;
+        break;
+      case '?':
+      case 'h':
+        help_flag = 1;
+        break;
+      case 0:
+        break;
+      }
+    }
 
-      while ((ch =
-              getopt_long (argc, argv, "vVh?", cem_long_opts,
-                           NULL)) != -1)
-        {
-          switch (ch)
-            {
-            case 's':
-              sscanf( optarg, "%f", &end );
-              break;
-            case 'o':
-              out_prefix = strdup (optarg);
-              break;
-            case 'v':
-              version_flag = 1;
-              break;
-            case 'V':
-              verbose_flag = 1;
-              break;
-            case '?':
-            case 'h':
-              help_flag = 1;
-              break;
-            case 0:
-              break;
-            }
-        }
+    if (help_flag)
+    {
+      char **str;
 
-      if (help_flag)
-        {
-          char **str;
-          for (str = help_msg; *str; str++)
-            fprintf (stdout, "%s\n", *str);
-          exit (EXIT_SUCCESS);
-        }          
-          
-      if (version_flag)
-        {
-          fprintf (stdout, "%s version %d.%d.%d\n",
-                   CEM_PROGRAM_STR, CEM_MAJOR_VERSION,
-                   CEM_MINOR_VERSION, CEM_MICRO_VERSION);
-          exit (EXIT_SUCCESS);
-        }
-        
-      if (optind < argc)
-        {
-          fprintf(stderr,"Error: Extra command line arguments.\n" );
-          fprintf(stderr,"%s --help for help\n", CEM_PROGRAM_STR);
-          exit (EXIT_FAILURE);
-        }
+      for (str = help_msg; *str; str++)
+        fprintf (stdout, "%s\n", *str);
+      exit (EXIT_SUCCESS);
+    }
 
-      if (!out_prefix)
-        out_prefix = strdup (CEM_DEFAULT_OUT_PREFIX);
+    if (version_flag)
+    {
+      fprintf (stdout, "%s version %d.%d.%d\n",
+               CEM_PROGRAM_STR, CEM_MAJOR_VERSION,
+               CEM_MINOR_VERSION, CEM_MICRO_VERSION);
+      exit (EXIT_SUCCESS);
+    }
 
-      if ( verbose_flag )
-        {
-          fprintf( stdout, "End time is %f\n", end );
-          fprintf( stdout, "Output prefix is %s\n", out_prefix );
-        }
-      args = malloc( sizeof(cem_args_st) );
-      args->verbose = verbose_flag;
-      args->stop_time = end;
-      args->out_prefix = out_prefix;
+    if (optind < argc)
+    {
+      fprintf (stderr, "Error: Extra command line arguments.\n");
+      fprintf (stderr, "%s --help for help\n", CEM_PROGRAM_STR);
+      exit (EXIT_FAILURE);
+    }
+
+    if (!out_prefix)
+      out_prefix = strdup (CEM_DEFAULT_OUT_PREFIX);
+
+    if (verbose_flag)
+    {
+      fprintf (stdout, "End time is %f\n", end);
+      fprintf (stdout, "Output prefix is %s\n", out_prefix);
+    }
+    args = malloc (sizeof (cem_args_st));
+    args->verbose = verbose_flag;
+    args->stop_time = end;
+    args->out_prefix = out_prefix;
   }
 
   return args;
 }
-
-
-
-
-

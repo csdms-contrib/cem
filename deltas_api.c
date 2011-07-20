@@ -6,144 +6,150 @@
 #include "deltas_api.h"
 
 #ifdef SWIG
-%include deltas_api.h
+% include deltas_api.h
 #endif
-
 /** \file
 \brief The Caperiffic API
 */
-
-Deltas_state*
-deltas_new( void )
+  Deltas_state * deltas_new (void)
 {
-   State* s = malloc( sizeof(State) );
+  State *s = malloc (sizeof (State));
 
-   deltas_init_state( s );
+  deltas_init_state (s);
 
-   return (Deltas_state*)s;
+  return (Deltas_state *) s;
 }
 
-Deltas_state*
-deltas_destroy( Deltas_state* s )
+Deltas_state *
+deltas_destroy (Deltas_state * s)
 {
-   if ( s )
-   {
+  if (s)
+  {
 
-      deltas_free_state( (State*)s );
-      free( s );
-   }
-   return NULL;
+    deltas_free_state ((State *) s);
+    free (s);
+  }
+  return NULL;
 }
 
-Deltas_state*
-deltas_init( Deltas_state* s )
+Deltas_state *
+deltas_init (Deltas_state * s)
 {
-   if ( !s )
-   {
-      s = deltas_new();
-   }
+  if (!s)
+  {
+    s = deltas_new ();
+  }
 
-   _cem_initialize( (State*)s );
+  _cem_initialize ((State *) s);
 
-   return s;
+  return s;
 }
 
 int
-deltas_run_until( Deltas_state* s, float time_in_days )
+deltas_run_until (Deltas_state * s, float time_in_days)
 {
-   State* p = (State*)s;
-   int until_time_step = time_in_days / TimeStep;
-   return _cem_run_until( p, until_time_step );
+  State *p = (State *) s;
+
+  int until_time_step = time_in_days / TimeStep;
+
+  return _cem_run_until (p, until_time_step);
 }
 
-Deltas_state*
-deltas_finalize( Deltas_state* s, int free )
+Deltas_state *
+deltas_finalize (Deltas_state * s, int free)
 {
-   State* p = (State*)s;
-   _cem_finalize (p);
+  State *p = (State *) s;
 
-   if (free)
-      s = deltas_destroy (s);
+  _cem_finalize (p);
 
-   return s;
+  if (free)
+    s = deltas_destroy (s);
+
+  return s;
 }
 
-Deltas_state*
-deltas_set_save_file( Deltas_state* s, char* name )
+Deltas_state *
+deltas_set_save_file (Deltas_state * s, char *name)
 {
-   State* p = (State*)s;
-   p->savefilename = strdup( name );
-   return s;
+  State *p = (State *) s;
+
+  p->savefilename = strdup (name);
+  return s;
 }
 
-Deltas_state*
-deltas_set_read_file( Deltas_state* s, char* name )
+Deltas_state *
+deltas_set_read_file (Deltas_state * s, char *name)
 {
-   State* p = (State*)s;
-   p->readfilename = strdup( name );
-   return s;
+  State *p = (State *) s;
+
+  p->readfilename = strdup (name);
+  return s;
 }
 
-Deltas_state*
-deltas_init_grid_shape (Deltas_state* s, int dimen[2])
+Deltas_state *
+deltas_init_grid_shape (Deltas_state * s, int dimen[2])
 {
-  State* p = (State*)s;
-fprintf (stderr, "*** Grid size is (%d,%d)\n", p->nx, p->ny);
-fprintf (stderr, "*** Requested size is (%d,%d)\n", dimen[0], dimen[1]);
-  if (s && (p->nx==0 && p->ny==0))
+  State *p = (State *) s;
+
+  fprintf (stderr, "*** Grid size is (%d,%d)\n", p->nx, p->ny);
+  fprintf (stderr, "*** Requested size is (%d,%d)\n", dimen[0], dimen[1]);
+  if (s && (p->nx == 0 && p->ny == 0))
   {
     int i;
-    const int len = dimen[0]*(dimen[1]*2);
-    const int stride = dimen[1]*2;
+
+    const int len = dimen[0] * (dimen[1] * 2);
+
+    const int stride = dimen[1] * 2;
 
     p->nx = dimen[0];
     p->ny = dimen[1];
     p->max_beach_len = len;
 
-    p->AllBeach = (char**)malloc (sizeof (char*)*p->nx);
-    p->PercentFull = (float**)malloc (sizeof (float*)*p->nx);
-    p->Age = (int**)malloc (sizeof (int*)*p->nx);
-    p->CellDepth = (float**)malloc (sizeof (float*)*p->nx);
-    p->InitDepth = (float**)malloc (sizeof (float*)*p->nx);
-  
-    p->AllBeach[0] = (char*)malloc (sizeof (char)*len);
-    p->PercentFull[0] = (float*)malloc (sizeof (float)*len);
-    p->Age[0] = (int*)malloc (sizeof (int)*len);
-    p->CellDepth[0] = (float*)malloc (sizeof (float)*len);
-    p->InitDepth[0] = (float*)malloc (sizeof (float)*len);
+    p->AllBeach = (char **)malloc (sizeof (char *) * p->nx);
+    p->PercentFull = (float **)malloc (sizeof (float *) * p->nx);
+    p->Age = (int **)malloc (sizeof (int *) * p->nx);
+    p->CellDepth = (float **)malloc (sizeof (float *) * p->nx);
+    p->InitDepth = (float **)malloc (sizeof (float *) * p->nx);
 
-    for (i=1; i<p->nx; i++)
+    p->AllBeach[0] = (char *)malloc (sizeof (char) * len);
+    p->PercentFull[0] = (float *)malloc (sizeof (float) * len);
+    p->Age[0] = (int *)malloc (sizeof (int) * len);
+    p->CellDepth[0] = (float *)malloc (sizeof (float) * len);
+    p->InitDepth[0] = (float *)malloc (sizeof (float) * len);
+
+    for (i = 1; i < p->nx; i++)
     {
-      p->AllBeach[i] = p->AllBeach[i-1] + stride;
-      p->PercentFull[i] = p->PercentFull[i-1] + stride;
-      p->Age[i] = p->Age[i-1] + stride;
-      p->CellDepth[i] = p->CellDepth[i-1] + stride;
-      p->InitDepth[i] = p->InitDepth[i-1] + stride;
+      p->AllBeach[i] = p->AllBeach[i - 1] + stride;
+      p->PercentFull[i] = p->PercentFull[i - 1] + stride;
+      p->Age[i] = p->Age[i - 1] + stride;
+      p->CellDepth[i] = p->CellDepth[i - 1] + stride;
+      p->InitDepth[i] = p->InitDepth[i - 1] + stride;
     }
 
-     p->river_flux = (float*)malloc (sizeof(float)*len);
-     p->river_x = (int*)malloc (sizeof(int)*len);
-     p->river_y = (int*)malloc (sizeof(int)*len);
-     p->n_rivers = 1;
+    p->river_flux = (float *)malloc (sizeof (float) * len);
+    p->river_x = (int *)malloc (sizeof (int) * len);
+    p->river_y = (int *)malloc (sizeof (int) * len);
+    p->n_rivers = 1;
 
-     p->X = (int*)malloc (sizeof (int)*len);
-     p->Y = (int*)malloc (sizeof (int)*len);
-     p->InShadow = (char*)malloc (sizeof (char)*len);
-     p->ShorelineAngle = (float*)malloc (sizeof (float)*len);
-     p->SurroundingAngle = (float*)malloc (sizeof (float)*len);
-     p->UpWind = (char*)malloc (sizeof (char)*len);
-     p->VolumeIn = (float*)malloc (sizeof (float)*len);
-     p->VolumeOut = (float*)malloc (sizeof (float)*len);
+    p->X = (int *)malloc (sizeof (int) * len);
+    p->Y = (int *)malloc (sizeof (int) * len);
+    p->InShadow = (char *)malloc (sizeof (char) * len);
+    p->ShorelineAngle = (float *)malloc (sizeof (float) * len);
+    p->SurroundingAngle = (float *)malloc (sizeof (float) * len);
+    p->UpWind = (char *)malloc (sizeof (char) * len);
+    p->VolumeIn = (float *)malloc (sizeof (float) * len);
+    p->VolumeOut = (float *)malloc (sizeof (float) * len);
   }
-fprintf (stderr, "*** New grid size is (%d,%d)\n", p->nx, p->ny);
+  fprintf (stderr, "*** New grid size is (%d,%d)\n", p->nx, p->ny);
 
   return s;
 }
 
-Deltas_state*
-deltas_init_cell_width (Deltas_state* s, double dx)
+Deltas_state *
+deltas_init_cell_width (Deltas_state * s, double dx)
 {
-  State* p = (State*)s;
+  State *p = (State *) s;
+
   if (s)
   {
     p->cell_width = dx;
@@ -151,25 +157,28 @@ deltas_init_cell_width (Deltas_state* s, double dx)
   return s;
 }
 
-Deltas_state*
-deltas_init_grid (Deltas_state* s, double* z)
+Deltas_state *
+deltas_init_grid (Deltas_state * s, double *z)
 {
-  State* p = (State*)s;
-  if (s && (p->nx>0 && p->ny>0))
+  State *p = (State *) s;
+
+  if (s && (p->nx > 0 && p->ny > 0))
   {
     int i;
-    const int len = p->nx*p->ny*2;
-    for (i=0; i<len; i++)
+
+    const int len = p->nx * p->ny * 2;
+
+    for (i = 0; i < len; i++)
       p->InitDepth[0][i] = z[i];
   }
 
   return s;
 }
 
-Deltas_state*
-deltas_destroy_grid (Deltas_state* s)
+Deltas_state *
+deltas_destroy_grid (Deltas_state * s)
 {
-  State* p = (State*)s;
+  State *p = (State *) s;
 
   if (p)
   {
@@ -196,25 +205,28 @@ deltas_destroy_grid (Deltas_state* s)
 }
 
 float
-deltas_get_sed_rate( Deltas_state* s )
+deltas_get_sed_rate (Deltas_state * s)
 {
-   State* p = (State*)s;
-   return p->SedRate;
+  State *p = (State *) s;
+
+  return p->SedRate;
 }
 
-Deltas_state*
-deltas_find_river_mouth (Deltas_state* s, int n)
+Deltas_state *
+deltas_find_river_mouth (Deltas_state * s, int n)
 {
-  State* p = (State*)s;
-	int x,y;
-	
-	x = 0;
-	y = p->stream_spot;
+  State *p = (State *) s;
 
-	while (p->AllBeach[x][y] == 'y')
-	{
-		x += 1;
-	}
+  int x,
+    y;
+
+  x = 0;
+  y = p->stream_spot;
+
+  while (p->AllBeach[x][y] == 'y')
+  {
+    x += 1;
+  }
 
   p->river_x[n] = x;
   p->river_y[n] = y;
@@ -226,12 +238,19 @@ deltas_find_river_mouth (Deltas_state* s, int n)
 }
 
 void
-deltas_avulsion (Deltas_state* s, double* qs, double river_flux)
+deltas_avulsion (Deltas_state * s, double *qs, double river_flux)
 {
-  State* p = (State*)s;
-  int x, y;
+  State *p = (State *) s;
+
+  int x,
+    y;
+
   int i;
-  int qs_x, qs_y, qs_i;
+
+  int qs_x,
+    qs_y,
+    qs_i;
+
   int len;
 
   deltas_find_river_mouth (s, 0);
@@ -239,13 +258,13 @@ deltas_avulsion (Deltas_state* s, double* qs, double river_flux)
   x = p->river_x[0];
   y = p->river_y[0];
 
-  len = deltas_get_nx (s)*deltas_get_ny (s)/2;
-  for (i=0; i<len; i++)
+  len = deltas_get_nx (s) * deltas_get_ny (s) / 2;
+  for (i = 0; i < len; i++)
     qs[i] = 0;
 
   qs_x = x;
-  qs_y = y%deltas_get_ny (s) - deltas_get_ny (s)/4;
-  qs_i = qs_x*deltas_get_ny (s)/2 + qs_y;
+  qs_y = y % deltas_get_ny (s) - deltas_get_ny (s) / 4;
+  qs_i = qs_x * deltas_get_ny (s) / 2 + qs_y;
 
 //fprintf (stderr, "qs_x = %d\n", qs_x);
 //fprintf (stderr, "qs_y = %d\n", qs_y);
@@ -255,186 +274,206 @@ deltas_avulsion (Deltas_state* s, double* qs, double river_flux)
   return;
 }
 
-Deltas_state*
-deltas_set_sed_rate( Deltas_state* s, float rate )
+Deltas_state *
+deltas_set_sed_rate (Deltas_state * s, float rate)
 {
-   State* p = (State*)s;
-   p->SedRate = rate;
-   return s;
+  State *p = (State *) s;
+
+  p->SedRate = rate;
+  return s;
 }
 
 /** Set sediment flux in kg/s
 */
-Deltas_state*
-deltas_set_sed_flux (Deltas_state* s, float flux)
+Deltas_state *
+deltas_set_sed_flux (Deltas_state * s, float flux)
 {
-   State* p = (State*)s;
-   p->SedFlux = flux;
-   return s;
+  State *p = (State *) s;
+
+  p->SedFlux = flux;
+  return s;
 }
 
 /** Set sediment flux in kg/s
 */
-Deltas_state*
-deltas_set_river_sed_flux (Deltas_state* s, float flux, int n)
+Deltas_state *
+deltas_set_river_sed_flux (Deltas_state * s, float flux, int n)
 {
-   State* p = (State*)s;
-   p->river_flux[n] = flux;
-   return s;
+  State *p = (State *) s;
+
+  p->river_flux[n] = flux;
+  return s;
 }
 
 /** Set sediment flux in kg/s
 */
-Deltas_state*
-deltas_set_river_position (Deltas_state* s, int x, int y, int n)
+Deltas_state *
+deltas_set_river_position (Deltas_state * s, int x, int y, int n)
 {
-   State* p = (State*)s;
-   p->river_x[n] = x;
-   p->river_y[n] = y;
-   return s;
+  State *p = (State *) s;
+
+  p->river_x[n] = x;
+  p->river_y[n] = y;
+  return s;
 }
 
-Deltas_state*
-deltas_set_sediment_flux_grid (Deltas_state* s, double* qs)
+Deltas_state *
+deltas_set_sediment_flux_grid (Deltas_state * s, double *qs)
 {
-  State* p = (State*)s;
+  State *p = (State *) s;
+
   int i;
+
   int n;
+
   int len;
-  const int lower[2] = {deltas_get_ny (s)/4, 0};
-  const int stride[2] = {1, deltas_get_ny (s)/2};
+  const int lower[2] = { deltas_get_ny (s) / 4, 0 };
+  const int stride[2] = { 1, deltas_get_ny (s) / 2 };
   int dimen[3];
-fprintf (stderr, "Set flux grid\n");
-fprintf (stderr, "Start.\n"); fflush (stderr);
+
+  fprintf (stderr, "Set flux grid\n");
+  fprintf (stderr, "Start.\n");
+  fflush (stderr);
   deltas_get_value_dimen (s, NULL, dimen);
 
-  len = dimen[0]*dimen[1]*dimen[2];
+  len = dimen[0] * dimen[1] * dimen[2];
 
-  for (i=0, n=0; i<len; i++)
+  for (i = 0, n = 0; i < len; i++)
   {
-    if (qs[i]>0)
+    if (qs[i] > 0)
     {
       p->river_flux[n] = qs[i];
-      p->river_x[n] = i/stride[1];
-      p->river_y[n] = i%stride[1] + lower[0];
-fprintf (stderr, "  river position = %d, %d\n", p->river_x[n], p->river_y[n]);
+      p->river_x[n] = i / stride[1];
+      p->river_y[n] = i % stride[1] + lower[0];
+      fprintf (stderr, "  river position = %d, %d\n", p->river_x[n],
+               p->river_y[n]);
 
-fprintf (stderr, "n = %d\n", n);
-fprintf (stderr, "i = %d\n", i);
-fprintf (stderr, "river_x = %d\n", p->river_x[n]);
-fprintf (stderr, "river_y = %d\n", p->river_y[n]);
-fprintf (stderr, "qs[%d] = %f\n", i, qs[i]);
+      fprintf (stderr, "n = %d\n", n);
+      fprintf (stderr, "i = %d\n", i);
+      fprintf (stderr, "river_x = %d\n", p->river_x[n]);
+      fprintf (stderr, "river_y = %d\n", p->river_y[n]);
+      fprintf (stderr, "qs[%d] = %f\n", i, qs[i]);
       n++;
     }
   }
   p->n_rivers = n;
-fprintf (stderr, "Number of rivers = %d\n", n);
-fprintf (stderr, "Done.\n"); fflush (stderr);
+  fprintf (stderr, "Number of rivers = %d\n", n);
+  fprintf (stderr, "Done.\n");
+  fflush (stderr);
 
   return s;
 }
 
-Deltas_state*
-deltas_set_angle_asymmetry (Deltas_state* s, float angle_asymmetry)
+Deltas_state *
+deltas_set_angle_asymmetry (Deltas_state * s, float angle_asymmetry)
 {
-   State* p = (State*)s;
-   p->angle_asymmetry = angle_asymmetry;
-   return s;
+  State *p = (State *) s;
+
+  p->angle_asymmetry = angle_asymmetry;
+  return s;
 }
 
-Deltas_state*
-deltas_set_angle_highness (Deltas_state* s, float angle_highness)
+Deltas_state *
+deltas_set_angle_highness (Deltas_state * s, float angle_highness)
 {
-   State* p = (State*)s;
-   p->angle_highness = angle_highness;
-   return s;
+  State *p = (State *) s;
+
+  p->angle_highness = angle_highness;
+  return s;
 }
 
-Deltas_state*
-deltas_set_wave_angle (Deltas_state* s, float wave_angle)
+Deltas_state *
+deltas_set_wave_angle (Deltas_state * s, float wave_angle)
 {
-  State* p = (State*)s;
+  State *p = (State *) s;
+
   p->WaveAngle = wave_angle;
   return s;
 }
 
-Deltas_state*
-deltas_set_depth( Deltas_state* s, float* depth )
+Deltas_state *
+deltas_set_depth (Deltas_state * s, float *depth)
 {
-   State* p = (State*)s;
-   memcpy( p->CellDepth[0], depth, sizeof(p->CellDepth) );
-   return s;
+  State *p = (State *) s;
+
+  memcpy (p->CellDepth[0], depth, sizeof (p->CellDepth));
+  return s;
 }
 
-Deltas_state*
-deltas_set_wave_height (Deltas_state* s, float height_in_m)
+Deltas_state *
+deltas_set_wave_height (Deltas_state * s, float height_in_m)
 {
-  State* p = (State*)s;
+  State *p = (State *) s;
+
   p->wave_height = height_in_m;
   return s;
 }
 
-Deltas_state*
-deltas_set_wave_period (Deltas_state* s, float period_in_s)
+Deltas_state *
+deltas_set_wave_period (Deltas_state * s, float period_in_s)
 {
-  State* p = (State*)s;
+  State *p = (State *) s;
+
   p->wave_period = period_in_s;
   return s;
 }
 
-Deltas_state*
-deltas_set_shoreface_slope (Deltas_state* s, float shoreface_slope)
+Deltas_state *
+deltas_set_shoreface_slope (Deltas_state * s, float shoreface_slope)
 {
-  State* p = (State*)s;
+  State *p = (State *) s;
+
   p->shoreface_slope = shoreface_slope;
   return s;
 }
 
-Deltas_state*
-deltas_set_shelf_slope (Deltas_state* s, float shelf_slope)
+Deltas_state *
+deltas_set_shelf_slope (Deltas_state * s, float shelf_slope)
 {
-  State* p = (State*)s;
+  State *p = (State *) s;
+
   p->shelf_slope = shelf_slope;
   return s;
 }
 
-Deltas_state*
-deltas_set_shoreface_depth (Deltas_state* s, float shoreface_depth)
+Deltas_state *
+deltas_set_shoreface_depth (Deltas_state * s, float shoreface_depth)
 {
-  State* p = (State*)s;
+  State *p = (State *) s;
+
   p->shoreface_depth = shoreface_depth;
   return s;
 }
 
-Deltas_state*
-deltas_set_cell_width (Deltas_state* s, float cell_width)
+Deltas_state *
+deltas_set_cell_width (Deltas_state * s, float cell_width)
 {
-  State* p = (State*)s;
+  State *p = (State *) s;
+
   p->cell_width = cell_width;
   return s;
 }
 
-const char* _deltas_exchange_items[] =
-{
+const char *_deltas_exchange_items[] = {
   "DEPTH",
   "PERCENT_FILLED",
   NULL
 };
 
-const char**
+const char **
 deltas_get_exchange_items (void)
 {
   return _deltas_exchange_items;
 }
 
-double*
-deltas_get_value_grid (Deltas_state* s, const char* value)
+double *
+deltas_get_value_grid (Deltas_state * s, const char *value)
 {
-  if (strcasecmp (value, "DEPTH")==0)
+  if (strcasecmp (value, "DEPTH") == 0)
     return deltas_get_depth_dup (s);
-  else if (strcasecmp (value, "PERCENT_FILLED")==0)
+  else if (strcasecmp (value, "PERCENT_FILLED") == 0)
     return deltas_get_percent_dup (s);
-  else if (strcasecmp (value, "Elevation")==0)
+  else if (strcasecmp (value, "Elevation") == 0)
     return deltas_get_elevation_dup (s);
   else
     fprintf (stderr, "ERROR: %s: Bad value string.", value);
@@ -442,11 +481,12 @@ deltas_get_value_grid (Deltas_state* s, const char* value)
   return NULL;
 }
 
-double*
-deltas_get_value_data (Deltas_state* s, const char* value, int lower[2],
+double *
+deltas_get_value_data (Deltas_state * s, const char *value, int lower[2],
                        int upper[2], int stride[2])
 {
-  double* data = NULL;
+  double *data = NULL;
+
 /*
   lower[0] = deltas_get_ny (s)/4;
   lower[1] = 0;
@@ -457,16 +497,16 @@ deltas_get_value_data (Deltas_state* s, const char* value, int lower[2],
 */
   lower[0] = 0;
   lower[1] = 0;
-  upper[0] = deltas_get_ny (s)/2-1;
-  upper[1] = deltas_get_nx (s)-1;
+  upper[0] = deltas_get_ny (s) / 2 - 1;
+  upper[1] = deltas_get_nx (s) - 1;
   stride[0] = 1;
-  stride[1] = deltas_get_ny (s)/2;
+  stride[1] = deltas_get_ny (s) / 2;
 
-  if (strcasecmp (value, "DEPTH")==0)
+  if (strcasecmp (value, "DEPTH") == 0)
     data = deltas_get_depth_dup (s);
-  else if (strcasecmp (value, "PERCENT_FILLED")==0)
+  else if (strcasecmp (value, "PERCENT_FILLED") == 0)
     data = deltas_get_percent_dup (s);
-  else if (strcasecmp (value, "Elevation")==0)
+  else if (strcasecmp (value, "Elevation") == 0)
     data = deltas_get_elevation_dup (s);
   else
     fprintf (stderr, "ERROR: %s: Bad value string.", value);
@@ -474,10 +514,10 @@ deltas_get_value_data (Deltas_state* s, const char* value, int lower[2],
   return data;
 }
 
-int*
-deltas_get_value_dimen (Deltas_state* s, const char* value, int shape[3])
+int *
+deltas_get_value_dimen (Deltas_state * s, const char *value, int shape[3])
 {
-  shape[0] = deltas_get_ny (s)/2;
+  shape[0] = deltas_get_ny (s) / 2;
   //shape[0] = deltas_get_ny (s);
   shape[1] = deltas_get_nx (s);
   shape[2] = 1;
@@ -485,8 +525,8 @@ deltas_get_value_dimen (Deltas_state* s, const char* value, int shape[3])
   return shape;
 }
 
-double*
-deltas_get_value_res (Deltas_state* s, const char* value, double res[3])
+double *
+deltas_get_value_res (Deltas_state * s, const char *value, double res[3])
 {
   res[0] = deltas_get_dy (s);
   res[1] = deltas_get_dx (s);
@@ -495,40 +535,44 @@ deltas_get_value_res (Deltas_state* s, const char* value, double res[3])
   return res;
 }
 
-const float*
-deltas_get_depth( Deltas_state* s )
+const float *
+deltas_get_depth (Deltas_state * s)
 {
-   State* p = (State*)s;
-   return p->CellDepth[0];
+  State *p = (State *) s;
+
+  return p->CellDepth[0];
 }
 
-double*
-dup_subgrid (Deltas_state* s, float** src)
+double *
+dup_subgrid (Deltas_state * s, float **src)
 {
   double *dest = NULL;
 
   {
-    int lower[2] = {deltas_get_ny (s)/4, 0};
-    int upper[2] = {3*deltas_get_ny (s)/4-1, deltas_get_nx (s)-1};
-    int stride[2] = {1, deltas_get_ny (s)};
-    const int len = (upper[0]-lower[0]+1)*(upper[1]-lower[1]+1);
+    int lower[2] = { deltas_get_ny (s) / 4, 0 };
+    int upper[2] = { 3 * deltas_get_ny (s) / 4 - 1, deltas_get_nx (s) - 1 };
+    int stride[2] = { 1, deltas_get_ny (s) };
+    const int len = (upper[0] - lower[0] + 1) * (upper[1] - lower[1] + 1);
 
-    dest = (double*)malloc (sizeof (double)*len);
+    dest = (double *)malloc (sizeof (double) * len);
 
     if (dest)
     {
       //int src_id;
       //int dst_id;
       int id;
-      int i, j;
+
+      int i,
+        j;
+
 /*
       for (src_id=lower[0], dst_id=0, j=lower[1]; j<=upper[1];
            src_id+=(stride[1]-(upper[0]-lower[0])), j++)
         for (i=lower[0]; i<=upper[0]; src_id+=stride[0], dst_id++, i++)
           dest[dst_id] = src[src_id];
 */
-      for (i=lower[1], id=0; i<=upper[1]; i++)
-        for (j=lower[0]; j<=upper[0]; j++, id++)
+      for (i = lower[1], id = 0; i <= upper[1]; i++)
+        for (j = lower[0]; j <= upper[0]; j++, id++)
           dest[id] = src[i][j];
     }
   }
@@ -536,11 +580,12 @@ dup_subgrid (Deltas_state* s, float** src)
   return dest;
 }
 
-double*
-deltas_get_depth_dup (Deltas_state* s)
+double *
+deltas_get_depth_dup (Deltas_state * s)
 {
-  State* p = (State*)s;
-  double* val = NULL;
+  State *p = (State *) s;
+
+  double *val = NULL;
 
   {
 /*
@@ -561,36 +606,41 @@ deltas_get_depth_dup (Deltas_state* s)
   return val;
 }
 
-double*
-deltas_get_elevation_dup (Deltas_state* s)
+double *
+deltas_get_elevation_dup (Deltas_state * s)
 {
-  State* p = (State*)s;
-  double* val = NULL;
+  State *p = (State *) s;
+
+  double *val = NULL;
 
   {
-    const int len = deltas_get_nx (s)*deltas_get_ny (s)/2;
+    const int len = deltas_get_nx (s) * deltas_get_ny (s) / 2;
+
     int i;
+
     //val = deltas_get_depth_dup (s);
     val = dup_subgrid (s, p->CellDepth);
-    for (i=0; i<len; i++)
+    for (i = 0; i < len; i++)
       val[i] *= -1;
   }
 
   return val;
 }
 
-const float*
-deltas_get_percent (Deltas_state* s)
+const float *
+deltas_get_percent (Deltas_state * s)
 {
-   State* p = (State*)s;
-   return p->PercentFull[0];
+  State *p = (State *) s;
+
+  return p->PercentFull[0];
 }
 
-double*
-deltas_get_percent_dup (Deltas_state* s)
+double *
+deltas_get_percent_dup (Deltas_state * s)
 {
-  State* p = (State*)s;
-  double* val = NULL;
+  State *p = (State *) s;
+
+  double *val = NULL;
 
   {
 /*
@@ -613,114 +663,123 @@ deltas_get_percent_dup (Deltas_state* s)
 }
 
 double
-deltas_get_angle_asymmetry (Deltas_state* s)
+deltas_get_angle_asymmetry (Deltas_state * s)
 {
-  State* p = (State*)s;
+  State *p = (State *) s;
+
   return p->angle_asymmetry;
 }
 
 double
-deltas_get_angle_highness (Deltas_state* s)
+deltas_get_angle_highness (Deltas_state * s)
 {
-  State* p = (State*)s;
+  State *p = (State *) s;
+
   return p->angle_highness;
 }
 
 double
-deltas_get_wave_angle (Deltas_state* s)
+deltas_get_wave_angle (Deltas_state * s)
 {
-  State* p = (State*)s;
+  State *p = (State *) s;
+
   return p->WaveAngle;
 }
 
 double
-deltas_get_start_time (Deltas_state* s)
+deltas_get_start_time (Deltas_state * s)
 {
   return 0.;
 }
 
 #include <float.h>
 double
-deltas_get_end_time (Deltas_state* s)
+deltas_get_end_time (Deltas_state * s)
 {
   return DBL_MAX;
 }
 
 double
-deltas_get_current_time (Deltas_state* s)
+deltas_get_current_time (Deltas_state * s)
 {
-  State* p = (State*)s;
-  return p->CurrentTimeStep*TimeStep;
+  State *p = (State *) s;
+
+  return p->CurrentTimeStep * TimeStep;
 }
 
 int
-deltas_get_nx (Deltas_state* s)
+deltas_get_nx (Deltas_state * s)
 {
-  State* p = (State*)s;
+  State *p = (State *) s;
+
   return p->nx;
 }
 
 int
-deltas_get_ny (Deltas_state* s)
+deltas_get_ny (Deltas_state * s)
 {
-  State* p = (State*)s;
-  return p->ny*2;
+  State *p = (State *) s;
+
+  return p->ny * 2;
   //return 2*Ymax;
 }
 
 int
-deltas_get_stride (Deltas_state* s, int dimen)
+deltas_get_stride (Deltas_state * s, int dimen)
 {
-  if (dimen==0)
+  if (dimen == 0)
     return 1;
-  else if (dimen==1)
-    return deltas_get_ny (s)/2;
+  else if (dimen == 1)
+    return deltas_get_ny (s) / 2;
   else
     return 0;
 }
 
 int
-deltas_get_len (Deltas_state* s, int dimen)
+deltas_get_len (Deltas_state * s, int dimen)
 {
-  if (dimen==0)
+  if (dimen == 0)
     return deltas_get_nx (s);
-  else if (dimen==1)
+  else if (dimen == 1)
     return deltas_get_ny (s);
   else
     return 0;
 }
 
 double
-deltas_get_dx (Deltas_state* s)
+deltas_get_dx (Deltas_state * s)
 {
-  State* p = (State*)s;
+  State *p = (State *) s;
+
   return p->cell_width;
   //return CellWidth;
 }
 
 double
-deltas_get_dy (Deltas_state* s)
+deltas_get_dy (Deltas_state * s)
 {
-  State* p = (State*)s;
+  State *p = (State *) s;
+
   return p->cell_width;
   //return CellWidth;
 }
 
 void
-deltas_use_external_waves (Deltas_state* s)
+deltas_use_external_waves (Deltas_state * s)
 {
-   State* p = (State*)s;
-   p->external_waves = TRUE;
-   //fprintf (stderr, "*** Ignoring request for external waves\n");
-   //p->external_waves = FALSE;
+  State *p = (State *) s;
+
+  p->external_waves = TRUE;
+  //fprintf (stderr, "*** Ignoring request for external waves\n");
+  //p->external_waves = FALSE;
 }
 
 void
-deltas_use_sed_flux (Deltas_state* s)
+deltas_use_sed_flux (Deltas_state * s)
 {
-  State* p = (State*)s;
+  State *p = (State *) s;
+
   p->use_sed_flux = TRUE;
   //fprintf (stderr, "*** Ignoring request for sediment flux\n");
   //p->use_sed_flux = FALSE;
 }
-

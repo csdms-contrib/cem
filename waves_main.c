@@ -3,7 +3,7 @@
  *
  *       Filename:  waves_main.c
  *
- *    Description:  
+ *    Description:
  *
  *        Version:  1.0
  *        Created:  04/16/2010 04:04:40 PM
@@ -29,13 +29,14 @@
 #define WAVES_MINOR_VERSION (1)
 #define WAVES_MICRO_VERSION (0)
 
-double waves_next_angle (GRand* rand, double asymmetry, double highness);
+double waves_next_angle (GRand * rand, double asymmetry, double highness);
 
 int
-main (int argc, char* argv[])
+main (int argc, char *argv[])
 {
-  waves_args_st* args = NULL;
-  GError* error = NULL;
+  waves_args_st *args = NULL;
+
+  GError *error = NULL;
 
   args = parse_command_line (argc, argv, &error);
   g_assert (args);
@@ -43,23 +44,30 @@ main (int argc, char* argv[])
   if (args->version)
   {
     fprintf (stdout, "%s %d.%d.%d\n", WAVES_PROGRAM_STR, WAVES_MAJOR_VERSION,
-                                      WAVES_MINOR_VERSION, WAVES_MICRO_VERSION);
+             WAVES_MINOR_VERSION, WAVES_MICRO_VERSION);
     return EXIT_SUCCESS;
   }
 
   {
     gint i;
+
     double a;
-    GRand* rand = g_rand_new_with_seed (args->seed);
+
+    GRand *rand = g_rand_new_with_seed (args->seed);
+
     const gint len = args->n_waves;
+
     const double asymmetry = args->asymmetry;
+
     const double highness = args->highness;
-    const double scale = (args->radians)?1.:180./M_PI;
-    Waves_state* waves_state = NULL;
+
+    const double scale = (args->radians) ? 1. : 180. / M_PI;
+
+    Waves_state *waves_state = NULL;
 
     if (args->verbose)
     {
-      gchar *units = (args->radians)?"Radians":"Degrees";
+      gchar *units = (args->radians) ? "Radians" : "Degrees";
 
       fprintf (stderr, "Highness factor: %f\n", highness);
       fprintf (stderr, "Asymmetry factor: %f\n", asymmetry);
@@ -70,10 +78,10 @@ main (int argc, char* argv[])
     waves_set_angle_asymmetry (waves_state, args->asymmetry);
     waves_set_angle_highness (waves_state, args->highness);
 
-    for (i=0; i<len; i++)
+    for (i = 0; i < len; i++)
     {
       waves_run_until (waves_state, i);
-      a = waves_get_wave_angle (waves_state)*scale;
+      a = waves_get_wave_angle (waves_state) * scale;
       //a = waves_next_angle (rand, asymmetry, highness)*scale;
       fprintf (stdout, "%f\n", a);
     }
@@ -87,4 +95,3 @@ main (int argc, char* argv[])
 
   return EXIT_SUCCESS;
 }
-

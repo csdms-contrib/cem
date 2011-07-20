@@ -11,99 +11,100 @@
 
 typedef struct
 {
-   int use_sed_flux; /**< Use SedFlux rather than SedRate */
-   float SedFlux; /**< Sediment flux in kg/s. */
-   float SedRate; /**< Sedimentation rate as percent per time step. */
-   float angle_highness; /**< Fraction of high-angle waves. */
-   float angle_asymmetry; /**< Fraction of waves coming from the left. */
-   float wave_height; /**< Height of incoming waves in meters. */
-   float wave_period; /**< Period of incoming waves in seconds. */
-   float shoreface_slope; /**< Gradient of the shoreface. */
-   float shelf_slope; /**< Gradient of the shelf. */
-   float shoreface_depth; /**< Water depth of the shoreface in meters. */
+  int use_sed_flux;  /**< Use SedFlux rather than SedRate */
+  float SedFlux;  /**< Sediment flux in kg/s. */
+  float SedRate;  /**< Sedimentation rate as percent per time step. */
+  float angle_highness;  /**< Fraction of high-angle waves. */
+  float angle_asymmetry;  /**< Fraction of waves coming from the left. */
+  float wave_height;  /**< Height of incoming waves in meters. */
+  float wave_period;  /**< Period of incoming waves in seconds. */
+  float shoreface_slope;  /**< Gradient of the shoreface. */
+  float shelf_slope;  /**< Gradient of the shelf. */
+  float shoreface_depth;  /**< Water depth of the shoreface in meters. */
 
-   int nx; /**< Number of cells in x (cross-shore) direction */
-   int ny; /**< Number of cells in y (long-shore) direction */
-   int max_beach_len; /**< Max number of cells that can make up the coastline */
+  int nx;  /**< Number of cells in x (cross-shore) direction */
+  int ny;  /**< Number of cells in y (long-shore) direction */
+  int max_beach_len;  /**< Max number of cells that can make up the coastline */
 
-   int n_rivers;
-   float* river_flux;
-   int* river_x;
-   int* river_y;
+  int n_rivers;
+  float *river_flux;
+  int *river_x;
+  int *river_y;
 
-   int stream_spot;
+  int stream_spot;
 
-   float cell_width; /**< Size of cell in meters */
+  float cell_width;  /**< Size of cell in meters */
 
    /** Input/output file names. */
-   char* savefilename; /**< Name of save file. */
-   char* readfilename; /**< Namve of file to read input from. */
+  char *savefilename;  /**< Name of save file. */
+  char *readfilename;  /**< Namve of file to read input from. */
 
    /** Overall Shoreface Configuration Arrays - Data file information
        This grids will be of size (nx, ny).
     */
-   
-   char** AllBeach; /**< Flag indicating of cell is entirely beach */
-   float** PercentFull; /**< Fractional amount of shore cell full of
+
+  char **AllBeach;  /**< Flag indicating of cell is entirely beach */
+  float **PercentFull;  /**< Fractional amount of shore cell full of
                                        sediment */
-   int** Age; /**< Age since cell was deposited */
-   float** CellDepth; /**< Depth array (m) (ADA 6/3) */
-   float** InitDepth; /**< Save initial depths (m) (EWHH 2010/8/11) */
+  int **Age;  /**< Age since cell was deposited */
+  float **CellDepth;  /**< Depth array (m) (ADA 6/3) */
+  float **InitDepth;  /**< Save initial depths (m) (EWHH 2010/8/11) */
 
    /** Computational Arrays (determined for each time step) */
-   int* X; /**< X Position of ith beach element */
-   int* Y; /**< Y Position of ith beach element */
-   char*	InShadow;	 /**< Is ith beach element in shadow? */
-   float* ShorelineAngle; /**< Angle between cell and right (z+1)
+  int *X;  /**< X Position of ith beach element */
+  int *Y;  /**< Y Position of ith beach element */
+  char *InShadow;                /**< Is ith beach element in shadow? */
+  float *ShorelineAngle;  /**< Angle between cell and right (z+1)
                                             neighbor */
-   float* SurroundingAngle;/**< Cell-orientated angle based upon
+  float *SurroundingAngle; /**< Cell-orientated angle based upon
                                              left and right neighbor */
-   char* UpWind; /**< Upwind or downwind condition used to
+  char *UpWind;  /**< Upwind or downwind condition used to
                                    calculate sediment transport */
-   float* VolumeIn;  /**< Sediment volume into ith beach element */	
-   float* VolumeOut; /**< Sediment volume out of ith beach element */
+  float *VolumeIn;   /**< Sediment volume into ith beach element */
+  float *VolumeOut;  /**< Sediment volume out of ith beach element */
 
    /** Miscellaneous State Variables */
-   int CurrentTimeStep; /**< Time step of current calculation */ 
+  int CurrentTimeStep;  /**< Time step of current calculation */
 
-   int NextX; /**< used to iterate FindNextCell in global array - */
-   int NextY;
+  int NextX;  /**< used to iterate FindNextCell in global array - */
+  int NextY;
 
-   int TotalBeachCells; /**< Number of cells describing beach at particular iteration */
-   int ShadowXMax; /**< used to determine maximum extent of beach cells */
+  int TotalBeachCells;  /**< Number of cells describing beach at particular iteration */
+  int ShadowXMax;  /**< used to determine maximum extent of beach cells */
 
-   int external_waves;
-   float WaveAngle; /**< wave angle for current time step */	
+  int external_waves;
+  float WaveAngle;  /**< wave angle for current time step */
 
-   int FindStart; /**< Used to tell FindBeach at what Y value to start looking */
+  int FindStart;  /**< Used to tell FindBeach at what Y value to start looking */
 
-   char FellOffArray; /**< Flag used to determine if accidentally went off array */
+  char FellOffArray;  /**< Flag used to determine if accidentally went off array */
 
-   float MassInitial; /**< For conservation of mass calcs */
-   float MassCurrent;
+  float MassInitial;  /**< For conservation of mass calcs */
+  float MassCurrent;
 
-   int NumWaveBins;    /**< For Input Wave - number of bins */
-   float WaveMax[36];  /**< Max Angle for specific bin */
-   float WaveProb[36]; /**< Probability of Certain Bin */
-
+  int NumWaveBins;     /**< For Input Wave - number of bins */
+  float WaveMax[36];   /**< Max Angle for specific bin */
+  float WaveProb[36];  /**< Probability of Certain Bin */
 
    /** Graphics variables. */
-   float xcellwidth;
-   float ycellwidth;
-   int   xplotoff;
-   int   yplotoff;
+  float xcellwidth;
+  float ycellwidth;
+  int xplotoff;
+  int yplotoff;
 
-   //char state[256];
-   char* state;
+  //char state[256];
+  char *state;
 }
 State;
 
-int _cem_initialize( State* s );
-int _cem_run_until ( State* s, int until );
-int _cem_finalize  ( State* s );
+int _cem_initialize (State * s);
 
-void deltas_init_state( State* s );
-void deltas_free_state( State* s );
+int _cem_run_until (State * s, int until);
+
+int _cem_finalize (State * s);
+
+void deltas_init_state (State * s);
+
+void deltas_free_state (State * s);
 
 #endif
-

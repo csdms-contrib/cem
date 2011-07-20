@@ -5,11 +5,10 @@ typedef struct
 {
   int verbose;
   float stop_time;
-  char* out_prefix;
+  char *out_prefix;
 }
 cem_args_st;
 
 cem_args_st *parse_command_line (int argc, char *argv[]);
 
 #endif
-
