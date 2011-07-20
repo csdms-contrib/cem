@@ -93,7 +93,8 @@ DEBUG_PRINT (int exp, const char *format, ...)
 #define InitCType       (0)     /**< type of initial conds 0 = sandy, 1 = barrier */
 #define InitBWidth      (4)     /**< initial minimum width of barrier (Cells) */
 #define OWType          (1)     /**< 0 = use depth array, 1 = use geometric rule */
-#define OWMinDepth	(0.1)   /**<  littlest overwash of all */
+//#define OWMinDepth	(0.1)   /**<  littlest overwash of all */
+#define OWMinDepth	(5.0)   /**<  littlest overwash of all */
 #define FindCellError	(5)     /**< if we run off of array, how far over do we try again? */
 
 /* Plotting Controls */
@@ -527,7 +528,7 @@ _cem_run_until (State * _s, int until)
 
       if (_s->CurrentTimeStep % ScreenTextSpacing == 0)
       {
-        printf ("==== WaveAngle: %2.2f  MASS Percent: %1.4f  Time Step: %d\n",
+        printf ("==== WaveAngle: %2.2f:  MASS Percent: %1.4f:  Time Step: %d\n",
                 180 * (_s->WaveAngle) / M_PI,
                 _s->MassCurrent / _s->MassInitial, _s->CurrentTimeStep);
       }
