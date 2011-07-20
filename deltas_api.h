@@ -55,6 +55,10 @@ Deltas_state *deltas_set_river_position (Deltas_state * s, int x, int y, int n);
 
 Deltas_state *deltas_set_sediment_flux_grid (Deltas_state * s, double *qs);
 
+Deltas_state * deltas_set_rivers (Deltas_state * s, const double * x,
+                                  const double * y, double * qb,
+                                  const int len);
+
 Deltas_state *deltas_set_angle_asymmetry (Deltas_state * s,
                                           double angle_asymmetry);
 Deltas_state *deltas_set_angle_highness (Deltas_state * s,
@@ -98,6 +102,11 @@ double *deltas_get_depth_dup (Deltas_state *);
 double *deltas_get_elevation_dup (Deltas_state * s);
 
 double *deltas_get_percent_dup (Deltas_state *);
+
+const double* deltas_get_river_x_position (Deltas_state * s);
+const double* deltas_get_river_y_position (Deltas_state * s);
+const double* deltas_get_river_flux (Deltas_state * s);
+int deltas_get_n_rivers (Deltas_state * s);
 
 double deltas_get_sed_rate (Deltas_state *);
 

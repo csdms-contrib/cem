@@ -333,10 +333,11 @@ deltas_set_sediment_flux_grid_old (Deltas_state * s, double *qs)
   const int lower[2] = { deltas_get_ny (s) / 4, 0 };
   const int stride[2] = { 1, deltas_get_ny (s) / 2 };
   int dimen[3];
-
+/*
   fprintf (stderr, "Set flux grid\n");
   fprintf (stderr, "Start.\n");
   fflush (stderr);
+*/
   deltas_get_value_dimen (s, NULL, dimen);
 
   len = dimen[0] * dimen[1] * dimen[2];
@@ -348,6 +349,7 @@ deltas_set_sediment_flux_grid_old (Deltas_state * s, double *qs)
       p->river_flux[n] = qs[i];
       p->river_x[n] = i / stride[1];
       p->river_y[n] = i % stride[1] + lower[0];
+      /*
       fprintf (stderr, "  river position = %d, %d\n", p->river_x[n],
                p->river_y[n]);
 
@@ -356,13 +358,16 @@ deltas_set_sediment_flux_grid_old (Deltas_state * s, double *qs)
       fprintf (stderr, "river_x = %d\n", p->river_x[n]);
       fprintf (stderr, "river_y = %d\n", p->river_y[n]);
       fprintf (stderr, "qs[%d] = %f\n", i, qs[i]);
+      */
       n++;
     }
   }
   p->n_rivers = n;
+  /*
   fprintf (stderr, "Number of rivers = %d\n", n);
   fprintf (stderr, "Done.\n");
   fflush (stderr);
+  */
 
   return s;
 }
@@ -381,9 +386,6 @@ deltas_set_sediment_flux_grid (Deltas_state * s, double *qs)
   const int stride[2] = { 1, deltas_get_ny (s) };
   int dimen[3];
 
-  fprintf (stderr, "Set flux grid\n");
-  fprintf (stderr, "Start.\n");
-  fflush (stderr);
   deltas_get_value_dimen (s, NULL, dimen);
 
   len = dimen[0] * dimen[1] * dimen[2];
@@ -395,21 +397,30 @@ deltas_set_sediment_flux_grid (Deltas_state * s, double *qs)
       p->river_flux[n] = qs[i];
       p->river_x[n] = i / stride[1];
       p->river_y[n] = i % stride[1] + lower[0];
-      fprintf (stderr, "  river position = %d, %d\n", p->river_x[n],
-               p->river_y[n]);
-
-      fprintf (stderr, "n = %d\n", n);
-      fprintf (stderr, "i = %d\n", i);
-      fprintf (stderr, "river_x = %d\n", p->river_x[n]);
-      fprintf (stderr, "river_y = %d\n", p->river_y[n]);
-      fprintf (stderr, "qs[%d] = %f\n", i, qs[i]);
       n++;
     }
   }
   p->n_rivers = n;
-  fprintf (stderr, "Number of rivers = %d\n", n);
-  fprintf (stderr, "Done.\n");
-  fflush (stderr);
+
+  return s;
+}
+
+Deltas_state *
+deltas_set_rivers (Deltas_state * s, const double * x, const double * y,
+                   double * qb, const int len)
+{
+  State *p = (State *) s;
+  int i;
+  const double dx = deltas_get_dx (s);
+  const double dy = deltas_get_dy (s);
+
+  p->n_rivers = len;
+  for (i=0; i<len; i++)
+  {
+    p->river_flux[i] = qb[i];
+    p->river_x[i] = x[i]/dx;
+    p->river_y[i] = y[i]/dy;
+  }
 
   return s;
 }
@@ -552,12 +563,25 @@ deltas_get_value_data (Deltas_state * s, const char *value, int lower[2],
 {
   double *data = NULL;
 
-  lower[0] = 0;
-  lower[1] = 0;
-  upper[0] = deltas_get_ny (s) - 1;
-  upper[1] = deltas_get_nx (s) - 1;
-  stride[0] = 1;
-  stride[1] = deltas_get_ny (s);
+  if (strncasecmp (value, "river_mouth", 11)==0)
+  {
+    lower[0] = 0;
+    upper[0] = deltas_get_n_rivers (s) - 1;
+    stride[0] = 1;
+
+    lower[1] = 0;
+    upper[1] = 0;
+    stride[1] = 1;
+  }
+  else
+  {
+    lower[0] = 0;
+    upper[0] = deltas_get_ny (s) - 1;
+    stride[0] = 1;
+    lower[1] = 0;
+    upper[1] = deltas_get_nx (s) - 1;
+    stride[1] = deltas_get_ny (s);
+  }
 
   if (strcasecmp (value, "DEPTH") == 0)
     data = (double*)deltas_get_depth (s);
@@ -565,6 +589,12 @@ deltas_get_value_data (Deltas_state * s, const char *value, int lower[2],
     data = (double*)deltas_get_percent (s);
 //  else if (strcasecmp (value, "ELEVATION") == 0)
 //    data = (double*)deltas_get_elevation (s);
+  else if (strcasecmp (value, "river_mouth_x_position") == 0)
+    data = (double*)deltas_get_river_x_position (s);
+  else if (strcasecmp (value, "river_mouth_y_position") == 0)
+    data = (double*)deltas_get_river_y_position (s);
+  else if (strcasecmp (value, "river_mouth_flux") == 0)
+    data = (double*)deltas_get_river_flux (s);
   else
     fprintf (stderr, "ERROR: %s: Bad value string.", value);
 
@@ -761,6 +791,34 @@ deltas_get_percent_dup (Deltas_state * s)
   }
 
   return val;
+}
+
+const double*
+deltas_get_river_x_position (Deltas_state * s)
+{
+  State *p = (State *) s;
+  return p->river_x;
+}
+
+const double*
+deltas_get_river_y_position (Deltas_state * s)
+{
+  State *p = (State *) s;
+  return p->river_y;
+}
+
+const double*
+deltas_get_river_flux (Deltas_state * s)
+{
+  State *p = (State *) s;
+  return p->river_flux;
+}
+
+int
+deltas_get_n_rivers (Deltas_state * s)
+{
+  State *p = (State *) s;
+  return p->n_rivers;
 }
 
 double
