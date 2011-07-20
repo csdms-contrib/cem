@@ -12,28 +12,28 @@
 typedef struct
 {
   int use_sed_flux;  /**< Use SedFlux rather than SedRate */
-  float SedFlux;  /**< Sediment flux in kg/s. */
-  float SedRate;  /**< Sedimentation rate as percent per time step. */
-  float angle_highness;  /**< Fraction of high-angle waves. */
-  float angle_asymmetry;  /**< Fraction of waves coming from the left. */
-  float wave_height;  /**< Height of incoming waves in meters. */
-  float wave_period;  /**< Period of incoming waves in seconds. */
-  float shoreface_slope;  /**< Gradient of the shoreface. */
-  float shelf_slope;  /**< Gradient of the shelf. */
-  float shoreface_depth;  /**< Water depth of the shoreface in meters. */
+  double SedFlux;  /**< Sediment flux in kg/s. */
+  double SedRate;  /**< Sedimentation rate as percent per time step. */
+  double angle_highness;  /**< Fraction of high-angle waves. */
+  double angle_asymmetry;  /**< Fraction of waves coming from the left. */
+  double wave_height;  /**< Height of incoming waves in meters. */
+  double wave_period;  /**< Period of incoming waves in seconds. */
+  double shoreface_slope;  /**< Gradient of the shoreface. */
+  double shelf_slope;  /**< Gradient of the shelf. */
+  double shoreface_depth;  /**< Water depth of the shoreface in meters. */
 
   int nx;  /**< Number of cells in x (cross-shore) direction */
   int ny;  /**< Number of cells in y (long-shore) direction */
   int max_beach_len;  /**< Max number of cells that can make up the coastline */
 
   int n_rivers;
-  float *river_flux;
+  double *river_flux;
   int *river_x;
   int *river_y;
 
   int stream_spot;
 
-  float cell_width;  /**< Size of cell in meters */
+  double cell_width;  /**< Size of cell in meters */
 
    /** Input/output file names. */
   char *savefilename;  /**< Name of save file. */
@@ -44,24 +44,24 @@ typedef struct
     */
 
   char **AllBeach;  /**< Flag indicating of cell is entirely beach */
-  float **PercentFull;  /**< Fractional amount of shore cell full of
+  double **PercentFull;  /**< Fractional amount of shore cell full of
                                        sediment */
   int **Age;  /**< Age since cell was deposited */
-  float **CellDepth;  /**< Depth array (m) (ADA 6/3) */
-  float **InitDepth;  /**< Save initial depths (m) (EWHH 2010/8/11) */
+  double **CellDepth;  /**< Depth array (m) (ADA 6/3) */
+  double **InitDepth;  /**< Save initial depths (m) (EWHH 2010/8/11) */
 
    /** Computational Arrays (determined for each time step) */
   int *X;  /**< X Position of ith beach element */
   int *Y;  /**< Y Position of ith beach element */
   char *InShadow;                /**< Is ith beach element in shadow? */
-  float *ShorelineAngle;  /**< Angle between cell and right (z+1)
+  double *ShorelineAngle;  /**< Angle between cell and right (z+1)
                                             neighbor */
-  float *SurroundingAngle; /**< Cell-orientated angle based upon
+  double *SurroundingAngle; /**< Cell-orientated angle based upon
                                              left and right neighbor */
   char *UpWind;  /**< Upwind or downwind condition used to
                                    calculate sediment transport */
-  float *VolumeIn;   /**< Sediment volume into ith beach element */
-  float *VolumeOut;  /**< Sediment volume out of ith beach element */
+  double *VolumeIn;   /**< Sediment volume into ith beach element */
+  double *VolumeOut;  /**< Sediment volume out of ith beach element */
 
    /** Miscellaneous State Variables */
   int CurrentTimeStep;  /**< Time step of current calculation */
@@ -73,22 +73,22 @@ typedef struct
   int ShadowXMax;  /**< used to determine maximum extent of beach cells */
 
   int external_waves;
-  float WaveAngle;  /**< wave angle for current time step */
+  double WaveAngle;  /**< wave angle for current time step */
 
   int FindStart;  /**< Used to tell FindBeach at what Y value to start looking */
 
   char FellOffArray;  /**< Flag used to determine if accidentally went off array */
 
-  float MassInitial;  /**< For conservation of mass calcs */
-  float MassCurrent;
+  double MassInitial;  /**< For conservation of mass calcs */
+  double MassCurrent;
 
   int NumWaveBins;     /**< For Input Wave - number of bins */
-  float WaveMax[36];   /**< Max Angle for specific bin */
-  float WaveProb[36];  /**< Probability of Certain Bin */
+  double WaveMax[36];   /**< Max Angle for specific bin */
+  double WaveProb[36];  /**< Probability of Certain Bin */
 
    /** Graphics variables. */
-  float xcellwidth;
-  float ycellwidth;
+  double xcellwidth;
+  double ycellwidth;
   int xplotoff;
   int yplotoff;
 

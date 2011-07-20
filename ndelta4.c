@@ -170,12 +170,12 @@ void DeliverSediment (State * _s);
 
 void DeliverRivers (State * _s);
 
-void AddRiverFlux (State * _s, int xin, int yin, float sedin);
+void AddRiverFlux (State * _s, int xin, int yin, double sedin);
 
-float FindFluvialShorefaceDepth (State * _s, int i);
+double FindFluvialShorefaceDepth (State * _s, int i);
 
-void ActualizeFluvialSed (State * _s, int xin, int yin, float Depth,
-                          float SedIn);
+void ActualizeFluvialSed (State * _s, int xin, int yin, double Depth,
+                          double SedIn);
 void DeliverSedimentFlux (State * _s);
 
 void DetermineAngles (State * _s);
@@ -183,26 +183,26 @@ void DetermineAngles (State * _s);
 void DetermineSedTransport (State * _s);
 
 void DoOverwash (State * _s, int xfrom, int yfrom, int xto, int yto,
-                 float xintto, float yintto, float distance, int ishore);
+                 double xintto, double yintto, double distance, int ishore);
 void FindBeachCells (State * _s, int YStart);
 
 char FindIfInShadow (State * _s, int icheck, int ShadMax);
 
 void FindNextCell (State * _s, int x, int y, int z);
 
-float FindWaveAngle (State * _s);
+double FindWaveAngle (State * _s);
 
 void FixBeach (State * _s);
 
-float GetOverwashDepth (State * _s, int xin, int yin, float xintto,
-                        float yintto, int ishore);
+double GetOverwashDepth (State * _s, int xin, int yin, double xintto,
+                        double yintto, int ishore);
 void GraphCells (State * _s);
 
 void InitConds (State * _s);
 
 void InitPert (State * _s);
 
-float MassCount (State * _s);
+double MassCount (State * _s);
 
 void OopsImEmpty (State * _s, int x, int y);
 
@@ -214,13 +214,13 @@ void PauseRun (State * _s, int x, int y, int in);
 
 void PeriodicBoundaryCopy (State * _s);
 
-void PutPixel (State * _s, float x, float y, float R, float G, float B);
+void PutPixel (State * _s, double x, double y, double R, double G, double B);
 
 void PrintLocalConds (State * _s, int x, int y, int in);
 
-float Raise (float b, float e);
+double Raise (double b, double e);
 
-float RandZeroToOne ();
+double RandZeroToOne ();
 
 void ReadSandFromFile (State * _s);
 
@@ -232,7 +232,7 @@ void SaveLineToFile (State * _s);
 
 void ScreenInit (State * _s);
 
-void SedTrans (State * _s, int From, int To, float ShoreAngle, char MaxT);
+void SedTrans (State * _s, int From, int To, double ShoreAngle, char MaxT);
 
 void ShadowSweep (State * _s);
 
@@ -256,7 +256,7 @@ deltas_init_state (State * s)
   s->shoreface_depth = DepthShoreface;
   s->shelf_slope = ShelfSlope;
 /*
-   s->river_flux = (float*)malloc (sizeof(float)*_s->nx*2*_s->ny);
+   s->river_flux = (double*)malloc (sizeof(double)*_s->nx*2*_s->ny);
    s->river_x = (int*)malloc (sizeof(int)*_s->nx*2*_s->ny);
    s->river_y = (int*)malloc (sizeof(int)*_s->nx*2*_s->ny);
    s->n_rivers = 1;
@@ -453,8 +453,8 @@ _cem_initialize (State * _s)
 #ifdef WITH_OPENGL
   if (DO_GRAPHICS)
   {
-    _s->xcellwidth = 2.0 / (2.0 * (float)XPlotExtent) * (CELL_PIXEL_SIZE) / 2.0;
-    _s->ycellwidth = 2.0 / (2.0 * (float)YPlotExtent) * (CELL_PIXEL_SIZE) / 2.0;
+    _s->xcellwidth = 2.0 / (2.0 * (double)XPlotExtent) * (CELL_PIXEL_SIZE) / 2.0;
+    _s->ycellwidth = 2.0 / (2.0 * (double)YPlotExtent) * (CELL_PIXEL_SIZE) / 2.0;
     _s->xplotoff = 0;
     _s->yplotoff = _s->ny / 2;
 
@@ -748,17 +748,17 @@ _cem_finalize (State * _s)
 }
 
 /** calculates wave angle for given time step */
-float
+double
 FindWaveAngle (State * _s)
 {
 
-  float Angle;
+  double Angle;
 
   /* Data Input Method */
 
-  float RandBin;                /* Random number to pick wave angle bin */
+  double RandBin;                /* Random number to pick wave angle bin */
 
-  float RandAngle;              /* Random number to pick wave angle within the bin */
+  double RandAngle;              /* Random number to pick wave angle within the bin */
 
   int flag = 1;
 
@@ -766,9 +766,9 @@ FindWaveAngle (State * _s)
 
   /*  Variables for Asymmetry Method */
 
-  float AsymRandom;             /* variable used to determine wave direction for current time step */
+  double AsymRandom;             /* variable used to determine wave direction for current time step */
 
-  float AngleRandom;            /* variable used to determine wave power for current time step */
+  double AngleRandom;            /* variable used to determine wave power for current time step */
 
   int Sign;                     /* defines direction of incoming waves for current time step, */
 
@@ -1392,14 +1392,14 @@ char
 FindIfInShadow (State * _s, int icheck, int ShadMax)
 {
 
-  float slope;                  /* search line slope - slope of zero goes staight forward */
+  double slope;                  /* search line slope - slope of zero goes staight forward */
 
   int ysign;                    /* holder for going left or right alongshore */
 
-  float x,
+  double x,
     y;                          /* holders for 'real' location of x and y */
 
-  float xin = -9999,
+  double xin = -9999,
     yin = -9999;        /* starting 'real' locations */
 
   int xinint,
@@ -1408,19 +1408,19 @@ FindIfInShadow (State * _s, int icheck, int ShadMax)
   int xtestint,
     ytestint;                   /* cell looking at */
 
-  float xtest = -9999,
+  double xtest = -9999,
     ytest = -9999;      /* 'real' location of testing */
 
-  float xout,
+  double xout,
     yout;                       /* used in AllBeach check - exit coordinates */
 
   int NextXInt,
     NextYInt;                   /* holder vairables for cell to check */
 
-  float Yup,
+  double Yup,
     DistanceUp;                 /* when going to next x cell, what other values */
 
-  float Xside,
+  double Xside,
     DistanceSide;               /* when gpoing to next y cell,other values */
 
   int DEBUG_2a = 0;             /* local debuggers */
@@ -1715,7 +1715,7 @@ DetermineAngles (State * _s)
   int x2int,
     y2int;                      /* shoreline location vars */
 
-  float x2,
+  double x2,
     x1,
     y2,
     y1;                         /* shoreline location variables */
@@ -1923,7 +1923,7 @@ DetermineSedTransport (State * _s)
 
   int i;                        /* Loop variable */
 
-  float ShoreAngleUsed = -9999; /* Temporary holder for shoreline angle                                 */
+  double ShoreAngleUsed = -9999; /* Temporary holder for shoreline angle                                 */
 
   int CalcCell;                 /* Cell sediment coming from to go across boundary i                    */
 
@@ -1938,7 +1938,7 @@ DetermineSedTransport (State * _s)
 
   int DoFlux;                   /* Skip sed transport calcs (added 02/04 AA)                            */
 
-  float SedTansLimit = SED_TRANS_LIMIT;
+  double SedTansLimit = SED_TRANS_LIMIT;
 
   DEBUG_PRINT (DEBUG_5, "\nSEDTRANS: %d  @  %f \n\n", _s->CurrentTimeStep,
                _s->WaveAngle * radtodeg);
@@ -2071,44 +2071,44 @@ This function will use the global values defining the wave field:
 Revised 6/02 - New iterative calc for refraction and breaking, parameters revised
 */
 void
-SedTrans (State * _s, int From, int To, float ShoreAngle, char MaxT)
+SedTrans (State * _s, int From, int To, double ShoreAngle, char MaxT)
 {
 
   /* Coefficients - some of these are important */
 
-  float StartDepth = 3 * _s->wave_height;       /* m, depth to begin refraction calcs (needs to be beyond breakers)      */
+  double StartDepth = 3 * _s->wave_height;       /* m, depth to begin refraction calcs (needs to be beyond breakers)      */
 
-  float RefractStep = .2;       /* m, step size to iterate depth for refraction calcs                   */
+  double RefractStep = .2;       /* m, step size to iterate depth for refraction calcs                   */
 
-  float KBreak = 0.5;           /* coefficient for wave breaking threshold                              */
+  double KBreak = 0.5;           /* coefficient for wave breaking threshold                              */
 
-  float rho = 1020;             /* kg/m3 - density of water and dissolved matter                                */
+  double rho = 1020;             /* kg/m3 - density of water and dissolved matter                                */
 
   /* Variables */
 
   int Broken = 0;               /* is wave broken yet?                          */
 
-  float AngleDeep;              /* rad, Angle of waves to shore at inner shelf  */
+  double AngleDeep;              /* rad, Angle of waves to shore at inner shelf  */
 
-  float Depth = StartDepth;     /* m, water depth for current iteration         */
+  double Depth = StartDepth;     /* m, water depth for current iteration         */
 
-  float Angle;                  /* rad, calculation angle                       */
+  double Angle;                  /* rad, calculation angle                       */
 
-  float CDeep;                  /* m/s, phase velocity in deep water            */
+  double CDeep;                  /* m/s, phase velocity in deep water            */
 
-  float LDeep;                  /* m, offhsore wavelength                       */
+  double LDeep;                  /* m, offhsore wavelength                       */
 
-  float C;                      /* m/s, current step phase velocity             */
+  double C;                      /* m/s, current step phase velocity             */
 
-  float kh;                     /* wavenumber times depth                       */
+  double kh;                     /* wavenumber times depth                       */
 
-  float n;                      /* n                                            */
+  double n;                      /* n                                            */
 
-  float WaveLength;             /* m, current wavelength                        */
+  double WaveLength;             /* m, current wavelength                        */
 
-  float WvHeight;               /* m, current wave height                       */
+  double WvHeight;               /* m, current wave height                       */
 
-  float VolumeAcrossBorder;     /* m3/day                                       */
+  double VolumeAcrossBorder;     /* m3/day                                       */
 
   /* Primary assumption is that waves refract over shore-parallel contours                    */
   /* New algorithm 6/02 iteratively takes wiave onshore until they break, then computes Qs    */
@@ -2278,30 +2278,30 @@ void
 AdjustShore (State * _s, int i)
 {
 
-  float Depth = -9999;          /* Depth of convergence */
+  double Depth = -9999;          /* Depth of convergence */
 
-  float DeltaArea;              /* Holds change in area for cell (m^2) */
+  double DeltaArea;              /* Holds change in area for cell (m^2) */
 
-  float Distance;               /* distance from shore to intercept of equilib. profile and overall slope (m) */
+  double Distance;               /* distance from shore to intercept of equilib. profile and overall slope (m) */
 
-  float PercentIn;
+  double PercentIn;
 
-  float PercentOut;
+  double PercentOut;
 
-  float PercentSum;
+  double PercentSum;
 
   int Xintint,
     Yintint;                    /* integer representing location shoreface cell */
 
-  float Xintfloat,
-    Yintfloat;                  /* floaters for shoreface cell */
+  double Xintdouble,
+    Yintdouble;                  /* doubleers for shoreface cell */
 
   /* variables for loop */
-  float slope;                  /* slope of zero goes staight back */
+  double slope;                  /* slope of zero goes staight back */
 
   int ysign;                    /* holder for going left or right alongshore */
 
-  float x = -9999,
+  double x = -9999,
     y = -9999;  /* holders for 'real' location of x and y */
 
   int xtest,
@@ -2310,10 +2310,10 @@ AdjustShore (State * _s, int i)
   int NextXInt,
     NextYInt;                   /* holder vairables for cell to check */
 
-  float Ydown,
+  double Ydown,
     DistanceDown;               /* when going to next x cell, what other values */
 
-  float Xside,
+  double Xside,
     DistanceSide;               /* when gpoing to next y cell,other values */
 
   int ShorefaceFlag;            /* flag to see if started intersecting shoreface cells */
@@ -2330,14 +2330,14 @@ AdjustShore (State * _s, int i)
 
     /* uncomplicated way - assume starting in middle of cell */
     Distance = _s->shoreface_depth / _s->cell_width / _s->shoreface_slope;
-    Xintfloat = _s->X[i] + 0.5 + Distance * cos (_s->SurroundingAngle[i]);
-    Xintint = floor (Xintfloat);
-    Yintfloat = _s->Y[i] + 0.5 - Distance * sin (_s->SurroundingAngle[i]);
-    Yintint = floor (Yintfloat);
+    Xintdouble = _s->X[i] + 0.5 + Distance * cos (_s->SurroundingAngle[i]);
+    Xintint = floor (Xintdouble);
+    Yintdouble = _s->Y[i] + 0.5 - Distance * sin (_s->SurroundingAngle[i]);
+    Yintint = floor (Yintdouble);
 
     DEBUG_PRINT (DEBUG_7A,
                  "xs: %d  ys: %d  Xint: %f Xint:%d Yint: %f Yint: %d  Dint: %f SAng: %f Sin = %f\n",
-                 _s->X[i], _s->Y[i], Xintfloat, Xintint, Yintfloat, Yintint,
+                 _s->X[i], _s->Y[i], Xintdouble, Xintint, Yintdouble, Yintint,
                  _s->CellDepth[Xintint][Yintint],
                  _s->SurroundingAngle[i] * radtodeg,
                  sin (_s->SurroundingAngle[i]));
@@ -2400,8 +2400,8 @@ AdjustShore (State * _s, int i)
       else
         ysign = -1;
 
-      x = Xintfloat;
-      y = Yintfloat;
+      x = Xintdouble;
+      y = Yintdouble;
       xtest = Xintint;
       ytest = Yintint;
       ShorefaceFlag = 0;
@@ -2750,7 +2750,7 @@ Hopefully addresses strange problems caused by filling/emptying of cells
 Looks at entire data set
 
 Find unattached pieces of sand and moves them back to the shore
-Takes care of 'floating bits' of sand
+Takes care of 'doubleing bits' of sand
 Also takes care of over/under filled beach pieces
 Revised 5/21/02 to move sand to all adjacent neighbors sandrevt.c
 Changes global variable
@@ -2998,22 +2998,22 @@ FixBeach (State * _s)
 /** Counts the total volume occupied by beach cells
 
 Uses same algorhythm as AdjustShore
-returns a float of the total sum
+returns a double of the total sum
 Uses
    _s->AllBeach[][] and _s->PercentFull[][]
 and InitialDepth, _s->cell_width, ShelfSlope
 */
-float
+double
 MassCount (State * _s)
 {
 
   int x,
     y;
 
-  float Mass = 0;
+  double Mass = 0;
 
-  /*float     MassHere;
-     float    refdepth;
+  /*double     MassHere;
+     double    refdepth;
 
      refdepth = InitialDepth; */
 
@@ -3039,8 +3039,8 @@ MassCount (State * _s)
 
 pow has problems if b <= 0
 */
-float
-Raise (float b, float e)
+double
+Raise (double b, double e)
 {
   if (b > 0)
     return powf (b, e);
@@ -3052,7 +3052,7 @@ Raise (float b, float e)
 
 currently this function has no seed
 */
-float
+double
 RandZeroToOne (void)
 {
   return random () / (Raise (2, 31) - 1);
@@ -3484,7 +3484,7 @@ SaveLineToFile (State * _s)
     xtop,
     i;
 
-  float xsave;
+  double xsave;
 
   char savename[40];
 
@@ -3562,7 +3562,7 @@ PrintLocalConds (State * _s, int x, int y, int in)
     k,
     isee = INT_MIN;
 
-  float vol = _s->cell_width * _s->cell_width * _s->shoreface_depth;
+  double vol = _s->cell_width * _s->cell_width * _s->shoreface_depth;
 
   printf ("\n x: %d  y: %d  z: %d\n\n", x, y, in);
 
@@ -3894,10 +3894,10 @@ OpenWindow (State * _s)
 }
 
 void
-PutPixel (State * _s, float x, float y, float R, float G, float B)
+PutPixel (State * _s, double x, double y, double R, double G, double B)
 {
 
-  float xstart,
+  double xstart,
     ystart;
 
   /* translate x and y integer components to the openGL grid */
@@ -3923,19 +3923,19 @@ GraphCells (State * _s)
   int x,
     y;
 
-  float Red,
+  double Red,
     Green,
     Blue,
     backRed,
     backGreen,
     backBlue;
 
-  float AgeFactorRed,
+  double AgeFactorRed,
     AgeFactorGreen,
     AgeFactorBlue,
     DepthBlue;
 
-  float DepthFactorX;
+  double DepthFactorX;
 
   int AgeShadeSpacing = AGE_SHADE_SPACING;      /* For graphics - how many time steps means back to original shade */
 
@@ -3949,16 +3949,16 @@ GraphCells (State * _s)
       backBlue = (75 + 130 * (x / DepthFactorX));
       backGreen = (165 - 125 * (x / DepthFactorX));
 
-      DepthBlue = floor ((.8 - (float)x / (XPlotExtent * 3)) * 255) / 255.0;
+      DepthBlue = floor ((.8 - (double)x / (XPlotExtent * 3)) * 255) / 255.0;
       /*  PutPixel( CELL_PIXEL_SIZE*(y-yplotoff), CELL_PIXEL_SIZE*x,0,0, DepthBlue); */
 
       AgeFactorRed =
-        (float)((_s->Age[x][y]) % AgeShadeSpacing) / AgeShadeSpacing;
+        (double)((_s->Age[x][y]) % AgeShadeSpacing) / AgeShadeSpacing;
       AgeFactorGreen =
-        (float)((_s->Age[x][y] +
+        (double)((_s->Age[x][y] +
                  AgeShadeSpacing / 3) % AgeShadeSpacing) / AgeShadeSpacing;
       AgeFactorBlue =
-        (float)((_s->Age[x][y] +
+        (double)((_s->Age[x][y] +
                  2 * AgeShadeSpacing / 3) % AgeShadeSpacing) / AgeShadeSpacing;
 
       if ((_s->PercentFull[x][y] > 0) && (_s->AllBeach[x][y] == 'n'))
@@ -4069,23 +4069,23 @@ DeliverRivers (State * _s)
   }
 }
 
-float
+double
 FindFluvialShorefaceDepth (State * _s, int i)
 /* this function taken from AdjustShore but made just for river flux */
 /* removed 'fixing the shoreface' situation */
 {
 
-  float Depth = -9999;          /* Depth of convergence */
+  double Depth = -9999;          /* Depth of convergence */
 
-  float Distance;               /* distance from shore to intercept of equilib. profile and overall slope (m) */
+  double Distance;               /* distance from shore to intercept of equilib. profile and overall slope (m) */
 
   int Xintint,
     Yintint;                    /* integer representing location shoreface cell */
 
-  float Xintfloat,
-    Yintfloat;                  /* floaters for shoreface cell */
+  double Xintdouble,
+    Yintdouble;                  /* doubleers for shoreface cell */
 
-  float slope;                  /* slope of zero goes staight back */
+  double slope;                  /* slope of zero goes staight back */
 
   /* must be accreting, so use that case */
 
@@ -4093,14 +4093,14 @@ FindFluvialShorefaceDepth (State * _s, int i)
 
   /* uncomplicated way - assume starting in middle of cell */
   Distance = _s->shoreface_depth / _s->cell_width / _s->shoreface_slope;
-  Xintfloat = _s->X[i] + 0.5 + Distance * cos (_s->SurroundingAngle[i]);
-  Xintint = floor (Xintfloat);
-  Yintfloat = _s->Y[i] + 0.5 - Distance * sin (_s->SurroundingAngle[i]);
-  Yintint = floor (Yintfloat);
+  Xintdouble = _s->X[i] + 0.5 + Distance * cos (_s->SurroundingAngle[i]);
+  Xintint = floor (Xintdouble);
+  Yintdouble = _s->Y[i] + 0.5 - Distance * sin (_s->SurroundingAngle[i]);
+  Yintint = floor (Yintdouble);
 
   DEBUG_PRINT (DEBUG_7A,
                "xs: %d  ys: %d  Xint: %f Xint:%d Yint: %f Yint: %d  Dint: %f SAng: %f Sin = %f\n",
-               _s->X[i], _s->Y[i], Xintfloat, Xintint, Yintfloat, Yintint,
+               _s->X[i], _s->Y[i], Xintdouble, Xintint, Yintdouble, Yintint,
                _s->CellDepth[Xintint][Yintint],
                _s->SurroundingAngle[i] * radtodeg,
                sin (_s->SurroundingAngle[i]));
@@ -4147,13 +4147,13 @@ FindFluvialShorefaceDepth (State * _s, int i)
 }
 
 void
-ActualizeFluvialSed (State * _s, int xin, int yin, float Depth, float SedIn)
+ActualizeFluvialSed (State * _s, int xin, int yin, double Depth, double SedIn)
 /* AAshton 09/10 newly added for fluvial case */
 {
 
-  float DeltaArea;              /* Holds change in area for cell (m^2) */
+  double DeltaArea;              /* Holds change in area for cell (m^2) */
 
-  float SedFixed;               /* fixed for correct units */
+  double SedFixed;               /* fixed for correct units */
 
   // convert to m^3/day, then number of days simulated
   SedFixed = SedIn / (2650 * 0.6) * 86400 * TimeStep;   /* assuming some things about the sed delivered */
@@ -4173,14 +4173,14 @@ fprintf (stderr, "  (x,y) = %d, %d\n", xin, yin);
 }
 
 void
-AddRiverFlux (State * _s, int xin, int yin, float sedin)
+AddRiverFlux (State * _s, int xin, int yin, double sedin)
 /* sedin in units of kg/s */
 {
   int iflag = -1;
 
   int i = 0;
 
-  float Depth4River;
+  double Depth4River;
 
   // try to find the location along the shoreline array
   // note, this probably should be actuated before actuating the full sediment flux.
@@ -4338,7 +4338,7 @@ Nothing done here, but can be down when CheckOVerwash is called
 void
 CheckOverwashSweep (State * _s)
 {
-  float OverwashLimit = OVERWASH_LIMIT;
+  double OverwashLimit = OVERWASH_LIMIT;
 
   int i,
     ii;                         /* local loop variable */
@@ -4395,34 +4395,34 @@ void
 CheckOverwash (State * _s, int icheck)
 {
 
-  float slope;                  /* slope of zero goes staight back */
+  double slope;                  /* slope of zero goes staight back */
 
   int ysign;                    /* holder for going left or right alongshore */
 
-  float x,
+  double x,
     y;                          /* holders for 'real' location of x and y */
 
-  float xin,
+  double xin,
     yin;                        /* starting 'real' locations */
 
   int xtest,
     ytest;                      /* cell looking at */
 
-  float xint,
+  double xint,
     yint;                       /* intercepts of overwash line in overwashable cell */
 
   int NextXInt,
     NextYInt;                   /* holder vairables for cell to check */
 
-  float Ydown,
+  double Ydown,
     DistanceDown;               /* when going to next x cell, what other values */
 
-  float Xside,
+  double Xside,
     DistanceSide;               /* when gpoing to next y cell,other values */
 
-  float checkdistance;          /* distance of checking line- minimum, not actual width, ends loop */
+  double checkdistance;          /* distance of checking line- minimum, not actual width, ends loop */
 
-  float measwidth;              /* actual barrier width between cells */
+  double measwidth;              /* actual barrier width between cells */
 
   int AllBeachFlag;             /* flag to see if overwash line has passed over at least one AllBeach cell */
 
@@ -4724,17 +4724,17 @@ will change and use
    _s->PercentFull[][] and AllBeach [][]
 */
 void
-DoOverwash (State * _s, int xfrom, int yfrom, int xto, int yto, float xintto,
-            float yintto, float widthin, int ishore)
+DoOverwash (State * _s, int xfrom, int yfrom, int xto, int yto, double xintto,
+            double yintto, double widthin, int ishore)
 {
-  float BBneed,
+  double BBneed,
     delBB,
     delShore;                   /* local variables */
 
-  float MaxOver = 0.2;          /*Maximum overwash step size (enforced at backbarrier) */
+  double MaxOver = 0.2;          /*Maximum overwash step size (enforced at backbarrier) */
 
-  /*float DepthBackBarrier = 6.0;          m current set depth for backbarrier (temp - make into function) */
-  float DepthBB;                /* holds effective backbarrier depth */
+  /*double DepthBackBarrier = 6.0;          m current set depth for backbarrier (temp - make into function) */
+  double DepthBB;                /* holds effective backbarrier depth */
 
   DepthBB = GetOverwashDepth (_s, xto, yto, xintto, yintto, ishore);
 
@@ -4824,21 +4824,21 @@ OWType = 0 take the depth at neightbor to the backing cell
 OWType = 1 geometric rule based upon distance from back to shoreline
 AA 5/04
 */
-float
-GetOverwashDepth (State * _s, int xin, int yin, float xinfl, float yinfl,
+double
+GetOverwashDepth (State * _s, int xin, int yin, double xinfl, double yinfl,
                   int ishore)
 {
   int xdepth;
 
-  float Depth;
+  double Depth;
 
-  float BBDistance;             /* Distance from backshore to next shore */
+  double BBDistance;             /* Distance from backshore to next shore */
 
-  float slope;                  /* slope of zero goes staight back */
+  double slope;                  /* slope of zero goes staight back */
 
   int ysign;                    /* holder for going left or right alongshore */
 
-  float x,
+  double x,
     y;                          /* holders for 'real' location of x and y */
 
   int xtest = INT_MIN,
@@ -4847,10 +4847,10 @@ GetOverwashDepth (State * _s, int xin, int yin, float xinfl, float yinfl,
   int NextXInt,
     NextYInt;                   /* holder vairables for cell to check */
 
-  float Ydown,
+  double Ydown,
     DistanceDown;               /* when going to next x cell, what other values */
 
-  float Xside,
+  double Xside,
     DistanceSide;               /* when gpoing to next y cell,other values */
 
   int BackFlag;                 /* Flag to indicate if hit backbarrier */
@@ -4862,7 +4862,7 @@ GetOverwashDepth (State * _s, int xin, int yin, float xinfl, float yinfl,
 
   int FoundFlag;                /* Backbarrier intersection flag */
 
-  float AngleSin,
+  double AngleSin,
     AngleUsed;
 
   if (OWType == 0)

@@ -23,7 +23,7 @@ Deltas_state *deltas_destroy (Deltas_state *);
 
 Deltas_state *deltas_init (Deltas_state *);
 
-int deltas_run_until (Deltas_state *, float);
+int deltas_run_until (Deltas_state *, double);
 
 Deltas_state *deltas_finalize (Deltas_state *, int);
 
@@ -37,45 +37,51 @@ Deltas_state *deltas_init_cell_width (Deltas_state * s, double dx);
 
 Deltas_state *deltas_init_grid (Deltas_state * s, double *z);
 
-Deltas_state *deltas_set_grid (Deltas_state *, float *, int[2]);
+Deltas_state *deltas_set_grid (Deltas_state *, double *, int[2]);
 
-Deltas_state *deltas_set_depth (Deltas_state *, float *);
+Deltas_state *deltas_set_depth (Deltas_state *, double *);
 
-Deltas_state *deltas_set_sed_rate (Deltas_state *, float);
+Deltas_state *deltas_set_sed_rate (Deltas_state *, double);
 
 Deltas_state *deltas_find_river_mouth (Deltas_state * s, int n);
 
 void deltas_avulsion (Deltas_state * s, double *qs, double river_flux);
 
-Deltas_state *deltas_set_sed_flux (Deltas_state *, float);
+Deltas_state *deltas_set_sed_flux (Deltas_state *, double);
 
-Deltas_state *deltas_set_river_sed_flux (Deltas_state * s, float flux, int n);
+Deltas_state *deltas_set_river_sed_flux (Deltas_state * s, double flux, int n);
 
 Deltas_state *deltas_set_river_position (Deltas_state * s, int x, int y, int n);
 
+Deltas_state *deltas_set_sediment_flux_grid (Deltas_state * s, double *qs);
+
 Deltas_state *deltas_set_angle_asymmetry (Deltas_state * s,
-                                          float angle_asymmetry);
+                                          double angle_asymmetry);
 Deltas_state *deltas_set_angle_highness (Deltas_state * s,
-                                         float angle_highness);
-Deltas_state *deltas_set_wave_angle (Deltas_state * s, float wave_angle);
+                                         double angle_highness);
+Deltas_state *deltas_set_wave_angle (Deltas_state * s, double wave_angle);
 
-Deltas_state *deltas_set_wave_height (Deltas_state * s, float wave_height);
+Deltas_state *deltas_set_wave_height (Deltas_state * s, double wave_height);
 
-Deltas_state *deltas_set_wave_period (Deltas_state * s, float wave_period);
+Deltas_state *deltas_set_wave_period (Deltas_state * s, double wave_period);
 
 Deltas_state *deltas_set_shoreface_slope (Deltas_state * s,
-                                          float shoreface_slope);
-Deltas_state *deltas_set_shelf_slope (Deltas_state * s, float shelf_slope);
+                                          double shoreface_slope);
+Deltas_state *deltas_set_shelf_slope (Deltas_state * s, double shelf_slope);
 
 Deltas_state *deltas_set_shoreface_depth (Deltas_state * s,
-                                          float shoreface_depth);
+                                          double shoreface_depth);
 
 const char **deltas_get_exchange_items (void);
 
-double *deltas_get_value_grid (Deltas_state * s, const char *value);
+const double *deltas_get_value_grid (Deltas_state * s, const char *value);
 
-double *deltas_get_value_data (Deltas_state * s, const char *value,
+double *deltas_get_value_grid_dup (Deltas_state * s, const char *value);
+
+const double *deltas_get_value_data (Deltas_state * s, const char *value,
                                int lower[2], int upper[2], int stride[2]);
+double *deltas_get_value_data_dup (Deltas_state * s, const char *value,
+                                   int lower[2], int upper[2], int stride[2]);
 int *deltas_get_value_dimen (Deltas_state * s, const char *value, int shape[3]);
 
 double *deltas_get_value_res (Deltas_state * s, const char *value,
@@ -83,9 +89,9 @@ double *deltas_get_value_res (Deltas_state * s, const char *value,
 
 //char*  deltas_get_save_file( Deltas_state* );
 //char*  deltas_get_read_file( Deltas_state* );
-const float *deltas_get_depth (Deltas_state *);
+const double *deltas_get_depth (Deltas_state *);
 
-const float *deltas_get_percent (Deltas_state *);
+const double *deltas_get_percent (Deltas_state *);
 
 double *deltas_get_depth_dup (Deltas_state *);
 
@@ -93,7 +99,7 @@ double *deltas_get_elevation_dup (Deltas_state * s);
 
 double *deltas_get_percent_dup (Deltas_state *);
 
-float deltas_get_sed_rate (Deltas_state *);
+double deltas_get_sed_rate (Deltas_state *);
 
 double deltas_get_angle_asymmetry (Deltas_state *);
 
