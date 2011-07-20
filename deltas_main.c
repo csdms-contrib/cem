@@ -13,7 +13,7 @@ main (int argc, char *argv[])
   {
     //Deltas_state* s = deltas_init (NULL);
     Deltas_state *s = deltas_new ();
-    int dimen[2] = { 200, 500 };
+    int dimen[2] = { 200, 1000 };
 
     fprintf (stderr, "Set grid shape\n");
     deltas_init_grid_shape (s, dimen);
@@ -36,7 +36,7 @@ main (int argc, char *argv[])
 
       const double river_flux = 250.;
 
-      const int len = deltas_get_nx (s) * deltas_get_ny (s) / 2;
+      const int len = deltas_get_nx (s) * deltas_get_ny (s);
 
       double *qs = (double *)malloc (sizeof (double) * len);
 
