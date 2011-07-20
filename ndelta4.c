@@ -1655,7 +1655,7 @@ fprintf (stderr, "y_right=%d\n", y_right);
         xtest = xtestint + 0.5;
         ytest = ytestint + 1.0 - _s->PercentFull[xtestint][ytestint];
 
-        if (ytest < (yin + (xtest - xin) * slope))
+        if (ytest < (yin + (xtest - xin) * slope)*ysign)
         {
           if (debug2b)
             printf ("Left:  xt: %f  yt: %f  comp: %f < Thing: %f\n",
