@@ -28,8 +28,10 @@ typedef struct
 
   int n_rivers;
   double *river_flux;
-  int *river_x;
-  int *river_y;
+  int *river_x_ind;
+  int *river_y_ind;
+  double *river_x;
+  double *river_y;
 
   int stream_spot;
 

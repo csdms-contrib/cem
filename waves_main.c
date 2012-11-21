@@ -64,6 +64,8 @@ main (int argc, char *argv[])
     const double scale = (args->radians) ? 1. : 180. / M_PI;
 
     Waves_state *waves_state = NULL;
+    BMI_Model *w = NULL;
+    int err;
 
     if (args->verbose)
     {
@@ -74,6 +76,41 @@ main (int argc, char *argv[])
       fprintf (stderr, "Units: %s\n", units);
     }
 
+    fprintf (stdout, "Initializing... ");
+    err = BMI_Initialize (NULL, &w);
+
+    if (err) {
+      fprintf (stdout, "FAIL.\n");
+      fprintf (stderr, "Error: %d: Unable to initialize\n", err);
+    }
+    else
+      fprintf (stdout, "PASS.\n");
+
+    err = BMI_Set_double (w, "wave_asymmetry", &(args->asymmetry));
+    err = BMI_Set_double (w, "wave_highness", &(args->highness));
+    for (i = 0; i < len; i++) {
+      fprintf (stdout, "Updating... ");
+      if (BMI_Update (w) == BMI_SUCCESS)
+        fprintf (stdout, "PASS\n");
+      else {
+        fprintf (stdout, "FAIL.\n");
+        fprintf (stderr, "Error: %d: Unable to update\n", err);
+      }
+
+      if (BMI_Get_double (w, "sea_surface_wave_from_direction", &a) == BMI_SUCCESS)
+        fprintf (stdout, "Wave angle: %f\n", a * scale);
+      else
+        fprintf (stderr, "Error: %d: Unable to get wave angle\n", err);
+    }
+
+    fprintf (stdout, "Finalizing... ");
+    if (BMI_Finalize (w) == BMI_SUCCESS)
+      fprintf (stdout, "PASS\n");
+    else {
+      fprintf (stdout, "FAIL.\n");
+      fprintf (stderr, "Error: %d: Unable to finalize\n", err);
+    }
+/*
     waves_state = waves_init (NULL);
     waves_set_angle_asymmetry (waves_state, args->asymmetry);
     waves_set_angle_highness (waves_state, args->highness);
@@ -87,7 +124,7 @@ main (int argc, char *argv[])
     }
 
     waves_state = waves_finalize (waves_state, TRUE);
-
+*/
     g_rand_free (rand);
   }
 

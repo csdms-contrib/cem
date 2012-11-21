@@ -94,7 +94,7 @@ DEBUG_PRINT (int exp, const char *format, ...)
 #define InitBWidth      (4)     /**< initial minimum width of barrier (Cells) */
 #define OWType          (1)     /**< 0 = use depth array, 1 = use geometric rule */
 //#define OWMinDepth	(0.1)   /**<  littlest overwash of all */
-#define OWMinDepth	(5.0)   /**<  littlest overwash of all */
+#define OWMinDepth	(5.0)
 #define FindCellError	(5)     /**< if we run off of array, how far over do we try again? */
 
 /* Plotting Controls */
@@ -265,6 +265,8 @@ deltas_init_state (State * s)
   s->river_flux = NULL;
   s->river_x = NULL;
   s->river_y = NULL;
+  s->river_x_ind = NULL;
+  s->river_y_ind = NULL;
   s->n_rivers = 0;
 
   // NOTE: This is no longer being used.
@@ -366,6 +368,8 @@ deltas_free_state (State * s)
   free (s->river_flux);
   free (s->river_x);
   free (s->river_y);
+  free (s->river_x_ind);
+  free (s->river_y_ind);
 
   return;
 }
@@ -4054,8 +4058,11 @@ DeliverSediment (State * _s)
     x += 1;
   }
 
+  fprintf (stderr, "Delivering sediment at x = %d\n", x);
+
   _s->PercentFull[x][y] += _s->SedRate;
 
+  fprintf (stderr, "Percent full at %d, %d = %f\n", x, y, _s->PercentFull[x][y]);
 }
 
 void
@@ -4066,7 +4073,7 @@ DeliverRivers (State * _s)
   for (i = 0; i < _s->n_rivers; i++)
   {
 //fprintf (stderr, "  river flux [%d] = %f\n", i, _s->river_flux[i]);
-    AddRiverFlux (_s, _s->river_x[i], _s->river_y[i], _s->river_flux[i]);
+    AddRiverFlux (_s, _s->river_x_ind[i], _s->river_y_ind[i], _s->river_flux[i]);
   }
 }
 
@@ -4170,6 +4177,7 @@ fprintf (stderr, "  df = %f\n", DeltaArea/(_s->cell_width*_s->cell_width));
 fprintf (stderr, "  (x,y) = %d, %d\n", xin, yin);
 }
 */
+
   _s->PercentFull[xin][yin] += DeltaArea / (_s->cell_width * _s->cell_width);
 }
 
@@ -4212,6 +4220,7 @@ AddRiverFlux (State * _s, int xin, int yin, double sedin)
       dx = _s->X[i] - xin;
       dy = _s->Y[i] - yin;
       l = dx * dx + dy * dy;
+      //fprintf (stderr, "ERROR: l=%f, l_min=%f\n", l, l_min);
       if (l < l_min)
       {
         l_min = l;
@@ -4220,9 +4229,13 @@ AddRiverFlux (State * _s, int xin, int yin, double sedin)
     }
     if (i_min == -1)
     {
-      fprintf (stderr, "ERROR: Cound not find a beach cell\n");
+      fprintf (stderr, "ERROR: Cound not find a beach cell (%d,%d)\n", xin, yin);
       fprintf (stderr, "ERROR: Using first in list (%d,%d)\n",
                _s->X[0], _s->Y[0]);
+      //fprintf (stderr, "ERROR: These are the beach cells\n");
+      //for (i = 0; i < _s->TotalBeachCells - 1; i++)
+      //  fprintf (stderr, "ERROR: %d: (%d,%d)\n", i, _s->X[i], _s->Y[i]);
+
       i_min = 0;
     }
     AddRiverFlux (_s, _s->X[i_min], _s->Y[i_min], sedin);

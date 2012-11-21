@@ -5,6 +5,9 @@ include (CTest)
 
 set (BUILD_SHARED_LIBS ON)
 
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/waves.pc.cmake ${CMAKE_CURRENT_SOURCE_DIR}/waves.pc )
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/deltas.pc.cmake ${CMAKE_CURRENT_SOURCE_DIR}/deltas.pc )
+
 add_subdirectory( data )
 
 ########### Look for glib-2.0 ###############
@@ -54,11 +57,12 @@ set( deltas_lib_SRCS
   deltas_cli.c
   ndelta4.c
   deltas_api.c)
+set_source_files_properties (${deltas_lib_SRCS} PROPERTIES LANGUAGE CXX)
 
-add_library( deltas ${deltas_lib_SRCS} )
-target_link_libraries( deltas m ${OPENGL_LIBRARIES} )
+add_library (bmicem ${deltas_lib_SRCS} )
+target_link_libraries (bmicem m ${OPENGL_LIBRARIES})
 
-install(TARGETS deltas DESTINATION lib COMPONENT deltas)
+install(TARGETS bmicem DESTINATION lib COMPONENT deltas)
 
 ########### libwaves ###############
 
@@ -67,18 +71,20 @@ include_directories (${CMAKE_CURRENT_SOURCE_DIR})
 set (waves_lib_SRCS
   waves_api.c
   waves.c)
+set_source_files_properties (${waves_lib_SRCS} PROPERTIES LANGUAGE CXX)
 
-add_library (waves ${waves_lib_SRCS})
-target_link_libraries (waves m glib-2.0)
+add_library (bmiwaves ${waves_lib_SRCS})
+target_link_libraries (bmiwaves m glib-2.0)
 
-install(TARGETS waves DESTINATION lib COMPONENT waves)
+install(TARGETS bmiwaves DESTINATION lib COMPONENT bmiwaves)
 
 ########### deltas main program ###############
 
 set( deltas_SRCS deltas_main.c)
+set_source_files_properties (${deltas_SRCS} PROPERTIES LANGUAGE CXX)
 
 add_executable(run_deltas ${deltas_SRCS})
-target_link_libraries(run_deltas deltas)
+target_link_libraries(run_deltas bmicem)
 
 install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/run_deltas
         DESTINATION bin
@@ -90,7 +96,7 @@ install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/run_deltas
 set (waves_SRCS waves_main.c waves_cli.c)
 
 add_executable(run_waves ${waves_SRCS})
-target_link_libraries(run_waves waves)
+target_link_libraries(run_waves bmiwaves)
 
 install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/run_waves
         DESTINATION bin
@@ -137,6 +143,17 @@ install(FILES deltas_api.h deltas_cli.h
         DESTINATION include
         COMPONENT deltas)
 
-install(FILES waves_api.h waves_cli.h
+install(FILES waves_cli.h
         DESTINATION include
         COMPONENT deltas)
+install (FILES waves_api.h RENAME bmi_waves.h
+        DESTINATION include
+        COMPONENT deltas)
+install (FILES deltas_api.h RENAME bmi_cem.h
+        DESTINATION include
+        COMPONENT deltas)
+
+install(FILES deltas.pc DESTINATION lib/pkgconfig  COMPONENT deltas)
+install(FILES waves.pc DESTINATION lib/pkgconfig  COMPONENT deltas)
+
+

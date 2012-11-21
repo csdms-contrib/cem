@@ -1,0 +1,38 @@
+#@model Waves
+#  @longname Waves
+#  @author Andrew Ashton
+#  @email Andrew.Ashton@domain.com
+#  @url http://csdms.colorado.edu/wiki/Model:CEM
+#  @version 0.9
+#
+#  @param end_time = 10
+#    @brief Model end time
+#    @units d
+#    @type int
+#    @range 0, inf
+#  @param wave_height = 2.
+#    @brief Incoming wave height
+#    @units m
+#    @type float
+#    @range 0, 100
+#  @param wave_period = 7.
+#    @brief Incoming wave period
+#    @units s
+#    @type float
+#    @range 0, 100
+#  @param angle_highness = .2
+#    @brief Highness factor for incoming wave angles
+#    @units -
+#    @range 0, 1
+#  @param angle_asymmetry = .5
+#    @brief Asymmetry of incoming wave angles
+#    @units -
+#    @range 0, 1
+#
+#  @param[out] sea_water_surface_wave__from_direction
+#  @param[out] max_over_increment_of_sea_water_surface_wave__from_direction
+#  @param[out] min_over_increment_of_sea_water_surface_wave__from_direction
+#  @param[out] mean_over_increment_of_sea_water_surface_wave__from_direction
+#  @param[out] sea_water_surface_wave__height
+#  @param[out] sea_water_surface_wave__period
+${end_time}, ${wave_height}, ${wave_period}, ${angle_highness}, ${angle_asymmetry}

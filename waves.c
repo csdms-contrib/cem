@@ -131,6 +131,7 @@ waves_init_state (State * s)
     s->period = DEFAULT_PERIOD;
 
     s->now = 0;
+    s->end = 0;
     s->time_step = 1.;
 
     s->seed = DEFAULT_SEED;

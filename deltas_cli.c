@@ -29,7 +29,7 @@ static struct option cem_long_opts[] = {
   {NULL, 0, NULL, 0}
 };
 
-static char *help_msg[] = {
+static const char *help_msg[] = {
   "Usage: deltas [options]",
   "Options:",
   "  -V or --verbose      Be verbose",
@@ -87,7 +87,7 @@ parse_command_line (int argc, char *argv[])
 
     if (help_flag)
     {
-      char **str;
+      const char **str;
 
       for (str = help_msg; *str; str++)
         fprintf (stdout, "%s\n", *str);
@@ -117,7 +117,7 @@ parse_command_line (int argc, char *argv[])
       fprintf (stdout, "End time is %f\n", end);
       fprintf (stdout, "Output prefix is %s\n", out_prefix);
     }
-    args = malloc (sizeof (cem_args_st));
+    args = (cem_args_st*) malloc (sizeof (cem_args_st));
     args->verbose = verbose_flag;
     args->stop_time = end;
     args->out_prefix = out_prefix;

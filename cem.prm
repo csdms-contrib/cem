@@ -1,0 +1,67 @@
+#@model CEM
+#
+#  @longname Coastal Evolution Model
+#  @author Andrew Ashton
+#  @email Andrew.Ashton@domain.com
+#  @url http://csdms.colorado.edu/wiki/Model:CEM
+#  @version 0.9
+#
+#  @file cem.txt
+#    @description A description of the file
+#
+#    @group Grid Parameters
+#      @param number_of_rows
+#        @brief Number of rows
+#        @description Number of rows in the computational grid
+#        @units -
+#        @type int
+#        @range 30, inf
+#        @default 50
+#      @param number_of_columns
+#        @brief Number of columns
+#        @description Number of columns in the computational grid
+#        @units -
+#        @type int
+#        @range 30, inf
+#        @default 1000
+#
+#      @param grid_spacing
+#        @description Spacing of the grid nodes
+#        @units m
+#        @type float
+#        @range 1., inf
+#        @default 100.
+#
+#      @param sediment_flux_flag
+#        @description Sediment flux flag
+#        @type boolean
+#        @default 1
+#
+#    @group Model Parameters
+#      @param shoreface_slope = .01
+#        @brief Gradient of the shoreface
+#        @units -
+#        @type float
+#        @range .001, 1
+#
+#      @param shoreface_depth = 10
+#        @brief Water depth of the shoreface
+#        @units m
+#        @type float
+#        @range 0, 100.
+#
+#      @param shelf_slope = .001
+#        @brief Gradient of the shelf
+#        @units -
+#        @type float
+#        @range .0001, 1
+#
+#  @param[out] sea_water__depth
+#  @param[out] sea_water_to_sediment__depth_ratio
+#  @param[out] river_mouth__location_model_x_component
+#  @param[out] river_mouth__location_model_y_component
+#  @param[out] channel_outflow_end_bed_load_sediment__mass_flow_rate
+#  @param[out] surface__elevation
+${number_of_rows}, ${number_of_columns}, ${grid_spacing}, ${sediment_flux_flag}
+${shoreface_slope}, ${shoreface_depth}, ${shelf_slope}
+

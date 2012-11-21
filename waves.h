@@ -11,6 +11,7 @@ typedef struct
   double period;
 
   gint now;
+  gint end;
   double time_step;
 
   double *angles;
