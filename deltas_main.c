@@ -23,7 +23,6 @@ main (int argc, char *argv[])
   }
 
   fprintf (stderr, "PASS\n");
-  fprintf (stderr, "%d\n", self);
 
   {
     int i;

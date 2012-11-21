@@ -3399,7 +3399,7 @@ ReadSandFromFile (State * _s)
 
     for (x = 0; x < _s->nx; x++)
     {
-      fscanf (ReadSandFile, " %f", &_s->PercentFull[x][y]);
+      fscanf (ReadSandFile, " %lf", &_s->PercentFull[x][y]);
 
       if (_s->PercentFull[x][y] >= 1.0)
         _s->AllBeach[x][y] = 'y';
@@ -3410,7 +3410,7 @@ ReadSandFromFile (State * _s)
 
   for (y = _s->ny / 2; y < 3 * _s->ny / 2; y++)
     for (x = 0; x < _s->nx; x++)
-      fscanf (ReadSandFile, " %f", &_s->CellDepth[x][y]);
+      fscanf (ReadSandFile, " %lf", &_s->CellDepth[x][y]);
 
   if (SaveAge)
 
@@ -3811,7 +3811,7 @@ ReadWaveIn (State * _s)
 
   for (i = 1; i <= _s->NumWaveBins; i++)
   {
-    fscanf (ReadWaveFile, " %f %f", &_s->WaveMax[i], &_s->WaveProb[i]);
+    fscanf (ReadWaveFile, " %lf %lf", &_s->WaveMax[i], &_s->WaveProb[i]);
     printf ("i= %d  Wave= %f Prob= %f \n", i, _s->WaveMax[i], _s->WaveProb[i]);
   }
 
