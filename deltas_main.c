@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 #include <deltas_api.h>
 #include <deltas_cli.h>
 
@@ -57,13 +58,15 @@ main (int argc, char *argv[])
     fprintf (stderr, "len is %d\n", len);
 
     BMI_Get_end_time (self, &stop_time);
-    stop_time = 1000;
+    stop_time = 10;
     for (i = 1; i <= stop_time; i++) {
       deltas_avulsion (self, qs, river_flux);
 
       err = BMI_Set_double (self, "surface_bed_load_sediment__mass_flow_rate", qs);
       if (err)
         fprintf (stderr, "Error %d\n", err);
+
+      BMI_Update (self);
 
       BMI_Get_double (self, "sea_water_to_sediment__depth_ratio", z);
       if (i%100 == 0) {
@@ -77,9 +80,20 @@ main (int argc, char *argv[])
     free (qs);
     free (z);
     free (shape);
+
+    {
+      double time;
+      int error;
+
+      error = BMI_Get_current_time (self, &time);
+      if (error || fabs (time - stop_time) > 1e-6)
+        return EXIT_FAILURE;
+    }
   }
 
   BMI_Finalize (self);
+
+  return EXIT_SUCCESS;
 }
 
 void
