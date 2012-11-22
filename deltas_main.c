@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <deltas_api.h>
 #include <deltas_cli.h>
 
@@ -11,7 +12,17 @@ main (int argc, char *argv[])
   BMI_Model *self = NULL;
   int err;
 
-  fprintf (stderr, "Initializing... ");
+  if (argc > 1) {
+    if (strcmp (argv[1], "--version") == 0) {
+      fprintf (stdout, "The Coastal Evolution Model version 0.1\n");
+      exit (0);
+    }
+    else if (strcmp (argv[1], "--help") == 0) {
+      fprintf (stdout, "Usage: run_deltas [--help] [--version] [FILE]\n");
+      exit (0);
+    }
+  }
+
   if (argc>1)
     err = BMI_Initialize (argv[1], &self);
   else
@@ -21,8 +32,6 @@ main (int argc, char *argv[])
     fprintf (stderr, "Error: %d: Unable to initialize\n", err);
     return EXIT_FAILURE;
   }
-
-  fprintf (stderr, "PASS\n");
 
   {
     int i;
@@ -34,40 +43,29 @@ main (int argc, char *argv[])
     double stop_time;
     const double river_flux = 250.;
 
-    BMI_Get_var_rank (self, "SedimentFlux", &rank);
+    BMI_Get_var_rank (self, "surface__elevation", &rank);
     fprintf (stderr, "Grid rank: %d\n", rank);
 
     shape = (int*) malloc (sizeof (int)*rank);
-    BMI_Get_grid_shape (self, "SedimentFlux", shape);
+    BMI_Get_grid_shape (self, "surface__elevation", shape);
     fprintf (stderr, "Grid shape: %d x %d\n", shape[0], shape[1]);
 
-    BMI_Get_var_point_count (self, "SedimentFlux", &len);
-    //for (i=0, len=1; i<rank; i++)
-    //  len *= shape[i];
+    BMI_Get_var_point_count (self, "surface__elevation", &len);
 
     qs = (double *)malloc (sizeof (double) * len);
     z = (double *)malloc (sizeof (double) * len);
     fprintf (stderr, "len is %d\n", len);
-
-    //BMI_Get_double (self, "PERCENT_FILLED", z);
-    //print_matrix (z, shape);
-    //return 0;
 
     BMI_Get_end_time (self, &stop_time);
     stop_time = 1000;
     for (i = 1; i <= stop_time; i++) {
       deltas_avulsion (self, qs, river_flux);
 
-      //fprintf (stderr, "Update until %d... ", i);
-      err = BMI_Set_double (self, "SedimentFlux", qs);
+      err = BMI_Set_double (self, "surface_bed_load_sediment__mass_flow_rate", qs);
       if (err)
         fprintf (stderr, "Error %d\n", err);
 
-      if (BMI_Update (self) == BMI_SUCCESS) {
-        //fprintf (stderr, "PASS\n");
-      }
-
-      BMI_Get_double (self, "PERCENT_FILLED", z);
+      BMI_Get_double (self, "sea_water_to_sediment__depth_ratio", z);
       if (i%100 == 0) {
         fprintf (stderr, "\n");
         fprintf (stderr, "Time: %d\n", i);
@@ -81,9 +79,7 @@ main (int argc, char *argv[])
     free (shape);
   }
 
-  fprintf (stderr, "Finalizing... ");
   BMI_Finalize (self);
-  fprintf (stderr, "PASS");
 }
 
 void

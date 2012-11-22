@@ -75,8 +75,8 @@ BMI_Initialize (const char *config_file, BMI_Model **handle)
       //fscanf (fp, "%lf, %lf, %lf", &shoreface_slope, &shoreface_depth, &shelf_slope);
     }
     else {
-      n_rows = 200;
-      n_cols = 1000;
+      n_rows = 50;
+      n_cols = 100;
       dx = 100.;
       sed_flux_flag = 1;
 
@@ -784,7 +784,7 @@ BMI_Get_var_stride (Deltas_state *s, const char *name, int *stride)
   if (stride) {
     State *p = (State *) s;
 
-    if (strcmp (name, "bed_load_sediment__mass_flow_rate") == 0) {
+    if (strcmp (name, "surface_bed_load_sediment__mass_flow_rate") == 0) {
       stride[0] = p->ny * 2;
       stride[1] = 1;
     }
@@ -828,7 +828,7 @@ BMI_Get_output_var_name_count (Deltas_state *s, int *count)
 #define BMI_INPUT_VAR_NAME_COUNT (6)
 
 const char *input_var_names[BMI_INPUT_VAR_NAME_COUNT] = {
-  "bed_load_sediment__mass_flow_rate",
+  "surface_bed_load_sediment__mass_flow_rate",
   "channel_outflow_end_bed_load_sediment__mass_flow_rate",
   "channel_outflow_end_suspended_load__mass_flow_rate",
   "sea_water_surface_wave__from_direction",
@@ -959,7 +959,7 @@ BMI_Set_double (Deltas_state *s, const char * value, double *src)
   int rtn = BMI_FAILURE;
 
   if (src) {
-    if (strcmp (value, "bed_load_sediment__mass_flow_rate") == 0) {
+    if (strcmp (value, "surface_bed_load_sediment__mass_flow_rate") == 0) {
       deltas_set_sediment_flux_grid (s, src);
     }
     else if (strcmp (value, "channel_outflow_end_bed_load_sediment__mass_flow_rate") == 0 ||
@@ -1329,8 +1329,9 @@ BMI_Get_var_rank (Deltas_state * s, const char *name, int *rank)
   int rtn = BMI_FAILURE;
   if (rank) {
     if (strcmp (name, "sea_water__depth") == 0 ||
+        strcmp (name, "surface__elevation") == 0 ||
         strcmp (name, "sea_water_to_sediment__depth_ratio") == 0 ||
-        strcmp (name, "bed_load_sediment__mass_flow_rate") == 0)
+        strcmp (name, "surface_bed_load_sediment__mass_flow_rate") == 0)
       *rank = 2;
     else if (strcmp (name, "river_mouth__location_model_x_component") == 0 ||
              strcmp (name, "river_mouth__location_model_y_component") == 0 ||
@@ -1348,8 +1349,9 @@ BMI_Get_var_point_count (Deltas_state * s, const char *name, int *count)
 {
   if (count && s) {
     State *p = (State *) s;
-    if (strcmp (name, "bed_load_sediment__mass_flow_rate") == 0 ||
+    if (strcmp (name, "surface_bed_load_sediment__mass_flow_rate") == 0 ||
         strcmp (name, "sea_water__depth") == 0 ||
+        strcmp (name, "surface__elevation") == 0 ||
         strcmp (name, "sea_water_to_sediment__depth_ratio") == 0) {
       *count = p->nx * p->ny;
     }
@@ -1382,8 +1384,9 @@ BMI_Get_grid_shape (Deltas_state * s, const char *name, int *shape)
   int rtn = BMI_FAILURE;
   if (shape && s) {
     State *p = (State *) s;
-    if (strcmp (name, "bed_load_sediment__mass_flow_rate") == 0 ||
+    if (strcmp (name, "surface_bed_load_sediment__mass_flow_rate") == 0 ||
         strcmp (name, "sea_water__depth") == 0 ||
+        strcmp (name, "surface__elevation") == 0 ||
         strcmp (name, "sea_water_to_sediment__depth_ratio") == 0) {
       shape[0] = p->nx;
       shape[1] = p->ny;
@@ -1402,8 +1405,9 @@ BMI_Get_grid_spacing (Deltas_state * s, const char *name, double *spacing)
 {
   int rtn = BMI_FAILURE;
   if (spacing) {
-    if (strcmp (name, "bed_load_sediment__mass_flow_rate") == 0 ||
+    if (strcmp (name, "surface_bed_load_sediment__mass_flow_rate") == 0 ||
         strcmp (name, "sea_water__depth") == 0 ||
+        strcmp (name, "surface__elevation") == 0 ||
         strcmp (name, "sea_water_to_sediment__depth_ratio") == 0) {
       spacing[0] = deltas_get_dy (s);
       spacing[1] = deltas_get_dx (s);
@@ -1422,8 +1426,9 @@ BMI_Get_grid_origin (Deltas_state * s, const char *name, double *origin)
 {
   int rtn = BMI_FAILURE;
   if (origin) {
-    if (strcmp (name, "bed_load_sediment__mass_flow_rate") == 0 ||
+    if (strcmp (name, "surface_bed_load_sediment__mass_flow_rate") == 0 ||
         strcmp (name, "sea_water__depth") == 0 ||
+        strcmp (name, "surface__elevation") == 0 ||
         strcmp (name, "sea_water_to_sediment__depth_ratio") == 0) {
       origin[0] = 0.;
       origin[1] = 0.;
