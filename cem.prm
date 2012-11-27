@@ -36,6 +36,7 @@
 #        @description Sediment flux flag
 #        @type boolean
 #        @default 1
+#        @range 0,1
 #
 #    @group Model Parameters
 #      @param shoreface_slope = .01
@@ -56,12 +57,13 @@
 #        @type float
 #        @range .0001, 1
 #
-#  @param[out] sea_water__depth
-#  @param[out] sea_water_to_sediment__depth_ratio
-#  @param[out] river_mouth__location_model_x_component
-#  @param[out] river_mouth__location_model_y_component
-#  @param[out] channel_outflow_end_bed_load_sediment__mass_flow_rate
-#  @param[out] surface__elevation
+#    @group Grid
+#      @param[out] surface__elevation
+#      @param[out] sea_water__depth
+#      @param[out] sea_water_to_sediment__depth_ratio
+#      @param[out] surface_bed_load_sediment__mass_flow_rate
+#      @param[out] river_mouth__location_model_x_component
+#      @param[out] river_mouth__location_model_y_component
 ${number_of_rows}, ${number_of_columns}, ${grid_spacing}, ${sediment_flux_flag}
 ${shoreface_slope}, ${shoreface_depth}, ${shelf_slope}
 
