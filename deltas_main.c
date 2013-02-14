@@ -25,9 +25,9 @@ main (int argc, char *argv[])
   }
 
   if (argc>1)
-    err = BMI_Initialize (argv[1], &self);
+    err = BMI_CEM_Initialize (argv[1], &self);
   else
-    err = BMI_Initialize (NULL, &self);
+    err = BMI_CEM_Initialize (NULL, &self);
 
   if (err) {
     fprintf (stderr, "Error: %d: Unable to initialize\n", err);
@@ -44,31 +44,31 @@ main (int argc, char *argv[])
     double stop_time;
     const double river_flux = 250.;
 
-    BMI_Get_var_rank (self, "surface__elevation", &rank);
+    BMI_CEM_Get_var_rank (self, "surface__elevation", &rank);
     fprintf (stderr, "Grid rank: %d\n", rank);
 
     shape = (int*) malloc (sizeof (int)*rank);
-    BMI_Get_grid_shape (self, "surface__elevation", shape);
+    BMI_CEM_Get_grid_shape (self, "surface__elevation", shape);
     fprintf (stderr, "Grid shape: %d x %d\n", shape[0], shape[1]);
 
-    BMI_Get_var_point_count (self, "surface__elevation", &len);
+    BMI_CEM_Get_var_point_count (self, "surface__elevation", &len);
 
     qs = (double *)malloc (sizeof (double) * len);
     z = (double *)malloc (sizeof (double) * len);
     fprintf (stderr, "len is %d\n", len);
 
-    BMI_Get_end_time (self, &stop_time);
-    stop_time = 10;
+    BMI_CEM_Get_end_time (self, &stop_time);
+    stop_time = 1000;
     for (i = 1; i <= stop_time; i++) {
       deltas_avulsion (self, qs, river_flux);
 
-      err = BMI_Set_double (self, "surface_bed_load_sediment__mass_flow_rate", qs);
+      err = BMI_CEM_Set_double (self, "surface_bed_load_sediment__mass_flow_rate", qs);
       if (err)
         fprintf (stderr, "Error %d\n", err);
 
-      BMI_Update (self);
+      BMI_CEM_Update (self);
 
-      BMI_Get_double (self, "sea_water_to_sediment__depth_ratio", z);
+      BMI_CEM_Get_double (self, "sea_water_to_sediment__depth_ratio", z);
       if (i%100 == 0) {
         fprintf (stderr, "\n");
         fprintf (stderr, "Time: %d\n", i);
@@ -85,13 +85,13 @@ main (int argc, char *argv[])
       double time;
       int error;
 
-      error = BMI_Get_current_time (self, &time);
+      error = BMI_CEM_Get_current_time (self, &time);
       if (error || fabs (time - stop_time) > 1e-6)
         return EXIT_FAILURE;
     }
   }
 
-  BMI_Finalize (self);
+  BMI_CEM_Finalize (self);
 
   return EXIT_SUCCESS;
 }

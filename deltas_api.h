@@ -26,9 +26,9 @@ typedef Deltas_state BMI_Model;
 #define BMI_SUCCESS (0)
 #define BMI_FAILURE (1)
 
-#define BMI_COMPONENT_NAME_MAX (2048)
-#define BMI_VAR_NAME_MAX (2048)
-#define BMI_UNIT_NAME_MAX (2048)
+#define BMI_CEM_COMPONENT_NAME_MAX (2048)
+#define BMI_CEM_VAR_NAME_MAX (2048)
+#define BMI_CEM_UNIT_NAME_MAX (2048)
 
 typedef enum {
   BMI_VAR_TYPE_UNKNOWN = 0,
@@ -55,42 +55,42 @@ typedef enum {
 BMI_Grid_type;
 
 /* BMI Function definitions */
-int BMI_Initialize (const char *config_file, BMI_Model **handle);
-int BMI_Update (BMI_Model * s);
-int BMI_Update_until (BMI_Model * s, double time_in_days);
-int BMI_Finalize (BMI_Model * s);
+int BMI_CEM_Initialize (const char *config_file, BMI_Model **handle);
+int BMI_CEM_Update (BMI_Model * s);
+int BMI_CEM_Update_until (BMI_Model * s, double time_in_days);
+int BMI_CEM_Finalize (BMI_Model * s);
 
-int BMI_Get_component_name (BMI_Model *s, char *name);
-int BMI_Get_output_var_names (BMI_Model *s, char **names);
-int BMI_Get_output_var_name_count (Deltas_state *s, int *count);
-int BMI_Get_input_var_names (BMI_Model *s, char **names);
-int BMI_Get_input_var_name_count (Deltas_state *s, int *count);
+int BMI_CEM_Get_component_name (BMI_Model *s, char *name);
+int BMI_CEM_Get_output_var_names (BMI_Model *s, char **names);
+int BMI_CEM_Get_output_var_name_count (Deltas_state *s, int *count);
+int BMI_CEM_Get_input_var_names (BMI_Model *s, char **names);
+int BMI_CEM_Get_input_var_name_count (Deltas_state *s, int *count);
 
-int BMI_Get_double (BMI_Model *s, const char *value, double *dest);
-int BMI_Get_double_ptr (BMI_Model *s, const char *value, double **dest);
-int BMI_Set_double (BMI_Model *s, const char * value, double *src);
+int BMI_CEM_Get_double (BMI_Model *s, const char *value, double *dest);
+int BMI_CEM_Get_double_ptr (BMI_Model *s, const char *value, double **dest);
+int BMI_CEM_Set_double (BMI_Model *s, const char * value, double *src);
 
-int BMI_Get_end_time (BMI_Model * s, double * time);
-int BMI_Get_current_time (BMI_Model * s, double * time);
-int BMI_Get_start_time (BMI_Model * s, double * time);
-int BMI_Get_time_step (BMI_Model * s, double * dt);
-int BMI_Get_time_units (Deltas_state * s, char *units);
+int BMI_CEM_Get_end_time (BMI_Model * s, double * time);
+int BMI_CEM_Get_current_time (BMI_Model * s, double * time);
+int BMI_CEM_Get_start_time (BMI_Model * s, double * time);
+int BMI_CEM_Get_time_step (BMI_Model * s, double * dt);
+int BMI_CEM_Get_time_units (Deltas_state * s, char *units);
 
-int BMI_Get_var_type (BMI_Model *s, const char *value, BMI_Var_type *type);
-int BMI_Get_var_rank (BMI_Model * s, const char *name, int *rank);
-int BMI_Get_var_stride (BMI_Model *s, const char *value, int *stride);
-int BMI_Get_var_point_count (BMI_Model * model, const char *name, int *count);
+int BMI_CEM_Get_var_type (BMI_Model *s, const char *value, BMI_Var_type *type);
+int BMI_CEM_Get_var_rank (BMI_Model * s, const char *name, int *rank);
+int BMI_CEM_Get_var_stride (BMI_Model *s, const char *value, int *stride);
+int BMI_CEM_Get_var_point_count (BMI_Model * model, const char *name, int *count);
 
-int BMI_Get_grid_type (BMI_Model * s, const char *name, BMI_Grid_type *type);
-int BMI_Get_grid_shape (BMI_Model * s, const char *name, int *shape);
-int BMI_Get_grid_spacing (BMI_Model * s, const char *name, double *spacing);
-int BMI_Get_grid_origin (BMI_Model * s, char const *name, double *origin);
+int BMI_CEM_Get_grid_type (BMI_Model * s, const char *name, BMI_Grid_type *type);
+int BMI_CEM_Get_grid_shape (BMI_Model * s, const char *name, int *shape);
+int BMI_CEM_Get_grid_spacing (BMI_Model * s, const char *name, double *spacing);
+int BMI_CEM_Get_grid_origin (BMI_Model * s, char const *name, double *origin);
 
-#define NO_BMI_GET_GRID_CONNECTIVITY
-#define NO_BMI_GET_GRID_OFFSET
-#define NO_BMI_GET_GRID_X
-#define NO_BMI_GET_GRID_Y
-#define NO_BMI_GET_GRID_Z
+#define NO_BMI_CEM_GET_GRID_CONNECTIVITY
+#define NO_BMI_CEM_GET_GRID_OFFSET
+#define NO_BMI_CEM_GET_GRID_X
+#define NO_BMI_CEM_GET_GRID_Y
+#define NO_BMI_CEM_GET_GRID_Z
 
 Deltas_state *deltas_new (void);
 

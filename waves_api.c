@@ -16,7 +16,7 @@
 #define BMI_FAILURE_SCAN_ERROR (3)
 
 int
-BMI_Initialize (const char *file, BMI_Model **handle)
+BMI_WAVES_Initialize (const char *file, BMI_Model **handle)
 {
   int rtn = BMI_FAILURE;
 
@@ -42,10 +42,10 @@ BMI_Initialize (const char *file, BMI_Model **handle)
         return BMI_FAILURE_BAD_FILE_ERROR;
     }
 
-    BMI_Set_double (self, "sea_water_surface_wave__height", &wave_height);
-    BMI_Set_double (self, "sea_water_surface_wave__period", &wave_period);
-    BMI_Set_double (self, "sea_water_surface_wave__model_from_direction_highness_constant", &angle_highness);
-    BMI_Set_double (self, "sea_water_surface_wave__model_from_direction_asymmetry_constant", &angle_asymmetry);
+    BMI_WAVES_Set_double (self, "sea_water_surface_wave__height", &wave_height);
+    BMI_WAVES_Set_double (self, "sea_water_surface_wave__period", &wave_period);
+    BMI_WAVES_Set_double (self, "sea_water_surface_wave__model_from_direction_highness_constant", &angle_highness);
+    BMI_WAVES_Set_double (self, "sea_water_surface_wave__model_from_direction_asymmetry_constant", &angle_asymmetry);
 
     {
       State *p = (State *) self;
@@ -63,19 +63,19 @@ BMI_Initialize (const char *file, BMI_Model **handle)
 }
 
 int
-BMI_Update (BMI_Model * self)
+BMI_WAVES_Update (BMI_Model * self)
 {
   State *p = (State *) self;
   double now;
 
-  BMI_Get_current_time (self, &now);
+  BMI_WAVES_Get_current_time (self, &now);
   _waves_run_until (p, now+1.);
 
   return BMI_SUCCESS;
 }
 
 int
-BMI_Update_until (BMI_Model * self, double time_in_days)
+BMI_WAVES_Update_until (BMI_Model * self, double time_in_days)
 {
   State *p = (State *) self;
   int until_time_step = time_in_days / p->time_step;
@@ -86,7 +86,7 @@ BMI_Update_until (BMI_Model * self, double time_in_days)
 }
 
 int
-BMI_Finalize (BMI_Model *self)
+BMI_WAVES_Finalize (BMI_Model *self)
 {
   int rtn = BMI_FAILURE;
 
@@ -100,7 +100,7 @@ BMI_Finalize (BMI_Model *self)
 }
 
 int
-BMI_Get_component_name (BMI_Model * self, char *name)
+BMI_WAVES_Get_component_name (BMI_Model * self, char *name)
 {
   if (name) {
     strcpy (name, "Waves");
@@ -118,7 +118,7 @@ const char *input_var_names[BMI_INPUT_VAR_NAME_COUNT] = {
 };
 
 int
-BMI_Get_input_var_name_count (BMI_Model * self, int *count)
+BMI_WAVES_Get_input_var_name_count (BMI_Model * self, int *count)
 {
   if (count) {
     *count = BMI_INPUT_VAR_NAME_COUNT;
@@ -128,11 +128,11 @@ BMI_Get_input_var_name_count (BMI_Model * self, int *count)
 }
 
 int
-BMI_Get_input_var_names (const BMI_Model * self, char ** names)
+BMI_WAVES_Get_input_var_names (const BMI_Model * self, char ** names)
 {
   int i;
   for (i=0; i<BMI_INPUT_VAR_NAME_COUNT; i++) {
-    strncpy (names[i], input_var_names[i], BMI_VAR_NAME_MAX);
+    strncpy (names[i], input_var_names[i], BMI_WAVES_VAR_NAME_MAX);
   }
   return BMI_SUCCESS;
 }
@@ -148,7 +148,7 @@ const char *output_var_names[BMI_OUTPUT_VAR_NAME_COUNT] = {
 };
 
 int
-BMI_Get_output_var_name_count (BMI_Model * self, int *count)
+BMI_WAVES_Get_output_var_name_count (BMI_Model * self, int *count)
 {
   if (count) {
     *count = BMI_OUTPUT_VAR_NAME_COUNT;
@@ -158,20 +158,21 @@ BMI_Get_output_var_name_count (BMI_Model * self, int *count)
 }
 
 int
-BMI_Get_output_var_names (const BMI_Model * self, char ** names)
+BMI_WAVES_Get_output_var_names (const BMI_Model * self, char ** names)
 {
   int i;
   for (i=0; i<BMI_OUTPUT_VAR_NAME_COUNT; i++) {
-    strncpy (names[i], output_var_names[i], BMI_VAR_NAME_MAX);
+    strncpy (names[i], output_var_names[i], BMI_WAVES_VAR_NAME_MAX);
   }
   return BMI_SUCCESS;
 }
 
 int
-BMI_Get_var_rank (const BMI_Model *self, const char * name, int *rank)
+BMI_WAVES_Get_var_rank (const BMI_Model *self, const char * name, int *rank)
 {
   if (rank) {
     *rank = 1;
+    fprintf (stdout, "getting rank for %s (%d)\n", name, *rank);
     return BMI_SUCCESS;
   }
   else
@@ -179,7 +180,7 @@ BMI_Get_var_rank (const BMI_Model *self, const char * name, int *rank)
 }
 
 int
-BMI_Get_var_type (const BMI_Model *self, const char * name, BMI_Var_type *type)
+BMI_WAVES_Get_var_type (const BMI_Model *self, const char * name, BMI_Var_type *type)
 {
   if (type) {
     *type = BMI_VAR_TYPE_DOUBLE;
@@ -190,7 +191,7 @@ BMI_Get_var_type (const BMI_Model *self, const char * name, BMI_Var_type *type)
 }
 
 int
-BMI_Get_var_point_count (const BMI_Model *self, const char * name, int *count)
+BMI_WAVES_Get_var_point_count (const BMI_Model *self, const char * name, int *count)
 {
   if (count) {
     *count = 1;
@@ -201,10 +202,11 @@ BMI_Get_var_point_count (const BMI_Model *self, const char * name, int *count)
 }
 
 int
-BMI_Get_grid_shape (const BMI_Model *self, const char * name, int *shape)
+BMI_WAVES_Get_grid_shape (const BMI_Model *self, const char * name, int *shape)
 {
   if (shape) {
     shape[0] = 1;
+    fprintf (stdout, "getting shape for %s (%d)\n", name, *shape);
     return BMI_SUCCESS;
   }
   else
@@ -212,7 +214,31 @@ BMI_Get_grid_shape (const BMI_Model *self, const char * name, int *shape)
 }
 
 int
-BMI_Get_grid_type (const BMI_Model *self, const char * name, BMI_Grid_type *type)
+BMI_WAVES_Get_grid_spacing (const BMI_Model *self, const char * name, double *spacing)
+{
+  if (spacing) {
+    spacing[0] = 0.;
+    fprintf (stdout, "getting spacing for %s (%f)\n", name, *spacing);
+    return BMI_SUCCESS;
+  }
+  else
+    return BMI_FAILURE;
+}
+
+int
+BMI_WAVES_Get_grid_origin (const BMI_Model *self, const char * name, double *origin)
+{
+  if (origin) {
+    origin[0] = 0.;
+    fprintf (stdout, "getting origin for %s (%f)\n", name, *origin);
+    return BMI_SUCCESS;
+  }
+  else
+    return BMI_FAILURE;
+}
+
+int
+BMI_WAVES_Get_grid_type (const BMI_Model *self, const char * name, BMI_Grid_type *type)
 {
   if (type) {
     *type = BMI_GRID_TYPE_UNIFORM;
@@ -223,7 +249,7 @@ BMI_Get_grid_type (const BMI_Model *self, const char * name, BMI_Grid_type *type
 }
 
 int
-BMI_Get_double (BMI_Model * self, const char *value, double *dest)
+BMI_WAVES_Get_double (BMI_Model * self, const char *value, double *dest)
 {
   int rtn = BMI_FAILURE;
 
@@ -254,13 +280,18 @@ BMI_Get_double (BMI_Model * self, const char *value, double *dest)
 }
 
 int
-BMI_Get_double_ptr (BMI_Model * self, const char *value, double **dest)
+BMI_WAVES_Get_var_stride (BMI_Model * self, const char *value, int *stride) {
+  return -BMI_FAILURE;
+}
+
+int
+BMI_WAVES_Get_double_ptr (BMI_Model * self, const char *value, double **dest)
 {
   return -BMI_FAILURE;
 }
 
 int
-BMI_Set_double (BMI_Model *self, const char *value, double *src)
+BMI_WAVES_Set_double (BMI_Model *self, const char *value, double *src)
 {
   int rtn = BMI_FAILURE;
 
@@ -286,7 +317,7 @@ BMI_Set_double (BMI_Model *self, const char *value, double *src)
 }
 
 int
-BMI_Get_current_time (const BMI_Model * self, double *time)
+BMI_WAVES_Get_current_time (const BMI_Model * self, double *time)
 {
   if (time) {
     State *p = (State *) self;
@@ -298,7 +329,7 @@ BMI_Get_current_time (const BMI_Model * self, double *time)
 }
 
 int
-BMI_Get_start_time (const BMI_Model * self, double *time)
+BMI_WAVES_Get_start_time (const BMI_Model * self, double *time)
 {
   if (time) {
     *time = 0.;
@@ -309,7 +340,7 @@ BMI_Get_start_time (const BMI_Model * self, double *time)
 }
 
 int
-BMI_Get_end_time (const BMI_Model * self, double *time)
+BMI_WAVES_Get_end_time (const BMI_Model * self, double *time)
 {
   if (time) {
     State *p = (State *) self;
@@ -321,7 +352,7 @@ BMI_Get_end_time (const BMI_Model * self, double *time)
 }
 
 int
-BMI_Get_time_units (const BMI_Model * self, char *units)
+BMI_WAVES_Get_time_units (const BMI_Model * self, char *units)
 {
   if (self && units) {
     strcpy (units, "d");

@@ -29,9 +29,9 @@ typedef Waves_state BMI_Model;
 #define BMI_SUCCESS (0)
 #define BMI_FAILURE (1)
 
-#define BMI_COMPONENT_NAME_MAX (2048)
-#define BMI_VAR_NAME_MAX (2048)
-#define BMI_UNIT_NAME_MAX (2048)
+#define BMI_WAVES_COMPONENT_NAME_MAX (2048)
+#define BMI_WAVES_VAR_NAME_MAX (2048)
+#define BMI_WAVES_UNIT_NAME_MAX (2048)
 
 typedef enum {
   BMI_VAR_TYPE_UNKNOWN = 0,
@@ -57,39 +57,42 @@ typedef enum {
 }
 BMI_Grid_type;
 
-int BMI_Initialize (const char*, BMI_Model **);
-int BMI_Update (BMI_Model*);
-int BMI_Update_until (BMI_Model*, double);
-int BMI_Finalize (BMI_Model*);
+int BMI_WAVES_Initialize (const char*, BMI_Model **);
+int BMI_WAVES_Update (BMI_Model*);
+int BMI_WAVES_Update_until (BMI_Model*, double);
+int BMI_WAVES_Finalize (BMI_Model*);
 
-int BMI_Get_component_name (BMI_Model * self, char *name);
-int BMI_Get_input_var_name_count (BMI_Model * self, int *count);
-int BMI_Get_input_var_names (const BMI_Model * self, char ** names);
-int BMI_Get_output_var_name_count (BMI_Model * self, int *count);
-int BMI_Get_output_var_names (const BMI_Model * self, char ** names);
+int BMI_WAVES_Get_component_name (BMI_Model * self, char *name);
+int BMI_WAVES_Get_input_var_name_count (BMI_Model * self, int *count);
+int BMI_WAVES_Get_input_var_names (const BMI_Model * self, char ** names);
+int BMI_WAVES_Get_output_var_name_count (BMI_Model * self, int *count);
+int BMI_WAVES_Get_output_var_names (const BMI_Model * self, char ** names);
 
-int BMI_Get_var_rank (const BMI_Model *self, const char * name, int *rank);
-int BMI_Get_var_type (const BMI_Model *self, const char * name, BMI_Var_type *type);
-int BMI_Get_var_point_count (const BMI_Model *self, const char * name, int *count);
-int BMI_Get_grid_shape (const BMI_Model *self, const char * name, int *shape);
+int BMI_WAVES_Get_var_rank (const BMI_Model *self, const char * name, int *rank);
+int BMI_WAVES_Get_var_stride (BMI_Model * self, const char *value, int *stride);
+int BMI_WAVES_Get_var_type (const BMI_Model *self, const char * name, BMI_Var_type *type);
+int BMI_WAVES_Get_var_point_count (const BMI_Model *self, const char * name, int *count);
+int BMI_WAVES_Get_grid_shape (const BMI_Model *self, const char * name, int *shape);
+int BMI_WAVES_Get_grid_spacing (const BMI_Model *self, const char * name, double *spacing);
+int BMI_WAVES_Get_grid_origin (const BMI_Model *self, const char * name, double *origin);
 
-int BMI_Get_double (BMI_Model * self, const char *value, double *dest);
-int BMI_Get_double_ptr (BMI_Model * self, const char *value, double **dest);
-int BMI_Set_double (BMI_Model *self, const char *value, double *src);
+int BMI_WAVES_Get_double (BMI_Model * self, const char *value, double *dest);
+int BMI_WAVES_Get_double_ptr (BMI_Model * self, const char *value, double **dest);
+int BMI_WAVES_Set_double (BMI_Model *self, const char *value, double *src);
 
-int BMI_Get_grid_type (const BMI_Model *self, const char * name, BMI_Grid_type *type);
-int BMI_Get_current_time (const BMI_Model * self, double *time);
-int BMI_Get_start_time (const BMI_Model * self, double *time);
-int BMI_Get_end_time (const BMI_Model * self, double *time);
-int BMI_Get_time_units (const BMI_Model * self, char *units);
+int BMI_WAVES_Get_grid_type (const BMI_Model *self, const char * name, BMI_Grid_type *type);
+int BMI_WAVES_Get_current_time (const BMI_Model * self, double *time);
+int BMI_WAVES_Get_start_time (const BMI_Model * self, double *time);
+int BMI_WAVES_Get_end_time (const BMI_Model * self, double *time);
+int BMI_WAVES_Get_time_units (const BMI_Model * self, char *units);
 
-#define NO_BMI_GET_GRID_CONNECTIVITY
-#define NO_BMI_GET_GRID_OFFSET
-#define NO_BMI_GET_GRID_X
-#define NO_BMI_GET_GRID_Y
-#define NO_BMI_GET_GRID_Z
-#define NO_BMI_GET_GRID_SPACING
-#define NO_BMI_GET_GRID_ORIGIN
+#define NO_BMI_WAVES_GET_GRID_CONNECTIVITY
+#define NO_BMI_WAVES_GET_GRID_OFFSET
+#define NO_BMI_WAVES_GET_GRID_X
+#define NO_BMI_WAVES_GET_GRID_Y
+#define NO_BMI_WAVES_GET_GRID_Z
+//#define NO_BMI_WAVES_GET_GRID_SPACING
+//#define NO_BMI_WAVES_GET_GRID_ORIGIN
 
 Waves_state *waves_new (void);
 

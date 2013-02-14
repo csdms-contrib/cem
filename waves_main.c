@@ -77,7 +77,7 @@ main (int argc, char *argv[])
     }
 
     fprintf (stdout, "Initializing... ");
-    err = BMI_Initialize (NULL, &w);
+    err = BMI_WAVES_Initialize (NULL, &w);
 
     if (err) {
       fprintf (stdout, "FAIL.\n");
@@ -86,25 +86,25 @@ main (int argc, char *argv[])
     else
       fprintf (stdout, "PASS.\n");
 
-    err = BMI_Set_double (w, "wave_asymmetry", &(args->asymmetry));
-    err = BMI_Set_double (w, "wave_highness", &(args->highness));
+    err = BMI_WAVES_Set_double (w, "wave_asymmetry", &(args->asymmetry));
+    err = BMI_WAVES_Set_double (w, "wave_highness", &(args->highness));
     for (i = 0; i < len; i++) {
       fprintf (stdout, "Updating... ");
-      if (BMI_Update (w) == BMI_SUCCESS)
+      if (BMI_WAVES_Update (w) == BMI_SUCCESS)
         fprintf (stdout, "PASS\n");
       else {
         fprintf (stdout, "FAIL.\n");
         fprintf (stderr, "Error: %d: Unable to update\n", err);
       }
 
-      if (BMI_Get_double (w, "sea_surface_wave_from_direction", &a) == BMI_SUCCESS)
+      if (BMI_WAVES_Get_double (w, "sea_surface_wave_from_direction", &a) == BMI_SUCCESS)
         fprintf (stdout, "Wave angle: %f\n", a * scale);
       else
         fprintf (stderr, "Error: %d: Unable to get wave angle\n", err);
     }
 
     fprintf (stdout, "Finalizing... ");
-    if (BMI_Finalize (w) == BMI_SUCCESS)
+    if (BMI_WAVES_Finalize (w) == BMI_SUCCESS)
       fprintf (stdout, "PASS\n");
     else {
       fprintf (stdout, "FAIL.\n");

@@ -39,7 +39,7 @@ scan_next_non_comment_line (char *line, int len, FILE *fp)
 }
 
 int
-BMI_Initialize (const char *config_file, BMI_Model **handle)
+BMI_CEM_Initialize (const char *config_file, BMI_Model **handle)
 {
   int rtn = BMI_FAILURE;
 
@@ -150,33 +150,33 @@ deltas_init (Deltas_state * s)
 }
 
 int
-BMI_Get_component_name (BMI_Model *s, char *name)
+BMI_CEM_Get_component_name (BMI_Model *s, char *name)
 {
   if (*name) {
-    strncpy (name, "CEM", BMI_COMPONENT_NAME_MAX);
+    strncpy (name, "CEM", BMI_CEM_COMPONENT_NAME_MAX);
     return BMI_SUCCESS;
   }
 }
 
 int
-BMI_Update (BMI_Model * s)
+BMI_CEM_Update (BMI_Model * s)
 {
   State *p = (State *) s;
   double now;
 
-  BMI_Get_current_time (s, &now);
+  BMI_CEM_Get_current_time (s, &now);
 
   //fprintf (stderr, "Update until %f\n", now+1);
   _cem_run_until (p, (now+1) / TimeStep);
 
-  BMI_Get_current_time (s, &now);
+  BMI_CEM_Get_current_time (s, &now);
   //fprintf (stderr, "Current time is %f\n", now);
 
   return BMI_SUCCESS;
 }
 
 int
-BMI_Update_until (Deltas_state * s, double time_in_days)
+BMI_CEM_Update_until (Deltas_state * s, double time_in_days)
 {
   State *p = (State *) s;
   int until_time_step = time_in_days / TimeStep;
@@ -197,7 +197,7 @@ deltas_run_until (Deltas_state * s, double time_in_days)
 }
 
 int
-BMI_Finalize (Deltas_state * s)
+BMI_CEM_Finalize (Deltas_state * s)
 {
   if (s) {
     State *p = (State *) s;
@@ -545,19 +545,30 @@ deltas_set_sediment_flux_grid (Deltas_state * s, double *qs)
   const int lower[2] = { 0, 0 };
   const int stride[2] = { 1, deltas_get_ny (s) };
   int dimen[3];
+  const int qs_stride[2] = {deltas_get_ny (s)/2, 1};
+  const int qs_lower[2] = {deltas_get_ny (s)/4, 0};
 
   deltas_get_value_dimen (s, NULL, dimen);
 
   len = dimen[0] * dimen[1] * dimen[2] / 2;
 
+  fprintf (stderr, "Setting sediment flux grid\n");
+
   for (i = 0, n = 0; i < len; i++)
   {
     if (qs[i] > 0)
     {
+      fprintf (stderr, "Found non-zero flux at %d\n", i);
+
       p->river_flux[n] = qs[i];
 
-      p->river_x_ind[n] = i / stride[1];
-      p->river_y_ind[n] = i % stride[1] + lower[0];
+      p->river_x_ind[n] = i / qs_stride[0];
+      p->river_y_ind[n] = i % qs_stride[0] + qs_lower[0];
+      fprintf (stderr, "Found non-zero flux at x_ind = %d\n", p->river_x_ind[n]);
+      fprintf (stderr, "Found non-zero flux at y_ind = %d\n", p->river_y_ind[n]);
+
+      //p->river_x_ind[n] = i / stride[1];
+      //p->river_y_ind[n] = i % stride[1] + lower[0];
       p->river_x[n] = p->river_x_ind[n]*deltas_get_dx (s);
       p->river_y[n] = p->river_y_ind[n]*deltas_get_dy (s);
       n++;
@@ -777,21 +788,25 @@ deltas_get_value_data (Deltas_state * s, const char *value, int lower[2],
 }
 
 int
-BMI_Get_var_stride (Deltas_state *s, const char *name, int *stride)
+BMI_CEM_Get_var_stride (Deltas_state *s, const char *name, int *stride)
 {
   int rtn = BMI_FAILURE;
 
   if (stride) {
     State *p = (State *) s;
 
+    fprintf (stderr, "getting stride for %s\n", name);
     if (strcmp (name, "surface_bed_load_sediment__mass_flow_rate") == 0 ||
         strcmp (name, "sea_water_to_sediment__depth_ratio") == 0 ||
         strcmp (name, "sea_water__depth") == 0) {
       stride[0] = p->ny * 2;
       stride[1] = 1;
+    fprintf (stderr, "stride is %d, %d\n", stride[0], stride[1]);
+
     }
     else if (strcmp (name, "river_mouth__location_model_x_component") == 0 ||
-             strcmp (name, "river_mouth__location_model_y_component") == 0) {
+             strcmp (name, "river_mouth__location_model_y_component") == 0 ||
+             strcmp (name, "river_mouth_bed_load_sediment__mass_flow_rate") == 0) {
       stride[0] = 1;
     }
 
@@ -809,20 +824,21 @@ const char *output_var_names[BMI_OUTPUT_VAR_NAME_COUNT] = {
   "sea_water_to_sediment__depth_ratio",
   "river_mouth__location_model_x_component",
   "river_mouth__location_model_y_component",
-  "surface_bed_load_sediment__mass_flow_rate",
+  "river_mouth_bed_load_sediment__mass_flow_rate",
+  //"surface_bed_load_sediment__mass_flow_rate",
 };
 
 int
-BMI_Get_output_var_names (Deltas_state *s, char **names)
+BMI_CEM_Get_output_var_names (Deltas_state *s, char **names)
 {
   int i;
   for (i=0; i<BMI_OUTPUT_VAR_NAME_COUNT; i++)
-    strncpy (names[i], output_var_names[i], BMI_VAR_NAME_MAX);
+    strncpy (names[i], output_var_names[i], BMI_CEM_VAR_NAME_MAX);
   return BMI_SUCCESS;
 }
 
 int
-BMI_Get_output_var_name_count (Deltas_state *s, int *count)
+BMI_CEM_Get_output_var_name_count (Deltas_state *s, int *count)
 {
   if (count) {
     *count = BMI_OUTPUT_VAR_NAME_COUNT;
@@ -843,17 +859,17 @@ const char *input_var_names[BMI_INPUT_VAR_NAME_COUNT] = {
 };
 
 int
-BMI_Get_input_var_names (Deltas_state *s, char **names)
+BMI_CEM_Get_input_var_names (Deltas_state *s, char **names)
 {
   int i;
   for (i=0; i<BMI_INPUT_VAR_NAME_COUNT; i++) {
-    strncpy (names[i], input_var_names[i], BMI_VAR_NAME_MAX);
+    strncpy (names[i], input_var_names[i], BMI_CEM_VAR_NAME_MAX);
   }
   return BMI_SUCCESS;
 }
 
 int
-BMI_Get_input_var_name_count (Deltas_state *s, int *count)
+BMI_CEM_Get_input_var_name_count (Deltas_state *s, int *count)
 {
   if (count) {
     *count = BMI_INPUT_VAR_NAME_COUNT;
@@ -863,7 +879,7 @@ BMI_Get_input_var_name_count (Deltas_state *s, int *count)
 }
 
 int
-BMI_Get_double (Deltas_state *s, const char *value, double *dest)
+BMI_CEM_Get_double (Deltas_state *s, const char *value, double *dest)
 {
   int rtn = BMI_FAILURE;
 
@@ -885,34 +901,45 @@ BMI_Get_double (Deltas_state *s, const char *value, double *dest)
     else if (strcmp (value, "river_mouth__location_model_y_component") == 0) {
       src = (double*)deltas_get_river_y_position (s);
     }
-    else if (strcmp (value, "surface_bed_load_sediment__mass_flow_rate") == 0) {
+    //else if (strcmp (value, "surface_bed_load_sediment__mass_flow_rate") == 0) {
+    else if (strcmp (value, "river_mouth_bed_load_sediment__mass_flow_rate") == 0) {
       src = (double*)deltas_get_river_flux (s);
     }
 
     if (src) { /* Copy the subgrid to the destination array */
-      State *p = (State *) s;
-      int i, j;
-      const int n_rows = p->nx;
-      const int n_cols = p->ny;
-      const int stride = p->ny * 2;
-      double * src_row = src + p->ny / 2;
-      double * dest_row = dest;
-
-      if (strcmp (value, "surface__elevation") == 0) {
-        const double scale = -1.;
-        for (i=0; i<n_rows; i++) {
-          for (j=0; j<n_cols; j++)
-            dest_row[j] = scale * src_row[j];
-          dest_row += n_cols;
-          src_row += stride;
-        }
+      if (strcmp (value, "river_mouth_bed_load_sediment__mass_flow_rate") == 0 ||
+          strcmp (value, "river_mouth_bed_load_sediment__mass_flow_rate") == 0 ||
+          strcmp (value, "river_mouth_bed_load_sediment__mass_flow_rate") == 0) {
+        int i;
+        const int len = deltas_get_n_rivers (s);
+        for (i=0; i<len; i++)
+          dest[i] = src[i];
       }
       else {
-        for (i=0; i<n_rows; i++) {
-          for (j=0; j<n_cols; j++)
-            dest_row[j] = src_row[j];
-          dest_row += n_cols;
-          src_row += stride;
+        State *p = (State *) s;
+        int i, j;
+        const int n_rows = p->nx;
+        const int n_cols = p->ny;
+        const int stride = p->ny * 2;
+        double * src_row = src + p->ny / 2;
+        double * dest_row = dest;
+
+        if (strcmp (value, "surface__elevation") == 0) {
+          const double scale = -1.;
+          for (i=0; i<n_rows; i++) {
+            for (j=0; j<n_cols; j++)
+              dest_row[j] = scale * src_row[j];
+            dest_row += n_cols;
+            src_row += stride;
+          }
+        }
+        else {
+          for (i=0; i<n_rows; i++) {
+            for (j=0; j<n_cols; j++)
+              dest_row[j] = src_row[j];
+            dest_row += n_cols;
+            src_row += stride;
+          }
         }
       }
 
@@ -924,7 +951,7 @@ BMI_Get_double (Deltas_state *s, const char *value, double *dest)
 }
 
 int
-BMI_Get_double_ptr (Deltas_state *s, const char *value, double **dest)
+BMI_CEM_Get_double_ptr (Deltas_state *s, const char *value, double **dest)
 {
   int rtn = BMI_FAILURE;
 
@@ -937,7 +964,7 @@ BMI_Get_double_ptr (Deltas_state *s, const char *value, double **dest)
     else if (strcasecmp (value, "sea_water_to_sediment__depth_ratio") == 0) {
       src = (double*)deltas_get_percent (s);
     }
-    else if (strcasecmp (value, "surface_bed_load_sediment__mass_flow_rate") == 0) {
+    else if (strcasecmp (value, "river_mouth_bed_load_sediment__mass_flow_rate") == 0) {
       src = (double*)deltas_get_river_flux (s);
     }
     else if (strcasecmp (value, "surface__elevation") == 0) {
@@ -948,6 +975,9 @@ BMI_Get_double_ptr (Deltas_state *s, const char *value, double **dest)
       State *p = (State *) s;
       *dest = src + p->ny / 2;
       rtn = BMI_SUCCESS;
+
+      fprintf (stderr, "dest = %d\n", *dest);
+      fprintf (stderr, "data = %f, %f, %f\n", (*dest)[0], (*dest)[1], (*dest)[2]);
     }
     else {
       if (strcasecmp (value, "river_mouth__location_model_x_component") == 0) {
@@ -967,7 +997,7 @@ BMI_Get_double_ptr (Deltas_state *s, const char *value, double **dest)
 }
 
 int
-BMI_Set_double (Deltas_state *s, const char * value, double *src)
+BMI_CEM_Set_double (Deltas_state *s, const char * value, double *src)
 {
   int rtn = BMI_FAILURE;
 
@@ -1269,14 +1299,14 @@ deltas_get_start_time (Deltas_state * s)
 #include <float.h>
 
 int
-BMI_Get_end_time (Deltas_state * s, double * time)
+BMI_CEM_Get_end_time (Deltas_state * s, double * time)
 {
   *time = DBL_MAX;
   return BMI_SUCCESS;
 }
 
 int
-BMI_Get_current_time (Deltas_state * s, double * time)
+BMI_CEM_Get_current_time (Deltas_state * s, double * time)
 {
   State *p = (State *) s;
   *time = p->CurrentTimeStep * TimeStep;
@@ -1284,21 +1314,21 @@ BMI_Get_current_time (Deltas_state * s, double * time)
 }
 
 int
-BMI_Get_start_time (Deltas_state * s, double * time)
+BMI_CEM_Get_start_time (Deltas_state * s, double * time)
 {
   *time = 0.;
   return BMI_SUCCESS;
 }
 
 int
-BMI_Get_time_step (Deltas_state * s, double * dt)
+BMI_CEM_Get_time_step (Deltas_state * s, double * dt)
 {
   *dt = TimeStep;
   return BMI_SUCCESS;
 }
 
 int
-BMI_Get_time_units (Deltas_state * s, char *units)
+BMI_CEM_Get_time_units (Deltas_state * s, char *units)
 {
   if (s && units) {
     strcpy (units, "d");
@@ -1324,7 +1354,7 @@ deltas_get_current_time (Deltas_state * s)
 }
 
 int
-BMI_Get_var_type (Deltas_state *s, const char *value, BMI_Var_type *type)
+BMI_CEM_Get_var_type (Deltas_state *s, const char *value, BMI_Var_type *type)
 {
   int rtn = BMI_FAILURE;
 
@@ -1337,10 +1367,11 @@ BMI_Get_var_type (Deltas_state *s, const char *value, BMI_Var_type *type)
 }
 
 int
-BMI_Get_var_rank (Deltas_state * s, const char *name, int *rank)
+BMI_CEM_Get_var_rank (Deltas_state * s, const char *name, int *rank)
 {
   int rtn = BMI_FAILURE;
   if (rank) {
+    fprintf (stderr, "getting rank for %s\n", name);
     if (strcmp (name, "sea_water__depth") == 0 ||
         strcmp (name, "surface__elevation") == 0 ||
         strcmp (name, "sea_water_to_sediment__depth_ratio") == 0 ||
@@ -1348,7 +1379,8 @@ BMI_Get_var_rank (Deltas_state * s, const char *name, int *rank)
       *rank = 2;
     else if (strcmp (name, "river_mouth__location_model_x_component") == 0 ||
              strcmp (name, "river_mouth__location_model_y_component") == 0 ||
-             strcmp (name, "channel_outflow_end_bed_load_sediment__mass_flow_rate") == 0)
+             strcmp (name, "river_mouth_bed_load_sediment__mass_flow_rate") == 0)
+             //strcmp (name, "channel_outflow_end_bed_load_sediment__mass_flow_rate") == 0)
       *rank = 1;
     else if (strcmp (name, "channel_outflow_end_suspended_load__mass_flow_rate") == 0 ||
              strcmp (name, "channel_outflow_end_bed_load_sediment__mass_flow_rate") == 0 ||
@@ -1358,13 +1390,14 @@ BMI_Get_var_rank (Deltas_state * s, const char *name, int *rank)
       *rank = 0;
     else
       return BMI_FAILURE;
+    fprintf (stderr, "rank is %d\n", *rank);
     rtn = BMI_SUCCESS;
   }
   return rtn;
 }
 
 int
-BMI_Get_var_point_count (Deltas_state * s, const char *name, int *count)
+BMI_CEM_Get_var_point_count (Deltas_state * s, const char *name, int *count)
 {
   if (count && s) {
     State *p = (State *) s;
@@ -1378,7 +1411,8 @@ BMI_Get_var_point_count (Deltas_state * s, const char *name, int *count)
     }
     else if (strcmp (name, "river_mouth__location_model_x_component") == 0 ||
              strcmp (name, "river_mouth__location_model_y_component") == 0 ||
-             strcmp (name, "channel_outflow_end_bed_load_sediment__mass_flow_rate") == 0)
+             strcmp (name, "river_mouth_bed_load_sediment__mass_flow_rate") == 0)
+             //strcmp (name, "channel_outflow_end_bed_load_sediment__mass_flow_rate") == 0)
       *count = p->n_rivers;
     else if (strcmp (name, "channel_outflow_end_suspended_load__mass_flow_rate") == 0 ||
              strcmp (name, "channel_outflow_end_bed_load_sediment__mass_flow_rate") == 0 ||
@@ -1388,13 +1422,14 @@ BMI_Get_var_point_count (Deltas_state * s, const char *name, int *count)
       *count = 1;
     else
       return BMI_FAILURE + 1;
+    fprintf (stderr, "point count is %d\n", *count);
     return BMI_SUCCESS;
   }
   return BMI_FAILURE;
 }
 
 int
-BMI_Get_grid_type (Deltas_state * s, const char *name, BMI_Grid_type *type)
+BMI_CEM_Get_grid_type (Deltas_state * s, const char *name, BMI_Grid_type *type)
 {
   int rtn = BMI_FAILURE;
   if (type) {
@@ -1406,21 +1441,24 @@ BMI_Get_grid_type (Deltas_state * s, const char *name, BMI_Grid_type *type)
 }
 
 int
-BMI_Get_grid_shape (Deltas_state * s, const char *name, int *shape)
+BMI_CEM_Get_grid_shape (Deltas_state * s, const char *name, int *shape)
 {
   int rtn = BMI_FAILURE;
   if (shape && s) {
     State *p = (State *) s;
+    fprintf (stderr, "getting shape for %s\n", name);
     if (strcmp (name, "surface_bed_load_sediment__mass_flow_rate") == 0 ||
         strcmp (name, "sea_water__depth") == 0 ||
         strcmp (name, "surface__elevation") == 0 ||
         strcmp (name, "sea_water_to_sediment__depth_ratio") == 0) {
       shape[0] = p->nx;
       shape[1] = p->ny;
+    fprintf (stderr, "shape is %d, %d\n", shape[0], shape[1]);
     }
     else if (strcmp (name, "river_mouth__location_model_x_component") == 0 ||
              strcmp (name, "river_mouth__location_model_y_component") == 0 ||
-             strcmp (name, "channel_outflow_end_bed_load_sediment__mass_flow_rate") == 0)
+             strcmp (name, "river_mouth_bed_load_sediment__mass_flow_rate") == 0)
+             //strcmp (name, "channel_outflow_end_bed_load_sediment__mass_flow_rate") == 0)
       shape[0] = p->n_rivers;
     else if (strcmp (name, "channel_outflow_end_suspended_load__mass_flow_rate") == 0 ||
              strcmp (name, "channel_outflow_end_bed_load_sediment__mass_flow_rate") == 0 ||
@@ -1436,7 +1474,7 @@ BMI_Get_grid_shape (Deltas_state * s, const char *name, int *shape)
 }
 
 int
-BMI_Get_grid_spacing (Deltas_state * s, const char *name, double *spacing)
+BMI_CEM_Get_grid_spacing (Deltas_state * s, const char *name, double *spacing)
 {
   int rtn = BMI_FAILURE;
   if (spacing) {
@@ -1449,7 +1487,8 @@ BMI_Get_grid_spacing (Deltas_state * s, const char *name, double *spacing)
     }
     else if (strcmp (name, "river_mouth__location_model_x_component") == 0 ||
              strcmp (name, "river_mouth__location_model_y_component") == 0 ||
-             strcmp (name, "channel_outflow_end_bed_load_sediment__mass_flow_rate") == 0)
+             strcmp (name, "river_mouth_bed_load_sediment__mass_flow_rate") == 0)
+             //strcmp (name, "channel_outflow_end_bed_load_sediment__mass_flow_rate") == 0)
       spacing[0] = 0.;
     else if (strcmp (name, "channel_outflow_end_suspended_load__mass_flow_rate") == 0 ||
              strcmp (name, "channel_outflow_end_bed_load_sediment__mass_flow_rate") == 0 ||
@@ -1465,7 +1504,7 @@ BMI_Get_grid_spacing (Deltas_state * s, const char *name, double *spacing)
 }
 
 int
-BMI_Get_grid_origin (Deltas_state * s, const char *name, double *origin)
+BMI_CEM_Get_grid_origin (Deltas_state * s, const char *name, double *origin)
 {
   int rtn = BMI_FAILURE;
   if (origin) {
@@ -1478,7 +1517,8 @@ BMI_Get_grid_origin (Deltas_state * s, const char *name, double *origin)
     }
     else if (strcmp (name, "river_mouth__location_model_x_component") == 0 ||
              strcmp (name, "river_mouth__location_model_y_component") == 0 ||
-             strcmp (name, "channel_outflow_end_bed_load_sediment__mass_flow_rate") == 0)
+             strcmp (name, "river_mouth_bed_load_sediment__mass_flow_rate") == 0)
+             //strcmp (name, "channel_outflow_end_bed_load_sediment__mass_flow_rate") == 0)
       origin[0] = 0.;
     else if (strcmp (name, "channel_outflow_end_suspended_load__mass_flow_rate") == 0 ||
              strcmp (name, "channel_outflow_end_bed_load_sediment__mass_flow_rate") == 0 ||
