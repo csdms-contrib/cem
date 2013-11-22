@@ -59,8 +59,10 @@ set( deltas_lib_SRCS
   deltas_api.c)
 set_source_files_properties (${deltas_lib_SRCS} PROPERTIES LANGUAGE CXX)
 
-add_library (bmicem ${deltas_lib_SRCS} )
+add_library(bmicem ${deltas_lib_SRCS})
+add_library(bmicem-static STATIC ${deltas_lib_SRCS})
 target_link_libraries (bmicem m ${OPENGL_LIBRARIES})
+target_link_libraries(bmicem-static m ${GLIB2_LIBRARIES} ${GTHREAD2_LIBRARIES})
 
 install(TARGETS bmicem DESTINATION lib COMPONENT deltas)
 
@@ -73,8 +75,10 @@ set (waves_lib_SRCS
   waves.c)
 set_source_files_properties (${waves_lib_SRCS} PROPERTIES LANGUAGE CXX)
 
-add_library (bmiwaves ${waves_lib_SRCS})
+add_library(bmiwaves ${waves_lib_SRCS})
+add_library(bmiwaves-static STATIC ${waves_lib_SRCS})
 target_link_libraries (bmiwaves m glib-2.0)
+target_link_libraries(bmiwaves-static m ${GLIB2_LIBRARIES} ${GTHREAD2_LIBRARIES})
 
 install(TARGETS bmiwaves DESTINATION lib COMPONENT bmiwaves)
 
@@ -84,7 +88,7 @@ set( deltas_SRCS deltas_main.c)
 set_source_files_properties (${deltas_SRCS} PROPERTIES LANGUAGE CXX)
 
 add_executable(run_deltas ${deltas_SRCS})
-target_link_libraries(run_deltas bmicem)
+target_link_libraries(run_deltas bmicem-static)
 
 install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/run_deltas
         DESTINATION bin
@@ -96,7 +100,7 @@ install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/run_deltas
 set (waves_SRCS waves_main.c waves_cli.c)
 
 add_executable(run_waves ${waves_SRCS})
-target_link_libraries(run_waves bmiwaves)
+target_link_libraries(run_waves bmiwaves-static)
 
 install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/run_waves
         DESTINATION bin
