@@ -21,6 +21,7 @@ struct _BMI_CEM_Model {
   double **temp_z;
 };
 
+
 int
 BMI_CEM_Initialize (const char *config_file, BMI_CEM_Model ** handle)
 {
@@ -104,7 +105,7 @@ BMI_CEM_Initialize (const char *config_file, BMI_CEM_Model ** handle)
 
   return BMI_SUCCESS;
 }
-/* End: BMI_Initialize */
+
 
 int
 BMI_CEM_Update (BMI_CEM_Model *self)
@@ -130,7 +131,7 @@ BMI_CEM_Update (BMI_CEM_Model *self)
 
   return BMI_SUCCESS;
 }
-/* End: BMI_Update */
+
 
 int
 BMI_CEM_Update_frac (BMI_CEM_Model *self, double f)
@@ -149,7 +150,7 @@ BMI_CEM_Update_frac (BMI_CEM_Model *self, double f)
 
   return BMI_SUCCESS;
 }
-/* End: BMI_Update_frac */
+
 
 int
 BMI_CEM_Update_until (BMI_CEM_Model *self, double t)
@@ -174,7 +175,7 @@ BMI_CEM_Update_until (BMI_CEM_Model *self, double t)
 
   return BMI_SUCCESS;
 }
-/* End: BMI_CEM_Update_until */
+
 
 int
 BMI_CEM_Finalize (BMI_CEM_Model *self)
@@ -190,7 +191,7 @@ BMI_CEM_Finalize (BMI_CEM_Model *self)
 
   return BMI_SUCCESS;
 }
-/* End: BMI_CEM_Finalize */
+
 
 int
 BMI_CEM_Get_var_type (BMI_CEM_Model *self, const char *long_var_name, BMI_Var_type * type)
@@ -204,7 +205,7 @@ BMI_CEM_Get_var_type (BMI_CEM_Model *self, const char *long_var_name, BMI_Var_ty
     return BMI_FAILURE;
   }
 }
-/* End: BMI_Get_var_type */
+
 
 int
 BMI_CEM_Get_var_units (BMI_CEM_Model *self, const char *long_var_name, char * units)
@@ -218,7 +219,7 @@ BMI_CEM_Get_var_units (BMI_CEM_Model *self, const char *long_var_name, char * un
     return BMI_FAILURE;
   }
 }
-/* End: BMI_Get_var_units */
+
 
 int
 BMI_CEM_Get_var_rank (BMI_CEM_Model *self, const char *long_var_name, int * rank)
@@ -232,7 +233,7 @@ BMI_CEM_Get_var_rank (BMI_CEM_Model *self, const char *long_var_name, int * rank
     return BMI_FAILURE;
   }
 }
-/* End: BMI_Get_var_rank */
+
 
 int
 BMI_CEM_Get_grid_shape (BMI_CEM_Model *self, const char *long_var_name, int * shape)
@@ -245,7 +246,7 @@ BMI_CEM_Get_grid_shape (BMI_CEM_Model *self, const char *long_var_name, int * sh
   return BMI_SUCCESS;
 }
 
-/* End: BMI_Get_grid_shape */
+
 
 int
 BMI_CEM_Get_grid_spacing (BMI_CEM_Model *self, const char *long_var_name, double * spacing)
@@ -257,7 +258,7 @@ BMI_CEM_Get_grid_spacing (BMI_CEM_Model *self, const char *long_var_name, double
 
   return BMI_SUCCESS;
 }
-/* End: BMI_Get_grid_spacing */
+
 
 int
 BMI_CEM_Get_grid_origin (BMI_CEM_Model *self, const char *long_var_name, double * origin)
@@ -269,7 +270,7 @@ BMI_CEM_Get_grid_origin (BMI_CEM_Model *self, const char *long_var_name, double 
 
   return BMI_SUCCESS;
 }
-/* End: BMI_Get_grid_origin */
+
 
 int
 BMI_CEM_Get_grid_type (BMI_CEM_Model *self, const char *long_var_name, BMI_Grid_type * type)
@@ -284,7 +285,7 @@ BMI_CEM_Get_grid_type (BMI_CEM_Model *self, const char *long_var_name, BMI_Grid_
   }
   return BMI_SUCCESS;
 }
-/* End: BMI_Get_grid_type */
+
 
 int
 BMI_CEM_Get_value (BMI_CEM_Model *self, const char *long_var_name, void *dest)
@@ -299,7 +300,7 @@ BMI_CEM_Get_value (BMI_CEM_Model *self, const char *long_var_name, void *dest)
 
   return BMI_SUCCESS;
 }
-/* End: BMI_Get_value */
+
 
 int
 BMI_CEM_Get_value_ptr (BMI_CEM_Model *self, const char *long_var_name, void **dest)
@@ -314,7 +315,7 @@ BMI_CEM_Get_value_ptr (BMI_CEM_Model *self, const char *long_var_name, void **de
 
   return BMI_SUCCESS;
 }
-/* End: BMI_Get_value */
+
 
 int
 BMI_CEM_Get_value_at_indices (BMI_CEM_Model *self, const char *long_var_name, void *dest, int * inds, int len)
@@ -336,7 +337,7 @@ BMI_CEM_Get_value_at_indices (BMI_CEM_Model *self, const char *long_var_name, vo
   return BMI_SUCCESS;
 }
 
-/* End: BMI_Get_double_at_indices */
+
 int
 BMI_CEM_Get_double (BMI_CEM_Model *self, const char *long_var_name, double *dest)
 {
@@ -350,7 +351,7 @@ BMI_CEM_Get_double (BMI_CEM_Model *self, const char *long_var_name, double *dest
 
   return BMI_SUCCESS;
 }
-/* End: BMI_Get_double */
+
 
 int
 BMI_CEM_Get_double_ptr (BMI_CEM_Model *self, const char *long_var_name, double **dest)
@@ -365,7 +366,7 @@ BMI_CEM_Get_double_ptr (BMI_CEM_Model *self, const char *long_var_name, double *
 
   return BMI_SUCCESS;
 }
-/* End: BMI_Get_double_ptr */
+
 
 int
 BMI_CEM_Get_double_at_indices (BMI_CEM_Model *self, const char *long_var_name, double *dest, int * inds, int len)
@@ -385,7 +386,7 @@ BMI_CEM_Get_double_at_indices (BMI_CEM_Model *self, const char *long_var_name, d
 
   return BMI_SUCCESS;
 }
-/* End: BMI_Get_double_at_indices */
+
 
 int
 BMI_CEM_Set_value (BMI_CEM_Model *self, const char *long_var_name, void *array)
@@ -396,7 +397,7 @@ BMI_CEM_Set_value (BMI_CEM_Model *self, const char *long_var_name, void *array)
 
   return BMI_SUCCESS;
 }
-/* End: BMI_Set_double */
+
 
 int
 BMI_CEM_Set_value_at_indices (BMI_CEM_Model *self, const char *long_var_name, int * inds, int len, void *src)
@@ -417,7 +418,7 @@ BMI_CEM_Set_value_at_indices (BMI_CEM_Model *self, const char *long_var_name, in
 
   return BMI_SUCCESS;
 }
-/* End: BMI_Set_value_at_indices */
+
 
 int
 BMI_CEM_Set_double (BMI_CEM_Model *self, const char *long_var_name, double *array)
@@ -428,7 +429,7 @@ BMI_CEM_Set_double (BMI_CEM_Model *self, const char *long_var_name, double *arra
 
   return BMI_SUCCESS;
 }
-/* End: BMI_Set_double */
+
 
 int
 BMI_CEM_Set_double_at_indices (BMI_CEM_Model *self, const char *long_var_name, int * inds, int len, double *src)
@@ -448,7 +449,7 @@ BMI_CEM_Set_double_at_indices (BMI_CEM_Model *self, const char *long_var_name, i
 
   return BMI_SUCCESS;
 }
-/* End: BMI_Set_double_at_indices */
+
 
 int
 BMI_CEM_Get_component_name (BMI_CEM_Model *self, char * name)
@@ -456,7 +457,7 @@ BMI_CEM_Get_component_name (BMI_CEM_Model *self, char * name)
   strncpy (name, "Example C model", BMI_MAX_COMPONENT_NAME);
   return BMI_SUCCESS;
 }
-/* End: BMI_Get_component_name */
+
 
 const char *input_var_names[BMI_CEM_INPUT_VAR_NAME_COUNT] = {
   "surface_elevation"
@@ -471,7 +472,7 @@ BMI_CEM_Get_input_var_names (BMI_CEM_Model *self, char ** names)
   }
   return BMI_SUCCESS;
 }
-/* End: BMI_Get_input_var_names */
+
 
 const char *output_var_names[BMI_CEM_OUTPUT_VAR_NAME_COUNT] = {
   "surface_elevation"
@@ -486,7 +487,7 @@ BMI_CEM_Get_output_var_names (BMI_CEM_Model *self, char ** names)
   }
   return BMI_SUCCESS;
 }
-/* End: BMI_Get_output_var_names */
+
 
 int
 BMI_CEM_Get_start_time (BMI_CEM_Model *self, double * time)
@@ -499,7 +500,7 @@ BMI_CEM_Get_start_time (BMI_CEM_Model *self, double * time)
     return BMI_FAILURE;
   }
 }
-/* End: BMI_Get_start_time */
+
 
 int
 BMI_CEM_Get_end_time (BMI_CEM_Model *self, double * time)
@@ -507,7 +508,7 @@ BMI_CEM_Get_end_time (BMI_CEM_Model *self, double * time)
   *time = self->t_end;
   return BMI_SUCCESS;
 }
-/* End: BMI_Get_end_time */
+
 
 int
 BMI_CEM_Get_current_time (BMI_CEM_Model *self, double * time)
@@ -515,7 +516,7 @@ BMI_CEM_Get_current_time (BMI_CEM_Model *self, double * time)
   *time = self->t;
   return BMI_SUCCESS;
 }
-/* End: BMI_Get_current_time */
+
 
 int
 BMI_CEM_Get_time_step (BMI_CEM_Model *self, double * dt)
@@ -523,7 +524,7 @@ BMI_CEM_Get_time_step (BMI_CEM_Model *self, double * dt)
   *dt = self->dt;
   return BMI_SUCCESS;
 }
-/* End: BMI_Get_time_step */
+
 
 int
 BMI_CEM_Get_time_units (BMI_CEM_Model *self, char * units)
@@ -531,5 +532,3 @@ BMI_CEM_Get_time_units (BMI_CEM_Model *self, char * units)
   strncpy (units, "-", BMI_MAX_UNITS_NAME);
   return BMI_SUCCESS;
 }
-/* End: BMI_Get_time_units */
-
