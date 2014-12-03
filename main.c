@@ -298,6 +298,7 @@ double ControlFileIn[20];   /* Initialisation data read from file*/
 
 void    AdjustShore(int i);
 void	AgeCells(void);
+void	ControlFile(void);
 void	DetermineAngles(void);
 void	DetermineSedTransport(void);
 void	DoSink(void);
@@ -332,6 +333,7 @@ void	SaveLineToFile(void);
 void 	SedTrans(int i, float ShoreAngle, char MaxT); /*changed LMV*/
 void 	ShadowSweep(void);
 void 	TransportSedimentSweep(void);
+void	WaveOutFile(void);
 void 	WeatherRock(int j); 			/*LMV*/
 int 	XMaxBeach(int Max);
 void	ZeroVars(void);
