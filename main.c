@@ -395,10 +395,10 @@ XEvent event;
 Plotting Controls
 
 int		EveryPlotSpacing = 30;
-int		XPlotExtent = Xmax;	/* Height in cells of plot window in x - direction
-int		YPlotExtent = Ymax;	/* Width in cells of plot window in y - direction (Ymax or 2*Ymax)
+int		XPlotExtent = Xmax;	// Height in cells of plot window in x - direction
+int		YPlotExtent = Ymax;	// Width in cells of plot window in y - direction (Ymax or 2*Ymax)
 int		KeysOn = 0;
-int		YPlotStart = 0; /* at what y-value do you start plotting? (0 or Ymax/2)
+int		YPlotStart = 0; // at what y-value do you start plotting? (0 or Ymax/2)
 
 */
 
@@ -486,7 +486,7 @@ int main(void)
         xplotoff = 0;
         yplotoff = Ymax/2;
 
-        /* Initialize Graphics Window
+        // Initialize Graphics Window
         OpenWindow();
 
         if(EveryPlotSpacing) {
@@ -4560,7 +4560,7 @@ void ControlFile(void)
 
     if (TimeStep==-999) printf("***Initialisation file not read!***\n");
 
-	if (Metadata='y')
+	if (Metadata == 'y')
     {
         printf("Outputting Initialisation Metadata \n");
 
@@ -4773,7 +4773,7 @@ void PrintLocalConds(int x, int y, int in)
 CWT Commented out at present
 
 void ButtonEnter(void)
-/* Not sure what this does
+// Not sure what this does
 {
     char newdigit = 'z';
     int flag = 0;
@@ -4793,7 +4793,7 @@ void ButtonEnter(void)
 
 
 void ScreenInit(void)
-/* this is for the keyboard thingies to work
+// this is for the keyboard thingies to work
 {
     mainwnd = initscr();
     noecho();
@@ -4855,7 +4855,7 @@ void OpenWindow(void) {
 }
 
 void GraphCells(int bugx, int bugy)
-/* Plots entire Array
+// Plots entire Array
 {
     int x, y;
     float Red, Green, Blue, backRed, backGreen, backBlue;
@@ -4902,7 +4902,7 @@ void GraphCells(int bugx, int bugy)
 					Blue =(((210 - 150 * (AgeFactorBlue)-backBlue) * PercentFullSand[x][y]) + backBlue)/255.0;
 				}
 
-				/* LMV
+				// LMV
 				else if ((PercentFullRock[x][y] > 0.0) && (AllRock[x][y] == 'n'))
 				{
 					Red = ((((225 - 100 * (AgeFactorRed))-backRed) * PercentFullSand[x][y]) + backRed)/255.0;
@@ -4951,7 +4951,7 @@ void GraphCells(int bugx, int bugy)
 }
 
 void PutPixel(float x, float y, float R, float G, float B)
-/* translate x and y integer components to the openGL grid
+// translate x and y integer components to the openGL grid
 {
 
     float xstart, ystart;
