@@ -143,14 +143,14 @@ int	    SaveSpacing = 365;	/* space between saved files */
 char	savefilename[24] = "CEM";
 char	StartFromFile = 'n';	/* start from saved file? */
 char	readfilename[24] = "CEM_3285.out";
-int	    WaveIn = 2;		/* Input Wave Distribution file: no = 0, binned file = 1, angle/period/height file =2 */
+int	    WaveIn = 0;		/* Input Wave Distribution file: no = 0, binned file = 1, angle/period/height file =2 */
 char	readwavename[24] = "In_WaveData.dat";
-char    InitialiseFile = 'y'; /* use a file to initialise run? Over rides setup data*/
+char    InitialiseFile = 'n'; /* use a file to initialise run? Over rides setup data*/
 char    readcontrolname[24] = "In_CEM_init.dat";
 int	    CurrentTimeStep = 0;  /* Time step of current calculation */
-char    Metadata = 'y'; /*Create a metadata file?*/
+char    Metadata = 'n'; /*Create a metadata file?*/
 char    metasavename[24] = "Metadata.out";
-char    Wavedata = 'y'; /*Create a wavedata file?*/
+char    Wavedata = 'n'; /*Create a wavedata file?*/
 char    wavesavename[24] = "Wavedata.out";
 
 int	    SaveFile = 2;       /* 1 = line output, 2 = array output*/
