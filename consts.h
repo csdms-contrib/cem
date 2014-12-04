@@ -58,7 +58,7 @@ extern "C" {
 												Needed to calculate decay constant in WeatherRock function PWL */ 
 	#define	DoGraphics			0       /* CWT Re-cast as a define, rather than the odd char DoGraphics = 1 in the original; 0 = false */
 	
-	#define InitCType			0	/* 0: normal (columns/blocks), 1: wiggly, 2: one block */
+	#define InitCType			0	/* 0: normal (columns/blocks), 1: wiggly, 2: one block, 3: all sand, no rock */
 	#define	seed				1	/* random seed:  control value = 1 completely random = -999 */
 	#define	StartSavingAt			0	/* time step to begin saving files */
 	#define	SaveSpacing			365	/* space between saved files */
