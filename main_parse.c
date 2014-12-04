@@ -1,363 +1,72 @@
-/* standard includes */
-#include <stdlib.h>     /*THIS PROGRAM GONNA MAKE CAPES, SANDWAVES?? */
+#include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
-#ifdef WITH_OPENGL
-# include <GL/glx.h>
-# include <GL/gl.h>
-#endif
 #include <unistd.h>
-#include <ncurses.h>
-#include <limits.h>
-#include <string.h>
+
+#include "consts.h"
+#include "globals.h"
+
+void AdjustShore (int i);
+void AgeCells (void);
+void ControlFile (void);
+void DetermineAngles (void);
+void DetermineSedTransport (void);
+void DoSink (void);
+void Transport (void);
+void ErodeTheBeach (int i);
+void FindBeachCells (int YStart);
+void FindRockCells (int YStart);
+char FindIfInShadow (int xin, int yin, int ShadMax);
+void FindNearestBeach (int j);
+void FindNextCell (int x, int y, int z);
+void FindNextRockCell (int x, int y, int z);
+float FindWaveAngle (void);
+void FixBeach (void);
+void FixFlow (void);
+void FlowInCell (void);
+int getIndex (int x, int y, char interface);
+void InitConds (void);
+void InitPert (void);
+float MassCount (void);
+void OopsImEmpty (int x, int y);
+void OopsImFull (int x, int y);
+void PauseRun (int x, int y, int in);
+void PeriodicBoundaryCopy (void);
+float Raise (float b, float e);
+float RandZeroToOne (void);
+void ReadSandFromFile (void);
+void ReadWaveIn (void);
+void RealWaveIn (void);
+void RockCalculations (void);
+void SaveSandToFile (void);
+void SaveLineToFile (void);
+void SedTrans (int i, float ShoreAngle, char MaxT);   /*changed LMV */
+void ShadowSweep (void);
+void TransportSedimentSweep (void);
+void WaveOutFile (void);
+void WeatherRock (int j);
+int XMaxBeach (int Max);
+void ZeroVars (void);
+
+/* Overwash function prototypes */
+void CheckOverwashSweep (void);
+float GetOverwashDepth (int xin, int yin, float xinfl, float yinfl,
+                        int ishore);
+void CheckOverwash (int icheck);
+void DoOverwash (int xfrom, int yfrom, int xto, int yto, float xintto,
+                 float yintto, float widthin, int ishore);
+
+
+int cem_initialize (void);
+int cem_update (void);
+int cem_update_until (int);
+int cem_finalize (void);
 
 
 int
 cem_initialize (void)
 {
-  /* Aspect Parameters */
-#define CellWidth			100     /* size of cells (meters) */
-#define Xmax				50      /* number of cells in x (cross-shore) direction */
-#define Ymax				200     /* number of cells in y (longshore) direction */
-#define MaxBeachLength			8*Ymax  /* maximum length of arrays that contain beach data at each time step */
-#define ShelfSlope			0.001   /* slope of continental shelf */
-#define ShorefaceSlope			0.01    /* for now, linear slope of shoreface */
-#define DepthShoreface			10      /* minimum depth of shoreface due to wave action (meters) */
-#define InitBeach			20      /* cell where intial conditions changes from beach to ocean */
-#define InitRock			5       /* cell where initial conditions change from beach to rock LMV */
-#define InitialDepth			10      /* theoretical depth in meters of continental shelf at x = InitBeach */
-#define FindCellError			5       /* if we run off of array, how far over do we try again? */
-#define ShadowStepDistance  		0.2     /* step size for shadow cell checking */
-
-  /*Overwash Parameters */
-#define CritBWidth			350.0   /* Overwash - width barrier maintains due to overwash (m) important scaling parameter! */
-#define InitBWidth			4       /* Overwash - initial minimum width of barrier (Cells) */
-#define OWType				1       /* Overwash - 0 = use depth array, 1 = use geometric rule */
-#define OWMinDepth			1.0     /* Overwash - littlest overwash of all */
-
-#define OWflag				0       /* A debugging flag for overwash routines */
-#define MaxOver				0.01    /* Maximum overwash step size (enforced at back barrier) */
-#define OverwashLimit			60      /* Don't do over wash if the angle is > 60 degrees */
-  float CellDepth[Xmax][2 * Ymax];      /* Depth array */
-
-  /*
-     From Jordan Slott
-     Cuts out the TRUE & FALSE undeclared compiler errors in SedTrans()
-   */
-
-#ifndef TRUE
-#define TRUE	1
-#endif
-#ifndef FALSE
-#define FALSE 	0
-#endif
-
-  /*  Run Control Parameters */
-#define HaveSinks			0       /* include sediment sinks in model run? */
-#define Sinkiness			0.5     /* fractional value determines chance that sediment in the sink is deleted */
-#define TimeStep			1       /* days - reflects rate of sediment transport per time step */
-#define OffShoreWvHt			2.0     /* meters */
-#define Period				10.0    /* seconds */
-#define Asym				0.70    /* fractional portion of waves coming from positive (left) direction */
-#define Highness			0.35    /* .5 = even dist, < .5 high angle domination. NOTE Highness actually determines lowness! */
-#define Duration			1       /* Number of time steps calculations loop at same wave angle */
-#define STOP_AFTER			36500   /* Stop after what number of time steps? This is replaced by variable pushed here from BMI, 12/3/14 */
-#define NumberChunk			9       /* Number of chunks of rock in alongshore direction with different weathering rates LMV */
-#define NormalWeatheringRate 		0.2     /* Baseline rock retreat rate, m/yr   PWL */
-#define SlowWeatherCoeff		0*NormalWeatheringRate  /* Weathering rate of slow rock e.g. 0.5 = slow weathering, 1/2 as fast LMV */
-#define FastWeatherCoeff		1*NormalWeatheringRate  /* Weathering rate of fast rock e.g. 2 = fast weathering, 2 times faster than normal LMV */
-#define PercentFineFast 		0.00    /* Percent of fast weathering rock lost because it is too fine to stay in nearshore LMV */
-#define PercentFineSlow 		0.00    /* Percent of slow weathering rock lost because it is too fine to stay in nearshore LMV */
-#define ErosionRatePerYear  		0.5     /* Amount of erosion to TotalBeachCells in m/year LMV */
-  double CliffHeightSlow = 30;  /* Cliff height above sea level for slow weathering rock PWL */
-  double CliffHeightFast = 0;   /* Cliff height above sea level for fast weathering rock PWL */
-#define VaryCliffHeight			('y')   /* Vary cliff height for different rock weathering rates? PWL */
-#define Abrasion			('y')   /* Turn abrasion on? If yes, then rock weathering is maximized at a given amount of sediment cover (wcrit).
-                                                   Otherwise, use existing exponential weathering.  PWL */
-#define Wcrit				20      /* Sediment cover that maximizes rock weathering. PWL */
-#define N				4       /* How much to maximize weathering rate above bare-rock rate at Wcrit? PWL */
-#define Emin				0.001   /* Determines weathering rate when sediment thickness = NoWeathering.
-                                                   Needed to calculate decay constant in WeatherRock function PWL */
-#define	DoGraphics			0       /* CWT Re-cast as a define, rather than the odd char DoGraphics = 1 in the original; 0 = false */
-#define coastrotation			40      /* Angle (deg) used to align coastline with real wave climate */
-#define waveheightchange		1       /* Factor applied to the input wave height; 1 = no change, 0.5 = half wave height, and 2 = double wave height */
-#define waveperiodchange		1       /* Factor applied to the input wave period; 1 = no change, 0.5 = half wave period, and 2 = double wave period */
-
-#define InitCType			0       /* 0: normal (columns/blocks), 1: wiggly, 2: one block */
-#define	seed				1       /* random seed:  control value = 1 completely random = -999 */
-#define	StartSavingAt			0       /* time step to begin saving files */
-#define	SaveSpacing			365     /* space between saved files */
-#define	savefilename			"CEM"
-#define	StartFromFile			('n')   /* start from saved file? */
-#define	readfilename			"CEM_3285.out"
-#define	WaveIn				0       /* Input Wave Distribution file: no = 0, binned file = 1, angle/period/height file =2 */
-#define	readwavename			"In_WaveData.dat"
-#define InitialiseFile			('n')   /* use a file to initialise run? Over rides setup data */
-#define readcontrolname			"In_CEM_init.dat"
-#define	CurrentTimeStep			0       /* Time step of current calculation */
-#define Metadata			('n')   /*Create a metadata file? */
-#define metasavename			"Metadata.out"
-#define Wavedata			('n')   /*Create a wavedata file? */
-#define wavesavename			"Wavedata.out"
-
-#define	SaveFile			2       /* 1 = line output, 2 = array output */
-#define SaveAge				1       /* Save/update age of cells? */
-#define	SaveLine			1       /* Save line instead of whole array? */
-#define	PromptStart			('n')   /* ask prompts for file names, etc? */
-#define OffArray			('n')   /* Initializing this variable for later use */
-#define	ScreenTextSpacing		30      /* Spacing of writing to screen in time steps */
-#define TimeToSweepFullBeach 		50      /* Spacing of full beach sweep for each rock cell i=0:TotalBeachCells LMV */
-#define LookDist			10      /* For short rock to beach sweep, +- number of beach cells to look at LMV */
-#define BigDistanceToBeach  		1000.0*CellWidth        /* Used to find minimum distance to beach in rock to beach sweep LMV */
-#define NoWeathering			5.0     /* weathering of rock only occurs below this amt of sed cover (vert equiv in meters) LMV */
-#define	InteractivePlot			0
-#define	StartStop			0       /* Stop after every iteration 'Q' to move on */
-#define	InterruptRun			0       /* Allow run to be paused by pressing the 'A' key */
-#define	NoPauseRun			1       /* Disbale PauseRun subroutine */
-#define	InitialPert			0       /* Start with a bump? if =1-->square pert, if =2-->pointy pert */
-#define	DiffusiveHump			0       /* Shoreline is sinusoidal LMV  */
-#define	InitialSmooth			0       /* Smooth starting conditions */
-#define	InitialSmoothRock		1       /* Smooth rock interface starting conditions LMV */
-#define ChunkLength			100     /* Alongshore length of a chunk of fast or slow weathering rock LMV */
-  /* (used to be Ymax/NumberChunk) */
-
-  /* De-bugging Parameters */
-
-#define debug0				0       /* misc. printf's--don't leave them in */
-#define	debug1				0       /* Find Next Beach Cell */
-#define debug1a				0       /* Find Next Rock Cell LMV */
-#define	debug1b				0       /* More find next cell LMV */
-#define	debug1c				0       /* More find next rock cell LMV */
-#define debug2				0       /* Shadow Routine */
-#define	debug2a				0       /* In-Depth Shadow Results */
-#define	debug2b				0       /* More shadow results */
-#define debug3				0       /* Determine Angles */
-#define debug4				0       /* Upwind/Downwind */
-#define debug5				0       /* Sediment Transport Decisions */
-#define debug6				0       /* Sediment Trans Calculations */
-#define	debug6a				0       /* Volume In/Out/AcrossBorder LMV */
-#define debug7				0       /* Transport Sweep (move sediment) */
-#define	debug7a				0       /* Slope Calcs */
-#define debug8				0       /* Full/Empty */
-#define debug80				0       /* Temp Full */
-#define debug8a				0       /* More Full/Empty LMV */
-#define debug9				0       /* FixBeach */
-#define debug9a				0       /* More FixBeach LMV */
-#define debug10				0       /* Distance to Beach LMV */
-#define debug11				0       /* Min Distance to Beach & Closest Beach LMV */
-#define debug12				0       /* Weathering Rate LMV */
-#define debug12a			0       /* Percent Fines lost LMV */
-#define debug13				0       /* Sed Flow LMV */
-#define	debug14				0       /* Actual Volume Across Border & PFS LMV */
-#define debug15				0       /* Erosion Rate per Year LMV */
-#define debug16				0       /* Total Percent Full LMV */
-#define debug17				0       /* graphics stuff */
-#define debug18				0       /* reading wave data AB */
-#define debugNearest			0       /* graphs a pixel at nearest beach cell to a given rock cell (for weathering) */
-#define	debugtopo			0       /* debug topography...not really useful at this point -- wait until land is DEM! */
-
-  /* Universal Constants */
-#define	pi					3.1415927
-#define g					9.80665;
-#define						radtodeg = 180/pi       /* transform rads to degrees */
-
-  /* Overall Shoreface Configuration Arrays - Data file information */
-  char AllBeach[Xmax][2 * Ymax];        /* Flag indicating of cell is entirely beach */
-  char AllRock[Xmax][2 * Ymax]; /* Flag indicating if cell is entirely rock LMV */
-  double PercentFullSand[Xmax][2 * Ymax];       /* Fractional amount of cell full of sediment LMV */
-  double PercentFullRock[Xmax][2 * Ymax];       /* Fractional amount of a cell full of rock LMV */
-  char TypeOfRock[Xmax][2 * Ymax];      /* Array to control weathering rates of rock along the beach LMV */
-  int Age[Xmax][2 * Ymax];      /* Age since cell was deposited */
-  double Topography[Xmax][2 * Ymax];    /* Holds cliff heights -- will change through time, eventually... */
-
-#define NumSinks			6
-#define ColumnSinks			0       /* if this is turned on, X vector is disregarded and a sink is considered
-                                                   to span a whole column */
-  int SinkY[] = { 158, 361, 158, 361, 158, 361 };       /* a sink is a cell that is routinely emptied (if it is on the beach) */
-  int SinkX[] = { 190, 190, 189, 189, 191, 191 };
-
-  FILE *SaveSandFile;
-  FILE *WaveFileOutput;
-  FILE *InitMetaFile;
-  FILE *ReadSandFile;
-  FILE *ReadWaveFile;
-  FILE *ReadRealWaveFile;
-  FILE *ReadControlFile;
-
-  /* Computational Arrays (determined for each time step)  -- will eventually be in a structure for BMI */
-
-  int X[MaxBeachLength];        /* X Position of ith beach element */
-  int Y[MaxBeachLength];        /* Y Position of ith beach element */
-  int XBehind[MaxBeachLength];  /* Cell that is "behind" X[i] LMV */
-  int YBehind[MaxBeachLength];  /* Cell that is "behind" Y[i] LMV */
-  int XRock[MaxBeachLength];    /* X Position of ith rock element LMV */
-  int YRock[MaxBeachLength];    /* Y Position of ith rock element LMV */
-  int XRockBehind[MaxBeachLength];      /* Cell that is "behind" XRock[i] LMV */
-  int YRockBehind[MaxBeachLength];      /* Cell that is "behind" YRock[i] LMV */
-  char InShadow[MaxBeachLength];        /* Is ith beach element in shadow? */
-  float ShorelineAngle[MaxBeachLength]; /* Angle between cell and right (z+1) neighbor  */
-  float SurroundingAngle[MaxBeachLength];       /* Angle between left and right neighbors */
-  char UpWind[MaxBeachLength];  /* Upwind or downwind condition used to calculate sediment transport */
-  float VolumeIn[MaxBeachLength];       /* Sediment volume into ith beach element */
-  float VolumeOut[MaxBeachLength];      /* Sediment volume out of ith beach element */
-  float VolumeAcrossBorder[MaxBeachLength];     /* Sediment volume across border of ith beach element in m^3/day LMV */
-  /* amount sediment needed, not necessarily amount a cell gets */
-  float ActualVolumeAcross[MaxBeachLength];     /* Sediment volume that actually gets passed across border LMV */
-  /* amount sed is limited by volumes across border upstream and downstream */
-  char DirectionAcrossBorder[MaxBeachLength];   /* Flag to indicate if transport across border is L or R LMV */
-  char FlowThroughCell[MaxBeachLength]; /* Is flow through ith cell Left, Right, Convergent, or Divergent LMV */
-  float DistanceToBeach[MaxBeachLength];        /* Distance in meters from rock to beach LMV */
-  float MinDistanceToBeach[MaxBeachLength];     /* From a rock cell j, min distance (in meters) to closest beach LMV */
-  int ClosestBeach[MaxBeachLength];     /* i position of closest rock to beach LMV */
-  float AmountWeathered[MaxBeachLength];        /* Amount of rock weathered from rock cell j LMV */
-
-  /* Miscellaneous Global Variables -- also will be included in the BMI structure */
-
-  int NextX;                    /* Global variables used to iterate FindNextCell in global array - */
-  int NextY;                    /*      would've used pointer but wouldn't work */
-  int BehindX;
-  int BehindY;
-  int BehindRockX;
-  int BehindRockY;
-  int NextRockX;                /* Global variables used to iterate FindNextRockCell in global array LMV */
-  int NextRockY;
-  int TotalBeachCells;          /* Number of cells describing beach at particular iteration */
-  int TotalRockCells;           /* Number of cells describing rock at an iteration LMV */
-  int ShadowXMax;               /* used to determine maximum extent of beach cells */
-  float WaveAngle;              /* wave angle for current time step */
-  int FindStart;                /* Used to tell FindBeach at what Y value to start looking */
-  int FindRockStart;            /* Used to tell FindRock at what Y value to start looking LMV */
-  char FellOffArray;            /* Flag used to determine if accidentally went off array */
-  char FellOffRockArray;        /* Flag used to determine if accidentally went off rock array LMV */
-  float MassInitial;            /* For conservation of mass calcs */
-  float MassCurrent;            /* " */
-  int device;
-  short button;
-  long buttonback;
-  int NumWaveBins;              /* For Input Wave - number of bins */
-  float WaveMax[36];            /* Max Angle for specific bin */
-  float WaveProb[36];           /* Probability of Certain Bin */
-  double WaveAngleIn;
-  double WaveHeightIn;
-  double WavePeriodIn;
-  double ControlFileIn[20];     /* Initialisation data read from file */
-  /* Function Prototypes */
-
-  void AdjustShore (int i);
-  void AgeCells (void);
-  void ControlFile (void);
-  void DetermineAngles (void);
-  void DetermineSedTransport (void);
-  void DoSink (void);
-  void Transport (void);
-  void ErodeTheBeach (int i);
-  /*LMV*/ void FindBeachCells (int YStart);
-  void FindRockCells (int YStart);
-  /*LMV*/ char FindIfInShadow (int xin, int yin, int ShadMax);
-  void FindNearestBeach (int j);
-  /*LMV*/ void FindNextCell (int x, int y, int z);
-  void FindNextRockCell (int x, int y, int z);
-  /*LMV*/ float FindWaveAngle (void);
-  void FixBeach (void);
-  void FixFlow (void);
-  /*LMV*/ void FlowInCell (void);
-  /*LMV*/ int getIndex (int x, int y, char interface);
-  void InitConds (void);
-  void InitPert (void);
-  float MassCount (void);
-  void OopsImEmpty (int x, int y);
-  void OopsImFull (int x, int y);
-  void PauseRun (int x, int y, int in);
-  void PeriodicBoundaryCopy (void);
-  float Raise (float b, float e);
-  float RandZeroToOne (void);
-  void ReadSandFromFile (void);
-  void ReadWaveIn (void);
-  void RealWaveIn (void);
-  void RockCalculations (void);
-  void SaveSandToFile (void);
-  void SaveLineToFile (void);
-  void SedTrans (int i, float ShoreAngle, char MaxT);   /*changed LMV */
-  void ShadowSweep (void);
-  void TransportSedimentSweep (void);
-  void WaveOutFile (void);
-  void WeatherRock (int j);
-  /*LMV*/ int XMaxBeach (int Max);
-  void ZeroVars (void);
-
-  /*
-     CWT
-     Overwash function prototypes
-   */
-
-  void CheckOverwashSweep (void);
-  float GetOverwashDepth (int xin, int yin, float xinfl, float yinfl,
-                          int ishore);
-  void CheckOverwash (int icheck);
-  void DoOverwash (int xfrom, int yfrom, int xto, int yto, float xintto,
-                   float yintto, float widthin, int ishore);
-
-  /*
-     CWT
-     These assignments and declarations moved here - needed for compilation, ecven when not using graohics
-   */
-
-#define	AgeMax				1000000 /* Maximum 'age' of cells - loops back to zero */
-#define	AgeUpdate			10      /* Time space for updating age of non-beach cells */
-#define	AgeShadeSpacing			10000   /* For graphics - how many time steps means back to original shade */
-#define	CellPixelSize			4       /* Size in pixes of plotted cell (a power of two, please) */
-#define PutPixel(float x, float y, float R, float G, float B);
-
-  /*
-     CWT
-     Graphics and display stuff commented out to line 330
-
-     function prototypes
-
-     void         ButtonEnter(void);
-     void    GraphCells(int bugx, int bugy);
-     void    OpenWindow(void);
-     void    PutPixel(float x, float y, float R, float G, float B);
-     void         PrintLocalConds(int x, int y, int in);
-     void    ScreenInit(void);
-     Bool    WaitForNotify(Display*, XEvent*, char*);
-
-     Display Crap
-
-     static WINDOW *mainwnd;
-     static WINDOW *screen;
-     WINDOW *my_win;
-     float xcellwidth;
-     float ycellwidth;
-     int current_getch;
-     int xplotoff;
-     int yplotoff;
-     Display *dpy;
-     Window root;
-     XVisualInfo *vi;
-     Colormap cmap;
-     XSetWindowAttributes swa;
-     Window win;
-     GLXContext cx;
-     XEvent event;
-
-     Plotting Controls
-
-     int          EveryPlotSpacing = 30;
-     int          XPlotExtent = Xmax;     /* Height in cells of plot window in x - direction
-     int          YPlotExtent = Ymax;     /* Width in cells of plot window in y - direction (Ymax or 2*Ymax)
-     int          KeysOn = 0;
-     int          YPlotStart = 0; /* at what y-value do you start plotting? (0 or Ymax/2)
-
-   */
-
-  /* Phew!! Lets's Go! - Main Program */
-
-  /* 'main.c' was here, 12/3/14 */
-
-  /* Initialize Variables and Device */
-
   ShadowXMax = Xmax;    /* RCL: was Xmax-5; */
 
   //srandom(seed); //AB
@@ -423,40 +132,37 @@ cem_initialize (void)
   if (InitialiseFile == 'y')
     ControlFile ();     /*Read in initialisation data to control model */
 
-  /*
-     CWT Graphics calls commented out at present
-     If using graphics, open display and graph
-
-     if (DoGraphics)
-     {
-     xcellwidth = 2.0 / (2.0 * (float) XPlotExtent) * (CellPixelSize)/2.0;
-     ycellwidth = 2.0 / (2.0 * (float) YPlotExtent) * (CellPixelSize)/2.0;
-     xplotoff = 0;
-     yplotoff = Ymax/2;
-
-     /* Initialize Graphics Window
-     OpenWindow();
-
-     if(EveryPlotSpacing) {
-     GraphCells(-1, -1);
-     printf("Plotting initial condition\n");
-     //getchar();
-     }
-     }
-   */
+  return 0;
 }
 
+
 int
-_cem_run_until (int until)
+cem_update_until (int until)
+{
+  int StopAfter = until;
+  while (CurrentTimeStep < StopAfter) {
+    cem_update();
+
+    if (CurrentTimeStep == StopAfter) {
+      if (SaveLine)
+        SaveLineToFile ();
+      if (SaveFile)
+        SaveSandToFile ();
+    }
+  }
+
+  return 0;
+}
+
+
+int
+cem_update (void)
 {
 /* 'until' is sent from BMI call ...12/3/14 */
-  int StopAfter = until;
+  //int StopAfter = until;
   int xx;                       /* duration loop variable, moved from former (now deleted) 'main.c' above */
 
-/* ---------------------------------------    PRIMARY PROGRAM LOOP   ----------------- --------------- */
-
-  while (CurrentTimeStep < StopAfter) {
-
+  {
     /*  Time Step iteration - compute same wave angle for Duration time steps */
 
     /*  Calculate Wave Angle */
@@ -555,35 +261,29 @@ _cem_run_until (int until)
 
       /* SAVE FILE ? */
       if ((CurrentTimeStep % SaveSpacing == 0 &&
-           CurrentTimeStep > StartSavingAt)
-          || (CurrentTimeStep == StopAfter)) {
+           CurrentTimeStep > StartSavingAt)) {
         if (SaveLine)
           SaveLineToFile ();
         if (SaveFile)
           SaveSandToFile ();
       }
 
-/*
-CWT Cgraphics commented out at present
-GRAPHING
-	        if (DoGraphics && EveryPlotSpacing && (CurrentTimeStep%EveryPlotSpacing == 0)) {
-	                GraphCells(-1,-1);
-	        }
-*/
       CurrentTimeStep++;
 
     }
   }
-/* --------------------------------------- END OF MAIN -------------------------------------------------- */
+  return 0;
 }
 
+
 int
-_cem_finalize (void)
+cem_finalize (void)
 {
   printf ("Run Complete.  Output file: %s \n", savefilename);
   getchar ();
   return (0);
 }
+
 
 /* -----FUNCTIONS ARE BELOW----- */
 
@@ -1994,7 +1694,7 @@ FindNearestBeach (int j)
         /* Finds the minimum beach to rock distance                                             */
         /* This function will use but not adjust the global arrays: X[], Y[], XRock[], YRock[]  */
                                                         /* PercentFullSand[][]                  */
-        /* This function will use but not adjust the variables MinDistanceToBeach and TotalBeachCells */
+        /* This function will use but not adjust the variables MinDistToBeach and TotalBeachCells */
 {
   int i;
   float DeltaX,
@@ -2002,7 +1702,7 @@ FindNearestBeach (int j)
   int LookStart,
     LookEnd;                    /* for short rock to beach sweep */
 
-  MinDistanceToBeach[j] = BigDistanceToBeach;
+  MinDistToBeach[j] = BigDistanceToBeach;
 
   if (CurrentTimeStep % TimeToSweepFullBeach == 0)
     /* do a full sweep every now and then */
@@ -2048,19 +1748,19 @@ FindNearestBeach (int j)
         printf ("Distance to beach from XRock[j] %d to X[i] %d is %f \n",
                 XRock[j], X[i], DistanceToBeach[j]);
 
-      if (DistanceToBeach[j] < MinDistanceToBeach[j]) {
-        MinDistanceToBeach[j] = DistanceToBeach[j];
+      if (DistanceToBeach[j] < MinDistToBeach[j]) {
+        MinDistToBeach[j] = DistanceToBeach[j];
         ClosestBeach[j] = i;
       }
     }
     if (debug11)
-      printf ("Min Distance for j = %d is %f \n", j, MinDistanceToBeach[j]);
+      printf ("Min Distance for j = %d is %f \n", j, MinDistToBeach[j]);
     if (debug11)
       printf ("XRock[j] %d to X[i] %d \n", XRock[j], X[i]);
     if (debug11)
       printf ("Closest Beach is at cell i = %d \n \n", ClosestBeach[j]);
     if (Y[i] == 150)
-      printf ("Min Distance for j = %d is %f \n", j, MinDistanceToBeach[j]);
+      printf ("Min Distance for j = %d is %f \n", j, MinDistToBeach[j]);
     if (Y[i] == 150)
       printf ("XRock[j] %d to X[i] %d \n", XRock[j], X[i]);
     if (Y[i] == 150)
@@ -2124,14 +1824,14 @@ FindNearestBeach (int j)
         printf ("Distance to beach from XRock[j] %d to X[i] %d is %f \n",
                 XRock[j], X[i], DistanceToBeach[j]);
 
-      if (DistanceToBeach[j] < MinDistanceToBeach[j]) {
-        MinDistanceToBeach[j] = DistanceToBeach[j];
+      if (DistanceToBeach[j] < MinDistToBeach[j]) {
+        MinDistToBeach[j] = DistanceToBeach[j];
         ClosestBeach[j] = i;
       }
     }
     if (debug11)
       printf ("Short Sweep - Min Distance for j = %d is %f \n", j,
-              MinDistanceToBeach[j]);
+              MinDistToBeach[j]);
     if (debug11)
       printf ("XRock[j] %d to X[i] %d \n", XRock[j], X[i]);
     if (debug11)
@@ -5123,7 +4823,7 @@ ControlFile (void)
   if (TimeStep == -999)
     printf ("***Initialisation file not read!***\n");
 
-  if (Metadata = 'y') {
+  if (Metadata == 'y') {
     printf ("Outputting Initialisation Metadata \n");
 
     InitMetaFile = fopen (metasavename, "w");
@@ -5343,206 +5043,6 @@ PrintLocalConds (int x, int y, int in)
 
 }
 
-/*-----------------Graphics-------------------------
-CWT Commented out at present
-
-void ButtonEnter(void)
-/* Not sure what this does
-{
-    char newdigit = 'z';
-    int flag = 0;
-    int i = 1;
-    char digits[7] = "";
-
-    printf("Press <Space> to Start\n");
-    printf("Enter Digit and <Space> (<Z> to finish)\n");
-
-    i += 1;
-
-    sprintf(digits, "%s%c", digits, newdigit);
-    printf("\nCurrent %s\n", digits);
-
-    newdigit = 'z';
-}
-
-void ScreenInit(void)
-/* this is for the keyboard thingies to work
-{
-    mainwnd = initscr();
-    noecho();
-    cbreak();
-    nodelay(mainwnd, TRUE);
-    halfdelay(.1);
-    refresh(); // 1)
-    wrefresh(mainwnd);
-    screen = newwin(13, 27, 1, 1);
-    box(screen, ACS_VLINE, ACS_HLINE);
-}
-
-Bool WaitForNotify(Display *d, XEvent *e, char *arg) {
-    return (e->type == MapNotify) && (e->xmap.window == (Window)arg);
-}
-
-void OpenWindow(void) {
-    static  int  attributeListSgl[]  =  {GLX_RGBA, GLX_RED_SIZE, 1, GLX_GREEN_SIZE, 1, GLX_BLUE_SIZE, 1, None };
-    static   int   attributeListDbl[]   =   { GLX_RGBA, 1, GLX_RED_SIZE, 1, GLX_GREEN_SIZE, 1, GLX_BLUE_SIZE, 1, None };
-
-	//     int FALSE = 0;
-	//     int TRUE =1;
-    int winwidth;
-    int winheight;
-    int swap_flag = FALSE;
-
-    dpy = XOpenDisplay(0);
-
-    vi = glXChooseVisual(dpy, DefaultScreen(dpy), attributeListSgl);
-
-    if (vi == NULL) {
-        vi = glXChooseVisual(dpy, DefaultScreen(dpy), attributeListDbl);
-        swap_flag = TRUE;
-    }
-    cx = glXCreateContext(dpy, vi, 0, GL_TRUE);
-    cmap = XCreateColormap(dpy, RootWindow(dpy, vi->screen),  vi->visual, AllocNone);
-
-    swa.colormap = cmap;
-    swa.border_pixel = 0;
-    swa.event_mask = StructureNotifyMask;
-
-    winwidth = CellPixelSize*Xmax;
-    winheight = CellPixelSize*Ymax;
-
-    win = XCreateWindow(dpy, RootWindow(dpy, vi->screen), 0, 0, YPlotExtent * CellPixelSize, XPlotExtent * CellPixelSize,
-						0, vi->depth, InputOutput, vi->visual,
-						CWBorderPixel|CWColormap|CWEventMask, &swa);
-    XMapWindow(dpy, win);
-    XIfEvent(dpy, &event, WaitForNotify, (char*)win);
-
-    glXMakeCurrent(dpy, win, cx);
-    glClearColor(0.0, 0.0, 0.0, 1);
-    glClear(GL_COLOR_BUFFER_BIT);
-    glFlush();
-
-    printf("WIN %d \n ", dpy);
-}
-
-void GraphCells(int bugx, int bugy)
-/* Plots entire Array
-{
-    int x, y;
-    float Red, Green, Blue, backRed, backGreen, backBlue;
-    float AgeFactorRed, AgeFactorGreen, AgeFactorBlue, DepthBlue;
-    float DepthFactorX;
-
-	int xbug, ybug;
-	xbug = bugx;
-	ybug = bugy;
-
-    DepthFactorX = XPlotExtent;
-
-    for (y=yplotoff; y <= YPlotExtent+yplotoff; y++) {
-
-        for (x= xplotoff; x <= XPlotExtent+xplotoff; x++) {
-
-			if (x == xbug && y == ybug) {
-				Red = 1;
-				Blue = 0;
-				Green = 0;
-			}
-			else {
-
-				backRed = 0;
-				backBlue = (75 + 130 * (x/DepthFactorX));
-				backGreen = (165 - 125 * (x/DepthFactorX));
-
-				DepthBlue =  floor( (.8 - (float)x/(XPlotExtent*3)) * 255 )/255.0;
-				PutPixel( CellPixelSize*(y-yplotoff), CellPixelSize*x,0,0, DepthBlue);
-
-				AgeFactorRed = (float)((Age[x][y])%AgeShadeSpacing)/AgeShadeSpacing;
-				AgeFactorGreen = (float)((Age[x][y]+AgeShadeSpacing/3)%AgeShadeSpacing)/AgeShadeSpacing;
-				AgeFactorBlue = (float)((Age[x][y]+2*AgeShadeSpacing/3)%AgeShadeSpacing)/AgeShadeSpacing;
-
-				if ((PercentFullSand[x][y] > 0) && (AllBeach[x][y] == 'n')) {
-					Red =((((235 - 100 *(AgeFactorRed))-backRed)* PercentFullSand[x][y] )+backRed)/255.0;
-					Green =((((235 - 95 * (AgeFactorGreen))-backGreen) * PercentFullSand[x][y])+backGreen)/255.0;
-					Blue =((((210 - 150 * AgeFactorBlue)-backBlue)* PercentFullSand[x][y])+backBlue)/255.0;
-
-				}
-				else if (AllBeach[x][y] == 'y') {
-					Red =((((235 - 100 *(AgeFactorRed))-backRed) * PercentFullSand[x][y]) + backRed)/255.0;
-					Green =((((235 - 95 * (AgeFactorGreen))-backGreen) * PercentFullSand[x][y]) + backGreen)/255.0;
-					Blue =(((210 - 150 * (AgeFactorBlue)-backBlue) * PercentFullSand[x][y]) + backBlue)/255.0;
-				}
-
-				/* LMV
-				else if ((PercentFullRock[x][y] > 0.0) && (AllRock[x][y] == 'n'))
-				{
-					Red = ((((225 - 100 * (AgeFactorRed))-backRed) * PercentFullSand[x][y]) + backRed)/255.0;
-					Green = ((((225 - 95 * (AgeFactorGreen))-backGreen) * PercentFullSand[x][y]) + backGreen)/255.0;
-					Blue = ((((200 - 150 * (AgeFactorBlue))-backBlue) * PercentFullSand[x][y]) + backBlue)/255.0;
-
-				}
-
-				else if ((AllRock[x][y] == 'y') && (TypeOfRock[x][y] == 's'))
-				{
-
-					Red = (159 * PercentFullRock[x][y])/255.0;
-					Green = (89 * PercentFullRock[x][y])/255.0;
-					Blue = (39 * PercentFullRock[x][y])/255.0;
-				}
-
-				else if ((AllRock[x][y] == 'y') && (TypeOfRock[x][y] == 'f'))
-				{
-					Red = (205 * PercentFullRock[x][y])/255.0;
-					Green = (133 * PercentFullRock[x][y])/255.0;
-					Blue = (63 * PercentFullRock[x][y])/255.0;
-				}
-
-				else {
-					Red = backRed/255.0;
-					Blue = backBlue/255.0;
-					Green = backGreen/255.0;
-				}
-			}
-
-			PutPixel(x-xplotoff, y-yplotoff, Red, Green, Blue);
-
-        }
-    }
-
-    x = 0;
-    y = Ymax; // was StreamSpot, which was defined as Ymax in the "deltas" parameters, I guess for Andrew's delta stuff...
-
-    while (AllBeach[x][y] == 'y') {
-        PutPixel(x-xplotoff, y-yplotoff, 1,0,0);
-        x += 1;
-    }
-
-    glFlush();
-
-}
-
-void PutPixel(float x, float y, float R, float G, float B)
-/* translate x and y integer components to the openGL grid
-{
-
-    float xstart, ystart;
-
-    xstart = (x - Xmax/2.0)/(Xmax/2.0);
-    ystart = (y - Ymax/2.0)/(Ymax/2.0);
-
-    glXMakeCurrent(dpy, win, cx);
-    glColor3f(R, G, B);
-    glBegin(GL_POLYGON);
-    glVertex3f(ystart, xstart, 0.0);
-    glVertex3f(ystart, xstart+xcellwidth, 0.0);
-    glVertex3f(ystart + ycellwidth, xstart + xcellwidth, 0.0);
-    glVertex3f(ystart + ycellwidth, xstart, 0.0);
-    glEnd();
-
-}
-
- CWT End of commenting out of graphics routines
- */
 
 /****
 Over wash functions, copied from Kenny's code (so from Andrew Ashton's code)
