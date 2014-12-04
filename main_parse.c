@@ -98,17 +98,17 @@ _cem_initialize(void)
 	
 	/* Aspect Parameters */
 	#define CellWidth			100 	/* size of cells (meters) */
-	#define Xmax				50		/* number of cells in x (cross-shore) direction */
-	#define Ymax				200		/* number of cells in y (longshore) direction */
-	#define MaxBeachLength		8*Ymax	/* maximum length of arrays that contain beach data at each time step */
+	#define Xmax				50	/* number of cells in x (cross-shore) direction */
+	#define Ymax				200	/* number of cells in y (longshore) direction */
+	#define MaxBeachLength			8*Ymax	/* maximum length of arrays that contain beach data at each time step */
 	#define ShelfSlope			0.001	/* slope of continental shelf */
-	#define ShorefaceSlope		0.01	/* for now, linear slope of shoreface */
-	#define DepthShoreface		10		/* minimum depth of shoreface due to wave action (meters) */
-	#define InitBeach			20		/* cell where intial conditions changes from beach to ocean */
-	#define InitRock			5		/* cell where initial conditions change from beach to rock LMV*/
-	#define InitialDepth		10		/* theoretical depth in meters of continental shelf at x = InitBeach */
-	#define FindCellError		5		/* if we run off of array, how far over do we try again? */
-	#define ShadowStepDistance  0.2 	/* step size for shadow cell checking */
+	#define ShorefaceSlope			0.01	/* for now, linear slope of shoreface */
+	#define DepthShoreface			10	/* minimum depth of shoreface due to wave action (meters) */
+	#define InitBeach			20	/* cell where intial conditions changes from beach to ocean */
+	#define InitRock			5	/* cell where initial conditions change from beach to rock LMV*/
+	#define InitialDepth			10	/* theoretical depth in meters of continental shelf at x = InitBeach */
+	#define FindCellError			5	/* if we run off of array, how far over do we try again? */
+	#define ShadowStepDistance  		0.2 	/* step size for shadow cell checking */
 	
 	/*Overwash Parameters*/
 	#define CritBWidth			350.0   /* Overwash - width barrier maintains due to overwash (m) important scaling parameter! */
@@ -118,7 +118,7 @@ _cem_initialize(void)
 	
 	#define OWflag				0       /* A debugging flag for overwash routines */
 	#define MaxOver				0.01    /* Maximum overwash step size (enforced at back barrier) */
-	#define OverwashLimit		60      /* Don't do over wash if the angle is > 60 degrees */
+	#define OverwashLimit			60      /* Don't do over wash if the angle is > 60 degrees */
 	float						CellDepth[Xmax][2*Ymax]; /* Depth array */
 	
 	/*
@@ -134,73 +134,73 @@ _cem_initialize(void)
 	#endif
 	
 	/*  Run Control Parameters */
-	#define HaveSinks			0		/* include sediment sinks in model run? */
+	#define HaveSinks			0	/* include sediment sinks in model run? */
 	#define Sinkiness			0.5 	/* fractional value determines chance that sediment in the sink is deleted */
-	#define TimeStep			1		/* days - reflects rate of sediment transport per time step */
-	#define OffShoreWvHt		2.0		/* meters */
+	#define TimeStep			1	/* days - reflects rate of sediment transport per time step */
+	#define OffShoreWvHt			2.0	/* meters */
 	#define Period				10.0	/* seconds */
 	#define Asym				0.70	/* fractional portion of waves coming from positive (left) direction */
 	#define Highness			0.35	/* .5 = even dist, < .5 high angle domination. NOTE Highness actually determines lowness! */
-	#define Duration			1		/* Number of time steps calculations loop at same wave angle */
+	#define Duration			1	/* Number of time steps calculations loop at same wave angle */
 	#define STOP_AFTER			36500	/* Stop after what number of time steps? This is replaced by variable pushed here from BMI, 12/3/14 */
-	#define NumberChunk			9		/* Number of chunks of rock in alongshore direction with different weathering rates LMV */
-	#define NormalWeatheringRate 0.2	/* Baseline rock retreat rate, m/yr   PWL */
-	#define SlowWeatherCoeff	0*NormalWeatheringRate		/* Weathering rate of slow rock e.g. 0.5 = slow weathering, 1/2 as fast LMV */
-	#define FastWeatherCoeff	1*NormalWeatheringRate		/* Weathering rate of fast rock e.g. 2 = fast weathering, 2 times faster than normal LMV */
-	#define PercentFineFast 	0.00	/* Percent of fast weathering rock lost because it is too fine to stay in nearshore LMV */
-	#define PercentFineSlow 	0.00	/* Percent of slow weathering rock lost because it is too fine to stay in nearshore LMV */
-	#define ErosionRatePerYear  0.5		/* Amount of erosion to TotalBeachCells in m/year LMV*/
+	#define NumberChunk			9	/* Number of chunks of rock in alongshore direction with different weathering rates LMV */
+	#define NormalWeatheringRate 		0.2	/* Baseline rock retreat rate, m/yr   PWL */
+	#define SlowWeatherCoeff		0*NormalWeatheringRate		/* Weathering rate of slow rock e.g. 0.5 = slow weathering, 1/2 as fast LMV */
+	#define FastWeatherCoeff		1*NormalWeatheringRate		/* Weathering rate of fast rock e.g. 2 = fast weathering, 2 times faster than normal LMV */
+	#define PercentFineFast 		0.00	/* Percent of fast weathering rock lost because it is too fine to stay in nearshore LMV */
+	#define PercentFineSlow 		0.00	/* Percent of slow weathering rock lost because it is too fine to stay in nearshore LMV */
+	#define ErosionRatePerYear  		0.5	/* Amount of erosion to TotalBeachCells in m/year LMV*/
 	double CliffHeightSlow = 30;		/* Cliff height above sea level for slow weathering rock PWL */
 	double CliffHeightFast = 0;			/* Cliff height above sea level for fast weathering rock PWL */
-	#define VaryCliffHeight		('y')	/* Vary cliff height for different rock weathering rates? PWL */
+	#define VaryCliffHeight			('y')	/* Vary cliff height for different rock weathering rates? PWL */
 	#define Abrasion			('y')   /* Turn abrasion on? If yes, then rock weathering is maximized at a given amount of sediment cover (wcrit).
 												Otherwise, use existing exponential weathering.  PWL */
-	#define Wcrit				20		/* Sediment cover that maximizes rock weathering. PWL */
-	#define N					4		/* How much to maximize weathering rate above bare-rock rate at Wcrit? PWL */
+	#define Wcrit				20	/* Sediment cover that maximizes rock weathering. PWL */
+	#define N				4	/* How much to maximize weathering rate above bare-rock rate at Wcrit? PWL */
 	#define Emin				0.001   /* Determines weathering rate when sediment thickness = NoWeathering. 
 												Needed to calculate decay constant in WeatherRock function PWL */ 
 	#define	DoGraphics			0       /* CWT Re-cast as a define, rather than the odd char DoGraphics = 1 in the original; 0 = false */
-	#define coastrotation		40		/* Angle (deg) used to align coastline with real wave climate*/
-	#define waveheightchange	1		/* Factor applied to the input wave height; 1 = no change, 0.5 = half wave height, and 2 = double wave height*/
-	#define waveperiodchange	1		/* Factor applied to the input wave period; 1 = no change, 0.5 = half wave period, and 2 = double wave period*/
+	#define coastrotation			40	/* Angle (deg) used to align coastline with real wave climate*/
+	#define waveheightchange		1	/* Factor applied to the input wave height; 1 = no change, 0.5 = half wave height, and 2 = double wave height*/
+	#define waveperiodchange		1	/* Factor applied to the input wave period; 1 = no change, 0.5 = half wave period, and 2 = double wave period*/
 	
-	#define InitCType			0		/* 0: normal (columns/blocks), 1: wiggly, 2: one block */
-	#define	seed				1		/* random seed:  control value = 1 completely random = -999 */
-	#define	StartSavingAt		0		/* time step to begin saving files */
-	#define	SaveSpacing			365		/* space between saved files */
-	#define	savefilename		"CEM"
-	#define	StartFromFile		('n')	/* start from saved file? */
-	#define	readfilename		"CEM_3285.out"
-	#define	WaveIn				0		/* Input Wave Distribution file: no = 0, binned file = 1, angle/period/height file =2 */
-	#define	readwavename		"In_WaveData.dat"
-	#define InitialiseFile		('n')	/* use a file to initialise run? Over rides setup data*/
-	#define readcontrolname		"In_CEM_init.dat"
-	#define	CurrentTimeStep		0		/* Time step of current calculation */
+	#define InitCType			0	/* 0: normal (columns/blocks), 1: wiggly, 2: one block */
+	#define	seed				1	/* random seed:  control value = 1 completely random = -999 */
+	#define	StartSavingAt			0	/* time step to begin saving files */
+	#define	SaveSpacing			365	/* space between saved files */
+	#define	savefilename			"CEM"
+	#define	StartFromFile			('n')	/* start from saved file? */
+	#define	readfilename			"CEM_3285.out"
+	#define	WaveIn				0	/* Input Wave Distribution file: no = 0, binned file = 1, angle/period/height file =2 */
+	#define	readwavename			"In_WaveData.dat"
+	#define InitialiseFile			('n')	/* use a file to initialise run? Over rides setup data*/
+	#define readcontrolname			"In_CEM_init.dat"
+	#define	CurrentTimeStep			0	/* Time step of current calculation */
 	#define Metadata			('n')	/*Create a metadata file?*/
-	#define metasavename		"Metadata.out"
+	#define metasavename			"Metadata.out"
 	#define Wavedata			('n')	/*Create a wavedata file?*/
-	#define wavesavename		"Wavedata.out"
+	#define wavesavename			"Wavedata.out"
 	
 	#define	SaveFile			2       /* 1 = line output, 2 = array output*/
-	#define SaveAge				1		/* Save/update age of cells? */
-	#define	SaveLine			1		/* Save line instead of whole array? */
+	#define SaveAge				1	/* Save/update age of cells? */
+	#define	SaveLine			1	/* Save line instead of whole array? */
 	#define	PromptStart			('n')	/* ask prompts for file names, etc? */
 	#define OffArray			('n')	/* Initializing this variable for later use */
-	#define	ScreenTextSpacing	30		/* Spacing of writing to screen in time steps */
-	#define TimeToSweepFullBeach 50  	/* Spacing of full beach sweep for each rock cell i=0:TotalBeachCells LMV */
-	#define LookDist			10		/* For short rock to beach sweep, +- number of beach cells to look at LMV */
-	#define BigDistanceToBeach  1000.0*CellWidth  /* Used to find minimum distance to beach in rock to beach sweep LMV */
-	#define NoWeathering		5.0		/* weathering of rock only occurs below this amt of sed cover (vert equiv in meters) LMV */
-	#define	InteractivePlot		0
-	#define	StartStop			0		/* Stop after every iteration 'Q' to move on */
-	#define	InterruptRun		0		/* Allow run to be paused by pressing the 'A' key */
-	#define	NoPauseRun			1		/* Disbale PauseRun subroutine */
-	#define	InitialPert			0		/* Start with a bump? if =1-->square pert, if =2-->pointy pert */
-	#define	DiffusiveHump		0		/* Shoreline is sinusoidal LMV	*/
-	#define	InitialSmooth		0		/* Smooth starting conditions */
-	#define	InitialSmoothRock	1		/* Smooth rock interface starting conditions LMV */
-	#define ChunkLength			100		/* Alongshore length of a chunk of fast or slow weathering rock LMV */
-											/* (used to be Ymax/NumberChunk) */
+	#define	ScreenTextSpacing		30	/* Spacing of writing to screen in time steps */
+	#define TimeToSweepFullBeach 		50  	/* Spacing of full beach sweep for each rock cell i=0:TotalBeachCells LMV */
+	#define LookDist			10	/* For short rock to beach sweep, +- number of beach cells to look at LMV */
+	#define BigDistanceToBeach  		1000.0*CellWidth  /* Used to find minimum distance to beach in rock to beach sweep LMV */
+	#define NoWeathering			5.0	/* weathering of rock only occurs below this amt of sed cover (vert equiv in meters) LMV */
+	#define	InteractivePlot			0
+	#define	StartStop			0	/* Stop after every iteration 'Q' to move on */
+	#define	InterruptRun			0	/* Allow run to be paused by pressing the 'A' key */
+	#define	NoPauseRun			1	/* Disbale PauseRun subroutine */
+	#define	InitialPert			0	/* Start with a bump? if =1-->square pert, if =2-->pointy pert */
+	#define	DiffusiveHump			0	/* Shoreline is sinusoidal LMV	*/
+	#define	InitialSmooth			0	/* Smooth starting conditions */
+	#define	InitialSmoothRock		1	/* Smooth rock interface starting conditions LMV */
+	#define ChunkLength			100	/* Alongshore length of a chunk of fast or slow weathering rock LMV */
+								/* (used to be Ymax/NumberChunk) */
 	
 	/* De-bugging Parameters */
 	
@@ -234,7 +234,7 @@ _cem_initialize(void)
 	#define debug16				0		/* Total Percent Full LMV */
 	#define debug17				0		/* graphics stuff */
 	#define debug18				0		/* reading wave data AB*/
-	#define debugNearest		0		/* graphs a pixel at nearest beach cell to a given rock cell (for weathering) */
+	#define debugNearest			0		/* graphs a pixel at nearest beach cell to a given rock cell (for weathering) */
 	#define	debugtopo			0		/* debug topography...not really useful at this point -- wait until land is DEM! */
 	
 	/* Universal Constants */
@@ -384,9 +384,9 @@ _cem_initialize(void)
 	 */
 	
 	#define	AgeMax				1000000		/* Maximum 'age' of cells - loops back to zero */
-	#define	AgeUpdate			10			/* Time space for updating age of non-beach cells */
-	#define	AgeShadeSpacing		10000		/* For graphics - how many time steps means back to original shade */
-	#define	CellPixelSize		4			/* Size in pixes of plotted cell (a power of two, please) */
+	#define	AgeUpdate			10		/* Time space for updating age of non-beach cells */
+	#define	AgeShadeSpacing			10000		/* For graphics - how many time steps means back to original shade */
+	#define	CellPixelSize			4		/* Size in pixes of plotted cell (a power of two, please) */
 	#define PutPixel(float x, float y, float R, float G, float B);
 	
 	/*
