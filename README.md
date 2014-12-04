@@ -13,7 +13,7 @@ long-term (10^2 to 10^5 yr) shoreline evolution.
 Build CEM
 ---------
 
-First create a build directory and then use *cmake* to generate a makefile,
+First create a build directory and then use [cmake](http://cmake.org) to generate a makefile,
 
     > mkdir _build
     > cd _build
