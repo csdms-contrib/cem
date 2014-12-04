@@ -21,6 +21,7 @@ extern "C"
 #define InitBeach			20      /* cell where intial conditions changes from beach to ocean */
 #define InitRock			5       /* cell where initial conditions change from beach to rock LMV */
 #define InitialDepth			10      /* theoretical depth in meters of continental shelf at x = InitBeach */
+#define LandHeight 1.0
 #define FindCellError			5       /* if we run off of array, how far over do we try again? */
 #define ShadowStepDistance  		0.2     /* step size for shadow cell checking */
 
