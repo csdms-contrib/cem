@@ -22,3 +22,18 @@ First create a build directory and then use [cmake](http://cmake.org) to generat
 Use the makefile to compile CEM,
 
     > make
+
+Build the old version of CEM
+----------------------------
+
+Build the old version of CEM,
+
+    > gcc main.c -o cem.exe
+
+To run this version of CEM, it's probably best to run it in another directory
+as it generates lots of output files,
+
+    > mkdir _run
+    > cd _run
+    > cem.exe
+
