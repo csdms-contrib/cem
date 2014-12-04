@@ -4,6 +4,7 @@
 #include <float.h>
 
 #include "bmi.h"
+#include "globals.h"
 
 
 int cem_initialize (void);
@@ -57,11 +58,11 @@ BMI_CEM_Update_frac (BMI_CEM_Model *self, double f)
 
     BMI_CEM_Get_time_step (self, &dt);
 
-    //self->dt = f * dt;
+    TimeStep = f * dt;
 
     BMI_CEM_Update (self);
 
-    //self->dt = dt;
+    TimeStep = dt;
   }
 
   return BMI_SUCCESS;
@@ -151,8 +152,8 @@ int
 BMI_CEM_Get_grid_shape (BMI_CEM_Model *self, const char *long_var_name, int * shape)
 {
   if (strcmp (long_var_name, "surface_elevation") == 0) {
-    //shape[0] = self->n_y;
-    //shape[1] = self->n_x;
+    shape[0] = Xmax;
+    shape[1] = Ymax;
   }
 
   return BMI_SUCCESS;
@@ -164,8 +165,8 @@ int
 BMI_CEM_Get_grid_spacing (BMI_CEM_Model *self, const char *long_var_name, double * spacing)
 {
   if (strcmp (long_var_name, "surface_elevation") == 0) {
-    //spacing[0] = self->dy;
-    //spacing[1] = self->dx;
+    spacing[0] = CellWidth;
+    spacing[1] = CellWidth;
   }
 
   return BMI_SUCCESS;
@@ -366,7 +367,7 @@ BMI_CEM_Set_double_at_indices (BMI_CEM_Model *self, const char *long_var_name, i
 int
 BMI_CEM_Get_component_name (BMI_CEM_Model *self, char * name)
 {
-  strncpy (name, "Example C model", BMI_MAX_COMPONENT_NAME);
+  strncpy (name, "Coastline Evolution Model", BMI_MAX_COMPONENT_NAME);
   return BMI_SUCCESS;
 }
 
@@ -417,7 +418,7 @@ BMI_CEM_Get_start_time (BMI_CEM_Model *self, double * time)
 int
 BMI_CEM_Get_end_time (BMI_CEM_Model *self, double * time)
 {
-  //*time = self->t_end;
+  *time = StopAfter;
   return BMI_SUCCESS;
 }
 
@@ -425,7 +426,7 @@ BMI_CEM_Get_end_time (BMI_CEM_Model *self, double * time)
 int
 BMI_CEM_Get_current_time (BMI_CEM_Model *self, double * time)
 {
-  //*time = self->t;
+  *time = CurrentTimeStep * TimeStep;
   return BMI_SUCCESS;
 }
 
@@ -433,7 +434,7 @@ BMI_CEM_Get_current_time (BMI_CEM_Model *self, double * time)
 int
 BMI_CEM_Get_time_step (BMI_CEM_Model *self, double * dt)
 {
-  //*dt = self->dt;
+  *dt = TimeStep;
   return BMI_SUCCESS;
 }
 
@@ -441,6 +442,6 @@ BMI_CEM_Get_time_step (BMI_CEM_Model *self, double * dt)
 int
 BMI_CEM_Get_time_units (BMI_CEM_Model *self, char * units)
 {
-  strncpy (units, "-", BMI_MAX_UNITS_NAME);
+  strncpy (units, "d", BMI_MAX_UNITS_NAME);
   return BMI_SUCCESS;
 }
