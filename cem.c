@@ -59,13 +59,15 @@ int ClosestBeach[MaxBeachLength];     /* i position of closest rock to beach LMV
 float AmountWeathered[MaxBeachLength];        /* Amount of rock weathered from rock cell j LMV */
 
 #if defined(WITH_SWAN)
+char SWANflag = 'y'; /* Is SWAN doing wave transformations? */
+
 float BreakDepth; /* Breaking wave depth found from SWAN run */
 
 /* Special SWAN matrices. */
-float ShelfDepth[Xmax][2*Ymax]; /* SWAN bathymetry. */
-float Hsig[Xmax][2*Ymax]; /* SWAN wave heights. */
-float Dir[Xmax][2*Ymax]; /* SWAN wave angles. */
-float EvaluateAngle; /* Temporary angle holder for the ConvertAngle function */
+double ShelfDepth[Xmax][2*Ymax]; /* SWAN bathymetry. */
+double Hsig[Xmax][2*Ymax]; /* SWAN wave heights. */
+double Dir[Xmax][2*Ymax]; /* SWAN wave angles. */
+double EvaluateAngle; /* Temporary angle holder for the ConvertAngle function */
 
 /* for temporary debugging only, 5-5-14 */
 /* UPDATE 11/20/14 -- now using these for upwind scheme fixing, so keep 'em around (probably should rename...) */
@@ -75,6 +77,9 @@ float Dirdebug[MaxBeachLength];
 float Hddebug[MaxBeachLength];
 float xdebug[MaxBeachLength];
 float ydebug[MaxBeachLength];
+
+#else
+char SWANflag = 'n';
 #endif
 
 /* Miscellaneous Global Variables -- also will be included in the BMI structure */
@@ -2534,8 +2539,8 @@ DetermineSedTransport (void)
     MaxTrans = 'n';
 
     /*  Is littoral transport going left or right?  */
-	  /* #SWAN, 11/27/14: this isn't necessarily correct when SWAN is involved -- short-period waves can refract around
-	   /* and break going the opposite direction of their deep-water direction.  */
+	  /* #SWAN, 11/27/14: this isn't necessarily correct when SWAN is involved --
+     * short-period waves can refract around and break going the opposite direction of their deep-water direction.  */
 	  /* Parse SWAN here first, and make this determination with 'breaking wave' angles */
 	  /* OY VAY */
 	  if (SWANflag == 'y')
@@ -2729,7 +2734,6 @@ SedTrans (int i, float ShoreAngle, char MaxT)
   {
     return;
   }
-
   else if (SWANflag == 'n')
   {
     /* Calculate Deep Water Celerity & Length, Komar 5.11 c = gT / pi, L = CT       */
@@ -2779,7 +2783,7 @@ SedTrans (int i, float ShoreAngle, char MaxT)
       else
         Depth -= RefractStep;
     }
-	  
+  }
 	else if (SWANflag == 'y') /* Do SWAN */
 	{
 		/* Instead of shoaling above, use ParseSWAN function to find the breaking wave characteristics. */
@@ -2815,9 +2819,7 @@ SedTrans (int i, float ShoreAngle, char MaxT)
       printf ("\ni: %d \n", i);
     if (debug6a)
       printf ("VolumeAcrossBorder: %f  ", VolumeAcrossBorder[i]);
-  }
 }
-
 
 
 void
@@ -5976,8 +5978,8 @@ void ParseSWAN (int ShoreAngleLoc, float ShoreAngle)
 	/*Xpos = (xcoord) + 0.5;*/
 	/*Ypos = (ycoord) + 0.5;*/
 	/* Distance to search for each loop iteration */
-	/*xdist = (interval*cos(LookOffshore)); /* NOTE cross-shore direction -- confusing convention! */
-	/*ydist = (interval*sin(LookOffshore)); /* alongshore direction */
+	/*xdist = (interval*cos(LookOffshore)); NOTE cross-shore direction -- confusing convention! */
+	/*ydist = (interval*sin(LookOffshore)); alongshore direction */
 	/* Initial conditions for LastCell */
 	/*LastXCell = xcoord;*/
 	/*LastYCell = ycoord;*/
@@ -6022,14 +6024,14 @@ void ParseSWAN (int ShoreAngleLoc, float ShoreAngle)
 				/* 11-12-13: When using angle-based function, replace 'ycoord' with 'LastYCell' */
 				
 				/* Wave broke! debug if necessary and then step back and take values from previous cell */
-				/*LookOffshore = LookOffshore*(180/pi); /* Convert angle to degrees because SWAN is in degrees */
+				/*LookOffshore = LookOffshore*(180/pi); Convert angle to degrees because SWAN is in degrees */
 				
 				/* Stepping back... */
 				/* UPDATE, 11/24/14: don't step back! Replaced [LastXCell] with [xcoord]*/
 				WvHeight = Hsig[xcoord][ycoord];
 				EvaluateAngle = Dir[xcoord][ycoord];
 				CAngle = ConvertAngle(EvaluateAngle, 2); /* Convert angle from azimuth (degrees) to CEM-style (rads) */
-				/*Angle = CAngle - LookOffshore; /* Angle is made relative to shore */
+				/*Angle = CAngle - LookOffshore; Angle is made relative to shore */
 				Angle = CAngle; /* NEW METHOD 11/20/14 PWL */
 				BreakDepth = ShelfDepth[xcoord][ycoord];
 				/*OopsImBroke = 1;*/
