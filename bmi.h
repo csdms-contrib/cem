@@ -7,7 +7,7 @@ extern "C" {
 
 #include "bmi_const.h"
 
-#define BMI_CEM_INPUT_VAR_NAME_COUNT 1
+#define BMI_CEM_INPUT_VAR_NAME_COUNT 2
 #define BMI_CEM_OUTPUT_VAR_NAME_COUNT 1
 
 typedef struct _BMI_CEM_Model BMI_CEM_Model;
