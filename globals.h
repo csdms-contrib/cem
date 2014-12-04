@@ -79,6 +79,8 @@ extern float Dirdebug[MaxBeachLength];
 extern float Hddebug[MaxBeachLength];
 extern float xdebug[MaxBeachLength];
 extern float ydebug[MaxBeachLength];
+extern float Angle;
+extern float WvHeight;
 #endif
 
 /* Miscellaneous Global Variables -- also will be included in the BMI structure */
