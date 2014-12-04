@@ -59,6 +59,26 @@ extern float MinDistToBeach[MaxBeachLength]; /* From a rock cell j, min distance
 extern int ClosestBeach[MaxBeachLength];     /* i position of closest rock to beach LMV */
 extern float AmountWeathered[MaxBeachLength];        /* Amount of rock weathered from rock cell j LMV */
 
+/* SWAN */
+#if defined(WITH_SWAN)
+extern float BreakDepth; /* Breaking wave depth found from SWAN run */
+
+/* Special SWAN matrices. */
+extern float ShelfDepth[Xmax][2*Ymax]; /* SWAN bathymetry. */
+extern float Hsig[Xmax][2*Ymax]; /* SWAN wave heights. */
+extern float Dir[Xmax][2*Ymax]; /* SWAN wave angles. */
+extern float EvaluateAngle; /* Temporary angle holder for the ConvertAngle function */
+
+/* for temporary debugging only, 5-5-14 */
+/* UPDATE 11/20/14 -- now using these for upwind scheme fixing, so keep 'em around (probably should rename...) */
+extern float Qsdebug[MaxBeachLength];		
+extern float Hsigdebug[MaxBeachLength];    
+extern float Dirdebug[MaxBeachLength];
+extern float Hddebug[MaxBeachLength];
+extern float xdebug[MaxBeachLength];
+extern float ydebug[MaxBeachLength];
+#endif
+
 /* Miscellaneous Global Variables -- also will be included in the BMI structure */
 
 extern int NextX;                    /* Global variables used to iterate FindNextCell in global array - */

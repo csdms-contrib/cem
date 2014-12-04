@@ -6,7 +6,11 @@ extern "C"
 {
 #endif
 
-  /* Aspect Parameters */
+/* IMPORTANT -- specify wave transformation routine */
+//#define	SWANflag ('y') /* Is SWAN doing wave transformations? */
+#define WITH_SWAN
+
+/* Aspect Parameters */
 #define CellWidth			100     /* size of cells (meters) */
 #define Xmax				50      /* number of cells in x (cross-shore) direction */
 #define Ymax				200     /* number of cells in y (longshore) direction */
@@ -25,6 +29,11 @@ extern "C"
 #define InitBWidth			4       /* Overwash - initial minimum width of barrier (Cells) */
 #define OWType				1       /* Overwash - 0 = use depth array, 1 = use geometric rule */
 #define OWMinDepth			1.0     /* Overwash - littlest overwash of all */
+
+/* SWAN */
+/* Define wave breaking threshold (wave height/depth) to pull out necessary
+ * metrics from SWAN */
+#define WaveBreakDepth 0.2
 
 #define MaxOver				0.01    /* Maximum overwash step size (enforced at back barrier) */
 #define OverwashLimit			60      /* Don't do over wash if the angle is > 60 degrees */
