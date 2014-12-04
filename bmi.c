@@ -6,19 +6,14 @@
 #include "bmi.h"
 
 
+int cem_initialize (void);
+int cem_update (void);
+int cem_update_until (int);
+int cem_finalize (void);
+
+
 struct _BMI_CEM_Model {
-  double dt;
-  double t;
-  double t_end;
-
-  int n_x;
-  int n_y;
-
-  double dx;
-  double dy;
-  double **z;
-
-  double **temp_z;
+  double time;
 };
 
 
@@ -26,110 +21,31 @@ int
 BMI_CEM_Initialize (const char *config_file, BMI_CEM_Model ** handle)
 {
   BMI_CEM_Model *self = NULL;
+  int status;
 
   if (!handle)
     return BMI_FAILURE;
 
   self = malloc (sizeof (BMI_CEM_Model));
 
-  if (config_file)
-  { /* Read input file */
-    FILE *fp = NULL;
-
-    double dt = 0.;
-    double t_end = 1.;
-    int n_x = 0;
-    int n_y = 0;
-
-    fp = fopen (config_file, "r");
-    if (!fp)
-      return BMI_FAILURE;
-
-    fscanf (fp, "%lf, %lf, %d, %d", &dt, &t_end, &n_x, &n_y);
-
-    self->dt = dt;
-    self->t_end = t_end;
-    self->n_x = n_x;
-    self->n_y = n_y;
-  }
-  else
-  { /* Set to default values */
-    self->dt = 1.;
-    self->t_end = 10.;
-    self->n_x = 10;
-    self->n_y = 20;
-  }
-
-  self->dx = 1.;
-  self->dy = 1.;
-
-  { /* Initialize data */
-    int i;
-    const int len = self->n_x * self->n_y;
-    double top_x = self->n_x - 1;
-
-    /* Allocate memory */
-    self->z = (double **)malloc (sizeof (double*) * self->n_y);
-    self->temp_z = (double **)malloc (sizeof (double*) * self->n_y);
-
-    if (!self->temp_z || !self->z)
-      return BMI_FAILURE;
-
-    self->z[0] = (double *)malloc (sizeof (double) * self->n_x * self->n_y);
-    self->temp_z[0] = (double *)malloc (sizeof (double) * self->n_x * self->n_y);
-
-    if (!self->temp_z[0] || !self->z[0])
-      return BMI_FAILURE;
-
-    for (i=1; i<self->n_y; i++) {
-      self->z[i] = self->z[i-1] + self->n_x;
-      self->temp_z[i] = self->temp_z[i-1] + self->n_x;
-    }
-
-    self->t = 0;
-    for (i = 0; i < len; i++)
-      self->z[0][i] = random ()*1./RAND_MAX * top_x * top_x * .5 - top_x * top_x * .25;
-    for (i = 0; i < self->n_y; i++) {
-      self->z[i][0] = 0.;
-      self->z[i][self->n_x-1] = 0.;
-    }
-    for (i = 0; i < self->n_x; i++) {
-      self->z[0][i] = 0.;
-      self->z[self->n_y-1][i] = top_x*top_x*.25 - (i-top_x*.5) * (i-top_x*.5);
-    }
-    
-    memcpy (self->temp_z[0], self->z[0], sizeof (double)*self->n_x*self->n_y);
-  }
+  status = cem_initialize ();
 
   *handle = self;
 
-  return BMI_SUCCESS;
+  if (status == 0)
+    return BMI_SUCCESS;
+  else
+    return BMI_FAILURE;
 }
 
 
 int
 BMI_CEM_Update (BMI_CEM_Model *self)
 {
-  {
-    int i, j;
-    const double rho = 0.;
-    const double dx2 = self->dx * self->dx;
-    const double dy2 = self->dy * self->dy;
-    const double dx2_dy2_rho = dx2 * dy2 * rho;
-    const double denom = self->dt/(2 * (dx2 + dy2));
-    double **z = self->z;
-
-    for (i=1; i<self->n_y-1; i++)
-      for (j=1; j<self->n_x-1; j++)
-        self->temp_z[i][j] = denom * (dx2 * (z[i-1][j] + z[i+1][j]) +
-                                      dy2 * (z[i][j-1] + z[i][j+1]) -
-                                      dx2_dy2_rho);
-    self->t += self->dt;
-  }
-
-  memcpy (self->z[0], self->temp_z[0], sizeof (double) * self->n_y * self->n_x);
-
-  return BMI_SUCCESS;
+  if (cem_update () == 0)
+    return BMI_SUCCESS;
+  else
+    return BMI_FAILURE;
 }
 
 
@@ -141,11 +57,11 @@ BMI_CEM_Update_frac (BMI_CEM_Model *self, double f)
 
     BMI_CEM_Get_time_step (self, &dt);
 
-    self->dt = f * dt;
+    //self->dt = f * dt;
 
     BMI_CEM_Update (self);
 
-    self->dt = dt;
+    //self->dt = dt;
   }
 
   return BMI_SUCCESS;
@@ -165,11 +81,12 @@ BMI_CEM_Update_until (BMI_CEM_Model *self, double t)
     {
       int n;
       const double n_steps = (t - now) / dt;
-      for (n=0; n<(int)n_steps; n++) {
+      const int n_full_steps = (int)n_steps;
+      for (n=0; n<n_full_steps; n++) {
         BMI_CEM_Update (self);
       }
 
-      BMI_CEM_Update_frac (self, n_steps - (int)n_steps);
+      // BMI_CEM_Update_frac (self, n_steps - n_full_steps);
     }
   }
 
@@ -180,13 +97,8 @@ BMI_CEM_Update_until (BMI_CEM_Model *self, double t)
 int
 BMI_CEM_Finalize (BMI_CEM_Model *self)
 {
-  if (self)
-  {
-    free (self->temp_z[0]);
-    free (self->temp_z);
-    free (self->z[0]);
-    free (self->z);
-    free (self);
+  if (self) {
+    cem_finalize ();
   }
 
   return BMI_SUCCESS;
@@ -239,8 +151,8 @@ int
 BMI_CEM_Get_grid_shape (BMI_CEM_Model *self, const char *long_var_name, int * shape)
 {
   if (strcmp (long_var_name, "surface_elevation") == 0) {
-    shape[0] = self->n_y;
-    shape[1] = self->n_x;
+    //shape[0] = self->n_y;
+    //shape[1] = self->n_x;
   }
 
   return BMI_SUCCESS;
@@ -252,8 +164,8 @@ int
 BMI_CEM_Get_grid_spacing (BMI_CEM_Model *self, const char *long_var_name, double * spacing)
 {
   if (strcmp (long_var_name, "surface_elevation") == 0) {
-    spacing[0] = self->dy;
-    spacing[1] = self->dx;
+    //spacing[0] = self->dy;
+    //spacing[1] = self->dx;
   }
 
   return BMI_SUCCESS;
@@ -293,10 +205,10 @@ BMI_CEM_Get_value (BMI_CEM_Model *self, const char *long_var_name, void *dest)
   void *src = NULL;
 
   if (strcmp (long_var_name, "surface_elevation")==0) {
-    src = (void*) self->z[0];
+    //src = (void*) self->z[0];
   }
 
-  memcpy (dest, src, sizeof (double) * self->n_x * self->n_y);
+  //memcpy (dest, src, sizeof (double) * self->n_x * self->n_y);
 
   return BMI_SUCCESS;
 }
@@ -308,7 +220,7 @@ BMI_CEM_Get_value_ptr (BMI_CEM_Model *self, const char *long_var_name, void **de
   void *src = NULL;
 
   if (strcmp (long_var_name, "surface_elevation")==0) {
-    src = (void*) self->z[0];
+    //src = (void*) self->z[0];
   }
 
   *dest = src;
@@ -323,7 +235,7 @@ BMI_CEM_Get_value_at_indices (BMI_CEM_Model *self, const char *long_var_name, vo
   double *src = NULL;
 
   if (strcmp (long_var_name, "surface_elevation")==0) {
-    src = self->z[0];
+    //src = self->z[0];
   }
 
   { /* Copy the data */
@@ -344,10 +256,10 @@ BMI_CEM_Get_double (BMI_CEM_Model *self, const char *long_var_name, double *dest
   double *src = NULL;
 
   if (strcmp (long_var_name, "surface_elevation")==0) {
-    src = self->z[0];
+    //src = self->z[0];
   }
 
-  memcpy (dest, src, sizeof (double) * self->n_x * self->n_y);
+  //memcpy (dest, src, sizeof (double) * self->n_x * self->n_y);
 
   return BMI_SUCCESS;
 }
@@ -359,7 +271,7 @@ BMI_CEM_Get_double_ptr (BMI_CEM_Model *self, const char *long_var_name, double *
   double *src = NULL;
 
   if (strcmp (long_var_name, "surface_elevation")==0) {
-    src = self->z[0];
+    //src = self->z[0];
   }
 
   *dest = src;
@@ -374,7 +286,7 @@ BMI_CEM_Get_double_at_indices (BMI_CEM_Model *self, const char *long_var_name, d
   double *src = NULL;
 
   if (strcmp (long_var_name, "surface_elevation")==0) {
-    src = self->z[0];
+    //src = self->z[0];
   }
 
   { /* Copy the data */
@@ -392,7 +304,7 @@ int
 BMI_CEM_Set_value (BMI_CEM_Model *self, const char *long_var_name, void *array)
 {
   if (strcmp (long_var_name, "surface_elevation")==0) {
-    memcpy (self->z[0], array, sizeof (double) * self->n_x * self->n_y);
+    //memcpy (self->z[0], array, sizeof (double) * self->n_x * self->n_y);
   }
 
   return BMI_SUCCESS;
@@ -405,7 +317,7 @@ BMI_CEM_Set_value_at_indices (BMI_CEM_Model *self, const char *long_var_name, in
   double * to;
 
   if (strcmp (long_var_name, "surface_elevation")==0) {
-    to = self->z[0];
+    //to = self->z[0];
   }
 
   { /* Copy the data */
@@ -424,7 +336,7 @@ int
 BMI_CEM_Set_double (BMI_CEM_Model *self, const char *long_var_name, double *array)
 {
   if (strcmp (long_var_name, "surface_elevation")==0) {
-    memcpy (self->z[0], array, sizeof (double) * self->n_x * self->n_y);
+    //memcpy (self->z[0], array, sizeof (double) * self->n_x * self->n_y);
   }
 
   return BMI_SUCCESS;
@@ -437,7 +349,7 @@ BMI_CEM_Set_double_at_indices (BMI_CEM_Model *self, const char *long_var_name, i
   double * dest;
 
   if (strcmp (long_var_name, "surface_elevation")==0) {
-    dest = self->z[0];
+    //dest = self->z[0];
   }
 
   { /* Copy the data */
@@ -505,7 +417,7 @@ BMI_CEM_Get_start_time (BMI_CEM_Model *self, double * time)
 int
 BMI_CEM_Get_end_time (BMI_CEM_Model *self, double * time)
 {
-  *time = self->t_end;
+  //*time = self->t_end;
   return BMI_SUCCESS;
 }
 
@@ -513,7 +425,7 @@ BMI_CEM_Get_end_time (BMI_CEM_Model *self, double * time)
 int
 BMI_CEM_Get_current_time (BMI_CEM_Model *self, double * time)
 {
-  *time = self->t;
+  //*time = self->t;
   return BMI_SUCCESS;
 }
 
@@ -521,7 +433,7 @@ BMI_CEM_Get_current_time (BMI_CEM_Model *self, double * time)
 int
 BMI_CEM_Get_time_step (BMI_CEM_Model *self, double * dt)
 {
-  *dt = self->dt;
+  //*dt = self->dt;
   return BMI_SUCCESS;
 }
 
