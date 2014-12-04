@@ -10,7 +10,7 @@ set (BUILD_SHARED_LIBS ON)
 
 include_directories( ${CMAKE_CURRENT_SOURCE_DIR} )
 
-set (bmicem_sources bmi.c)
+set (bmicem_sources main_parse.c bmi.c)
 
 add_library (bmicem ${bmicem_sources} )
 
