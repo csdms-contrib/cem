@@ -8,7 +8,6 @@ extern "C"
 
 
 /* IMPORTANT -- specify wave transformation routine */
-//#define	SWANflag ('y') /* Is SWAN doing wave transformations? */
 #define WITH_SWAN
 
 /* Aspect Parameters */

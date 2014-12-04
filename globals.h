@@ -60,14 +60,16 @@ extern int ClosestBeach[MaxBeachLength];     /* i position of closest rock to be
 extern float AmountWeathered[MaxBeachLength];        /* Amount of rock weathered from rock cell j LMV */
 
 /* SWAN */
+extern char SWANflag;
+
 #if defined(WITH_SWAN)
 extern float BreakDepth; /* Breaking wave depth found from SWAN run */
 
 /* Special SWAN matrices. */
-extern float ShelfDepth[Xmax][2*Ymax]; /* SWAN bathymetry. */
-extern float Hsig[Xmax][2*Ymax]; /* SWAN wave heights. */
-extern float Dir[Xmax][2*Ymax]; /* SWAN wave angles. */
-extern float EvaluateAngle; /* Temporary angle holder for the ConvertAngle function */
+extern double ShelfDepth[Xmax][2*Ymax]; /* SWAN bathymetry. */
+extern double Hsig[Xmax][2*Ymax]; /* SWAN wave heights. */
+extern double Dir[Xmax][2*Ymax]; /* SWAN wave angles. */
+extern double EvaluateAngle; /* Temporary angle holder for the ConvertAngle function */
 
 /* for temporary debugging only, 5-5-14 */
 /* UPDATE 11/20/14 -- now using these for upwind scheme fixing, so keep 'em around (probably should rename...) */
