@@ -418,7 +418,7 @@ BMI_CEM_Get_start_time (BMI_CEM_Model *self, double * time)
 int
 BMI_CEM_Get_end_time (BMI_CEM_Model *self, double * time)
 {
-  *time = StopAfter
+  *time = StopAfter;
   return BMI_SUCCESS;
 }
 
@@ -426,7 +426,7 @@ BMI_CEM_Get_end_time (BMI_CEM_Model *self, double * time)
 int
 BMI_CEM_Get_current_time (BMI_CEM_Model *self, double * time)
 {
-  *time = CurrentTimeStep * TimeStep
+  *time = CurrentTimeStep * TimeStep;
   return BMI_SUCCESS;
 }
 
@@ -434,7 +434,7 @@ BMI_CEM_Get_current_time (BMI_CEM_Model *self, double * time)
 int
 BMI_CEM_Get_time_step (BMI_CEM_Model *self, double * dt)
 {
-  *dt = TimeStep
+  *dt = TimeStep;
   return BMI_SUCCESS;
 }
 
