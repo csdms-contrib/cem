@@ -87,7 +87,7 @@ BMI_CEM_Update_until (BMI_CEM_Model *self, double t)
         BMI_CEM_Update (self);
       }
 
-      // BMI_CEM_Update_frac (self, n_steps - n_full_steps);
+      BMI_CEM_Update_frac (self, n_steps - n_full_steps);
     }
   }
 
@@ -212,12 +212,8 @@ BMI_CEM_Get_value (BMI_CEM_Model *self, const char *long_var_name, void *dest)
 {
   void *src = NULL;
 
-  if (strcmp (long_var_name, "sea_water__depth")==0) {
-    src = (void*) ShelfDepth[0];
-  }
-  else if (strcmp (long_var_name, "land_surface__elevation") == 0) {
-    src = (void*) Topography[0];
-  }
+  if (BMI_CEM_Get_value_ptr (self, long_var_name, &src) == BMI_FAILURE)
+    return BMI_FAILURE
 
   memcpy (dest, src, sizeof (double) * Xmax * Ymax * 2);
 
@@ -228,18 +224,20 @@ BMI_CEM_Get_value (BMI_CEM_Model *self, const char *long_var_name, void *dest)
 int
 BMI_CEM_Get_value_ptr (BMI_CEM_Model *self, const char *long_var_name, void **dest)
 {
-  void *src = NULL;
+  void *data = NULL;
 
-  if (strcmp (long_var_name, "sea_water__depth")==0) {
-    src = (void*) ShelfDepth[0];
-  }
-  else if (strcmp (long_var_name, "land_surface__elevation") == 0) {
-    src = (void*) Topography[0];
-  }
+  if (strcmp (long_var_name, "sea_water__depth")==0)
+    data = (void*) ShelfDepth[0];
+  else if (strcmp (long_var_name, "land_surface__elevation") == 0)
+    data = (void*) Topography[0];
+  else if (strcmp (long_var_name, "sea_surface_water_wave__significant_height")==0)
+    data = (void*) Hsig[0];
+  else if (strcmp (long_var_name, "sea_surface_water_wave__azimuth_angle_of_group_velocity")==0)
+    data = (void*) Dir[0];
 
-  *dest = src;
+  *dest = data;
 
-  return BMI_SUCCESS;
+  return (data == NULL)?BMI_FAILURE:BMI_SUCCESS;
 }
 
 
@@ -248,12 +246,8 @@ BMI_CEM_Get_value_at_indices (BMI_CEM_Model *self, const char *long_var_name, vo
 {
   double *src = NULL;
 
-  if (strcmp (long_var_name, "sea_water__depth")==0) {
-    src = ShelfDepth[0];
-  }
-  else if (strcmp (long_var_name, "land_surface__elevation") == 0) {
-    src = Topography[0];
-  }
+  if (BMI_CEM_Get_value_ptr (self, long_var_name, &src) == BMI_FAILURE)
+    return BMI_FAILURE
 
   { /* Copy the data */
     int i;
@@ -272,12 +266,8 @@ BMI_CEM_Get_double (BMI_CEM_Model *self, const char *long_var_name, double *dest
 {
   double *src = NULL;
 
-  if (strcmp (long_var_name, "sea_water__depth")==0) {
-    src = ShelfDepth[0];
-  }
-  else if (strcmp (long_var_name, "land_surface__elevation")==0) {
-    src = Topography[0];
-  }
+  if (BMI_CEM_Get_value_ptr (self, long_var_name, &src) == BMI_FAILURE)
+    return BMI_FAILURE
 
   memcpy (dest, src, sizeof (double) * Xmax * Ymax * 2);
 
@@ -290,12 +280,8 @@ BMI_CEM_Get_double_ptr (BMI_CEM_Model *self, const char *long_var_name, double *
 {
   double *src = NULL;
 
-  if (strcmp (long_var_name, "sea_water__depth")==0) {
-    src = ShelfDepth[0];
-  }
-  else if (strcmp (long_var_name, "land_surface__elevation")==0) {
-    src = Topography[0];
-  }
+  if (BMI_CEM_Get_value_ptr (self, long_var_name, &src) == BMI_FAILURE)
+    return BMI_FAILURE
 
   *dest = src;
 
@@ -329,9 +315,16 @@ BMI_CEM_Get_double_at_indices (BMI_CEM_Model *self, const char *long_var_name, d
 int
 BMI_CEM_Set_value (BMI_CEM_Model *self, const char *long_var_name, void *array)
 {
-  if (strcmp (long_var_name, "sea_water__depth")==0) {
-    //memcpy (self->z[0], array, sizeof (double) * self->n_x * self->n_y);
+  void * dest = NULL;
+
+  if (strcmp (long_var_name, "sea_surface_water_wave__significant_height")==0) {
+    dest = Hsig[0];
   }
+  else if (strcmp (long_var_name, "sea_surface_water_wave__azimuth_angle_of_group_velocity")==0) {
+    dest = Dir[0];
+  }
+
+  memcpy (dest, array, sizeof (double) * Xmin * Ymin * 2);
 
   return BMI_SUCCESS;
 }
@@ -340,10 +333,13 @@ BMI_CEM_Set_value (BMI_CEM_Model *self, const char *long_var_name, void *array)
 int
 BMI_CEM_Set_value_at_indices (BMI_CEM_Model *self, const char *long_var_name, int * inds, int len, void *src)
 {
-  double * to;
+  double * to = NULL;
 
-  if (strcmp (long_var_name, "sea_water__depth")==0) {
-    //to = self->z[0];
+  if (strcmp (long_var_name, "sea_surface_water_wave__significant_height")==0) {
+    to = Hsig[0];
+  }
+  else if (strcmp (long_var_name, "sea_surface_water_wave__azimuth_angle_of_group_velocity")==0) {
+    to = Dir[0];
   }
 
   { /* Copy the data */
