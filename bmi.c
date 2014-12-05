@@ -13,11 +13,12 @@ int cem_update_until (int);
 int cem_finalize (void);
 
 
+int BMI_CEM_Update_frac (BMI_CEM_Model *, double);
+
+
 struct _BMI_CEM_Model {
   double time;
 };
-
-int BMI_CEM_Get_value_ptr (BMI_CEM_Model *, const char *, void **);
 
 
 int
