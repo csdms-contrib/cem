@@ -7,7 +7,7 @@
 #include "consts.h"
 #include "globals.h"
 
-float CellDepth[Xmax][2 * Ymax];      /* Depth array */
+double CellDepth[Xmax][2 * Ymax];      /* Depth array */
 double CliffHeightSlow = 30;  /* Cliff height above sea level for slow weathering rock PWL */
 double CliffHeightFast = 0;   /* Cliff height above sea level for fast weathering rock PWL */
 
@@ -43,21 +43,21 @@ int YRock[MaxBeachLength];    /* Y Position of ith rock element LMV */
 int XRockBehind[MaxBeachLength];      /* Cell that is "behind" XRock[i] LMV */
 int YRockBehind[MaxBeachLength];      /* Cell that is "behind" YRock[i] LMV */
 char InShadow[MaxBeachLength];        /* Is ith beach element in shadow? */
-float ShorelineAngle[MaxBeachLength]; /* Angle between cell and right (z+1) neighbor  */
-float SurroundingAngle[MaxBeachLength];       /* Angle between left and right neighbors */
+double ShorelineAngle[MaxBeachLength]; /* Angle between cell and right (z+1) neighbor  */
+double SurroundingAngle[MaxBeachLength];       /* Angle between left and right neighbors */
 char UpWind[MaxBeachLength];  /* Upwind or downwind condition used to calculate sediment transport */
-float VolumeIn[MaxBeachLength];       /* Sediment volume into ith beach element */
-float VolumeOut[MaxBeachLength];      /* Sediment volume out of ith beach element */
-float VolumeAcrossBorder[MaxBeachLength];     /* Sediment volume across border of ith beach element in m^3/day LMV */
+double VolumeIn[MaxBeachLength];       /* Sediment volume into ith beach element */
+double VolumeOut[MaxBeachLength];      /* Sediment volume out of ith beach element */
+double VolumeAcrossBorder[MaxBeachLength];     /* Sediment volume across border of ith beach element in m^3/day LMV */
 /* amount sediment needed, not necessarily amount a cell gets */
-float ActualVolumeAcross[MaxBeachLength];     /* Sediment volume that actually gets passed across border LMV */
+double ActualVolumeAcross[MaxBeachLength];     /* Sediment volume that actually gets passed across border LMV */
 /* amount sed is limited by volumes across border upstream and downstream */
 char DirectionAcrossBorder[MaxBeachLength];   /* Flag to indicate if transport across border is L or R LMV */
 char FlowThroughCell[MaxBeachLength]; /* Is flow through ith cell Left, Right, Convergent, or Divergent LMV */
-float DistanceToBeach[MaxBeachLength];        /* Distance in meters from rock to beach LMV */
-float MinDistToBeach[MaxBeachLength]; /* From a rock cell j, min distance (in meters) to closest beach LMV */
+double DistanceToBeach[MaxBeachLength];        /* Distance in meters from rock to beach LMV */
+double MinDistToBeach[MaxBeachLength]; /* From a rock cell j, min distance (in meters) to closest beach LMV */
 int ClosestBeach[MaxBeachLength];     /* i position of closest rock to beach LMV */
-float AmountWeathered[MaxBeachLength];        /* Amount of rock weathered from rock cell j LMV */
+double AmountWeathered[MaxBeachLength];        /* Amount of rock weathered from rock cell j LMV */
 
 #if defined(WITH_SWAN)
 char SWANflag = 'y'; /* Is SWAN doing wave transformations? */
@@ -65,7 +65,7 @@ char SWANflag = 'y'; /* Is SWAN doing wave transformations? */
 char SWANflag = 'n';
 #endif
 
-float BreakDepth; /* Breaking wave depth found from SWAN run */
+double BreakDepth; /* Breaking wave depth found from SWAN run */
 
 /* Special SWAN matrices. */
 double ** ShelfDepth = NULL;
@@ -79,14 +79,14 @@ double EvaluateAngle; /* Temporary angle holder for the ConvertAngle function */
 
 /* for temporary debugging only, 5-5-14 */
 /* UPDATE 11/20/14 -- now using these for upwind scheme fixing, so keep 'em around (probably should rename...) */
-float Qsdebug[MaxBeachLength];		
-float Hsigdebug[MaxBeachLength];    
-float Dirdebug[MaxBeachLength];
-float Hddebug[MaxBeachLength];
-float xdebug[MaxBeachLength];
-float ydebug[MaxBeachLength];
-float WvHeight;
-float Angle;
+double Qsdebug[MaxBeachLength];		
+double Hsigdebug[MaxBeachLength];    
+double Dirdebug[MaxBeachLength];
+double Hddebug[MaxBeachLength];
+double xdebug[MaxBeachLength];
+double ydebug[MaxBeachLength];
+double WvHeight;
+double Angle;
 
 /* Miscellaneous Global Variables -- also will be included in the BMI structure */
 
@@ -101,19 +101,19 @@ int NextRockY;
 int TotalBeachCells;          /* Number of cells describing beach at particular iteration */
 int TotalRockCells;           /* Number of cells describing rock at an iteration LMV */
 int ShadowXMax;               /* used to determine maximum extent of beach cells */
-float WaveAngle;              /* wave angle for current time step */
+double WaveAngle;              /* wave angle for current time step */
 int FindStart;                /* Used to tell FindBeach at what Y value to start looking */
 int FindRockStart;            /* Used to tell FindRock at what Y value to start looking LMV */
 char FellOffArray;            /* Flag used to determine if accidentally went off array */
 char FellOffRockArray;        /* Flag used to determine if accidentally went off rock array LMV */
-float MassInitial;            /* For conservation of mass calcs */
-float MassCurrent;            /* " */
+double MassInitial;            /* For conservation of mass calcs */
+double MassCurrent;            /* " */
 int device;
 short button;
 long buttonback;
 int NumWaveBins;              /* For Input Wave - number of bins */
-float WaveMax[36];            /* Max Angle for specific bin */
-float WaveProb[36];           /* Probability of Certain Bin */
+double WaveMax[36];            /* Max Angle for specific bin */
+double WaveProb[36];           /* Probability of Certain Bin */
 double WaveAngleIn;
 double WaveHeightIn;
 double WavePeriodIn;
@@ -5016,7 +5016,7 @@ ReadWaveIn (void)
   WaveProb[0] = 0;
 
   for (i = 1; i <= NumWaveBins; i++) {
-    fscanf (ReadWaveFile, " %f %f", &WaveMax[i], &WaveProb[i]);
+    fscanf (ReadWaveFile, " %lf %lf", &WaveMax[i], &WaveProb[i]);
     printf ("i= %d  Wave= %f Prob= %f \n", i, WaveMax[i], WaveProb[i]);
   }
 
