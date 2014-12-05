@@ -8,7 +8,7 @@ extern "C"
 
 #include "consts.h"
 
-extern float CellDepth[Xmax][2 * Ymax];      /* Depth array */
+extern double CellDepth[Xmax][2 * Ymax];      /* Depth array */
 extern double CliffHeightSlow;  /* Cliff height above sea level for slow weathering rock PWL */
 extern double CliffHeightFast;   /* Cliff height above sea level for fast weathering rock PWL */
 
@@ -43,44 +43,44 @@ extern int YRock[MaxBeachLength];    /* Y Position of ith rock element LMV */
 extern int XRockBehind[MaxBeachLength];      /* Cell that is "behind" XRock[i] LMV */
 extern int YRockBehind[MaxBeachLength];      /* Cell that is "behind" YRock[i] LMV */
 extern char InShadow[MaxBeachLength];        /* Is ith beach element in shadow? */
-extern float ShorelineAngle[MaxBeachLength]; /* Angle between cell and right (z+1) neighbor  */
-extern float SurroundingAngle[MaxBeachLength];       /* Angle between left and right neighbors */
+extern double ShorelineAngle[MaxBeachLength]; /* Angle between cell and right (z+1) neighbor  */
+extern double SurroundingAngle[MaxBeachLength];       /* Angle between left and right neighbors */
 extern char UpWind[MaxBeachLength];  /* Upwind or downwind condition used to calculate sediment transport */
-extern float VolumeIn[MaxBeachLength];       /* Sediment volume into ith beach element */
-extern float VolumeOut[MaxBeachLength];      /* Sediment volume out of ith beach element */
-extern float VolumeAcrossBorder[MaxBeachLength];     /* Sediment volume across border of ith beach element in m^3/day LMV */
+extern double VolumeIn[MaxBeachLength];       /* Sediment volume into ith beach element */
+extern double VolumeOut[MaxBeachLength];      /* Sediment volume out of ith beach element */
+extern double VolumeAcrossBorder[MaxBeachLength];     /* Sediment volume across border of ith beach element in m^3/day LMV */
 /* amount sediment needed, not necessarily amount a cell gets */
-extern float ActualVolumeAcross[MaxBeachLength];     /* Sediment volume that actually gets passed across border LMV */
+extern double ActualVolumeAcross[MaxBeachLength];     /* Sediment volume that actually gets passed across border LMV */
 /* amount sed is limited by volumes across border upstream and downstream */
 extern char DirectionAcrossBorder[MaxBeachLength];   /* Flag to indicate if transport across border is L or R LMV */
 extern char FlowThroughCell[MaxBeachLength]; /* Is flow through ith cell Left, Right, Convergent, or Divergent LMV */
-extern float DistanceToBeach[MaxBeachLength];        /* Distance in meters from rock to beach LMV */
-extern float MinDistToBeach[MaxBeachLength]; /* From a rock cell j, min distance (in meters) to closest beach LMV */
+extern double DistanceToBeach[MaxBeachLength];        /* Distance in meters from rock to beach LMV */
+extern double MinDistToBeach[MaxBeachLength]; /* From a rock cell j, min distance (in meters) to closest beach LMV */
 extern int ClosestBeach[MaxBeachLength];     /* i position of closest rock to beach LMV */
-extern float AmountWeathered[MaxBeachLength];        /* Amount of rock weathered from rock cell j LMV */
+extern double AmountWeathered[MaxBeachLength];        /* Amount of rock weathered from rock cell j LMV */
 
 /* SWAN */
 extern char SWANflag;
 
 #if defined(WITH_SWAN)
-extern float BreakDepth; /* Breaking wave depth found from SWAN run */
+extern double BreakDepth; /* Breaking wave depth found from SWAN run */
 
 /* Special SWAN matrices. */
 extern double ShelfDepth[Xmax][2*Ymax]; /* SWAN bathymetry. */
-extern double Hsig[Xmax][2*Ymax]; /* SWAN wave heights. */
-extern double Dir[Xmax][2*Ymax]; /* SWAN wave angles. */
-extern double EvaluateAngle; /* Temporary angle holder for the ConvertAngle function */
+extern double Hsig[Xmax][2*Ymax];		/* SWAN wave heights. */
+extern double Dir[Xmax][2*Ymax];		/* SWAN wave angles. */
+extern double EvaluateAngle;			/* Temporary angle holder for the ConvertAngle function */
 
 /* for temporary debugging only, 5-5-14 */
 /* UPDATE 11/20/14 -- now using these for upwind scheme fixing, so keep 'em around (probably should rename...) */
-extern float Qsdebug[MaxBeachLength];		
-extern float Hsigdebug[MaxBeachLength];    
-extern float Dirdebug[MaxBeachLength];
-extern float Hddebug[MaxBeachLength];
-extern float xdebug[MaxBeachLength];
-extern float ydebug[MaxBeachLength];
-extern float Angle;
-extern float WvHeight;
+extern double Qsdebug[MaxBeachLength];		
+extern double Hsigdebug[MaxBeachLength];    
+extern double Dirdebug[MaxBeachLength];
+extern double Hddebug[MaxBeachLength];
+extern double xdebug[MaxBeachLength];
+extern double ydebug[MaxBeachLength];
+extern double Angle;
+extern double WvHeight;
 #endif
 
 /* Miscellaneous Global Variables -- also will be included in the BMI structure */
@@ -96,19 +96,19 @@ extern int NextRockY;
 extern int TotalBeachCells;          /* Number of cells describing beach at particular iteration */
 extern int TotalRockCells;           /* Number of cells describing rock at an iteration LMV */
 extern int ShadowXMax;               /* used to determine maximum extent of beach cells */
-extern float WaveAngle;              /* wave angle for current time step */
+extern double WaveAngle;              /* wave angle for current time step */
 extern int FindStart;                /* Used to tell FindBeach at what Y value to start looking */
 extern int FindRockStart;            /* Used to tell FindRock at what Y value to start looking LMV */
 extern char FellOffArray;            /* Flag used to determine if accidentally went off array */
 extern char FellOffRockArray;        /* Flag used to determine if accidentally went off rock array LMV */
-extern float MassInitial;            /* For conservation of mass calcs */
-extern float MassCurrent;            /* " */
+extern double MassInitial;            /* For conservation of mass calcs */
+extern double MassCurrent;            /* " */
 extern int device;
 extern short button;
 extern long buttonback;
 extern int NumWaveBins;              /* For Input Wave - number of bins */
-extern float WaveMax[36];            /* Max Angle for specific bin */
-extern float WaveProb[36];           /* Probability of Certain Bin */
+extern double WaveMax[36];            /* Max Angle for specific bin */
+extern double WaveProb[36];           /* Probability of Certain Bin */
 extern double WaveAngleIn;
 extern double WaveHeightIn;
 extern double WavePeriodIn;
