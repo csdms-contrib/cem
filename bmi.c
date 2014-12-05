@@ -109,7 +109,8 @@ BMI_CEM_Finalize (BMI_CEM_Model *self)
 int
 BMI_CEM_Get_var_type (BMI_CEM_Model *self, const char *long_var_name, BMI_Var_type * type)
 {
-  if (strcasecmp (long_var_name, "sea_water__depth") == 0) {
+  if (strcmp (long_var_name, "sea_water__depth") == 0 ||
+      strcmp (long_var_name, "land_surface__elevation") == 0) {
     *type = BMI_VAR_TYPE_DOUBLE;
     return BMI_SUCCESS;
   }
@@ -123,7 +124,8 @@ BMI_CEM_Get_var_type (BMI_CEM_Model *self, const char *long_var_name, BMI_Var_ty
 int
 BMI_CEM_Get_var_units (BMI_CEM_Model *self, const char *long_var_name, char * units)
 {
-  if (strcmp (long_var_name, "sea_water__depth") == 0) {
+  if (strcmp (long_var_name, "sea_water__depth") == 0 ||
+      strcmp (long_var_name, "land_surface__elevation") == 0) {
     strncpy (units, "meter", BMI_MAX_UNITS_NAME);
     return BMI_SUCCESS;
   }
@@ -137,7 +139,8 @@ BMI_CEM_Get_var_units (BMI_CEM_Model *self, const char *long_var_name, char * un
 int
 BMI_CEM_Get_var_rank (BMI_CEM_Model *self, const char *long_var_name, int * rank)
 {
-  if (strcmp (long_var_name, "sea_water__depth") == 0) {
+  if (strcmp (long_var_name, "sea_water__depth") == 0 ||
+      strcmp (long_var_name, "land_surface__elevation") == 0) {
     *rank = 2;
     return BMI_SUCCESS;
   }
@@ -151,7 +154,8 @@ BMI_CEM_Get_var_rank (BMI_CEM_Model *self, const char *long_var_name, int * rank
 int
 BMI_CEM_Get_grid_shape (BMI_CEM_Model *self, const char *long_var_name, int * shape)
 {
-  if (strcmp (long_var_name, "sea_water__depth") == 0) {
+  if (strcmp (long_var_name, "sea_water__depth") == 0 ||
+      strcmp (long_var_name, "land_surface__elevation") == 0) {
     shape[0] = Xmax;
     shape[1] = Ymax * 2;
   }
@@ -164,7 +168,8 @@ BMI_CEM_Get_grid_shape (BMI_CEM_Model *self, const char *long_var_name, int * sh
 int
 BMI_CEM_Get_grid_spacing (BMI_CEM_Model *self, const char *long_var_name, double * spacing)
 {
-  if (strcmp (long_var_name, "sea_water__depth") == 0) {
+  if (strcmp (long_var_name, "sea_water__depth") == 0 ||
+      strcmp (long_var_name, "land_surface__elevation") == 0) {
     spacing[0] = CellWidth;
     spacing[1] = CellWidth;
   }
@@ -176,7 +181,8 @@ BMI_CEM_Get_grid_spacing (BMI_CEM_Model *self, const char *long_var_name, double
 int
 BMI_CEM_Get_grid_origin (BMI_CEM_Model *self, const char *long_var_name, double * origin)
 {
-  if (strcmp (long_var_name, "sea_water__depth") == 0) {
+  if (strcmp (long_var_name, "sea_water__depth") == 0 ||
+      strcmp (long_var_name, "land_surface__elevation") == 0) {
     origin[0] = 0.;
     origin[1] = 0.;
   }
@@ -188,7 +194,8 @@ BMI_CEM_Get_grid_origin (BMI_CEM_Model *self, const char *long_var_name, double 
 int
 BMI_CEM_Get_grid_type (BMI_CEM_Model *self, const char *long_var_name, BMI_Grid_type * type)
 {
-  if (strcmp (long_var_name, "sea_water__depth") == 0) {
+  if (strcmp (long_var_name, "sea_water__depth") == 0 ||
+      strcmp (long_var_name, "land_surface__elevation") == 0) {
     *type = BMI_GRID_TYPE_UNIFORM;
     return BMI_SUCCESS;
   }
@@ -206,10 +213,13 @@ BMI_CEM_Get_value (BMI_CEM_Model *self, const char *long_var_name, void *dest)
   void *src = NULL;
 
   if (strcmp (long_var_name, "sea_water__depth")==0) {
-    //src = (void*) self->z[0];
+    src = (void*) ShelfDepth[0];
+  }
+  else if (strcmp (long_var_name, "land_surface__elevation") == 0) {
+    src = (void*) Topography[0];
   }
 
-  //memcpy (dest, src, sizeof (double) * self->n_x * self->n_y);
+  memcpy (dest, src, sizeof (double) * Xmax * Ymax * 2);
 
   return BMI_SUCCESS;
 }
@@ -221,7 +231,10 @@ BMI_CEM_Get_value_ptr (BMI_CEM_Model *self, const char *long_var_name, void **de
   void *src = NULL;
 
   if (strcmp (long_var_name, "sea_water__depth")==0) {
-    //src = (void*) self->z[0];
+    src = (void*) ShelfDepth[0];
+  }
+  else if (strcmp (long_var_name, "land_surface__elevation") == 0) {
+    src = (void*) Topography[0];
   }
 
   *dest = src;
@@ -236,7 +249,10 @@ BMI_CEM_Get_value_at_indices (BMI_CEM_Model *self, const char *long_var_name, vo
   double *src = NULL;
 
   if (strcmp (long_var_name, "sea_water__depth")==0) {
-    //src = self->z[0];
+    src = ShelfDepth[0];
+  }
+  else if (strcmp (long_var_name, "land_surface__elevation") == 0) {
+    src = Topography[0];
   }
 
   { /* Copy the data */
@@ -259,6 +275,9 @@ BMI_CEM_Get_double (BMI_CEM_Model *self, const char *long_var_name, double *dest
   if (strcmp (long_var_name, "sea_water__depth")==0) {
     src = ShelfDepth[0];
   }
+  else if (strcmp (long_var_name, "land_surface__elevation")==0) {
+    src = Topography[0];
+  }
 
   memcpy (dest, src, sizeof (double) * Xmax * Ymax * 2);
 
@@ -274,6 +293,9 @@ BMI_CEM_Get_double_ptr (BMI_CEM_Model *self, const char *long_var_name, double *
   if (strcmp (long_var_name, "sea_water__depth")==0) {
     src = ShelfDepth[0];
   }
+  else if (strcmp (long_var_name, "land_surface__elevation")==0) {
+    src = Topography[0];
+  }
 
   *dest = src;
 
@@ -287,6 +309,9 @@ BMI_CEM_Get_double_at_indices (BMI_CEM_Model *self, const char *long_var_name, d
   double *src = NULL;
 
   if (strcmp (long_var_name, "sea_water__depth")==0) {
+    src = ShelfDepth[0];
+  }
+  else if (strcmp (long_var_name, "land_surface__elevation")==0) {
     src = ShelfDepth[0];
   }
 
@@ -403,7 +428,8 @@ BMI_CEM_Get_input_var_names (BMI_CEM_Model *self, char ** names)
 
 
 const char *output_var_names[BMI_CEM_OUTPUT_VAR_NAME_COUNT] = {
-  "sea_water__depth"
+  "sea_water__depth",
+  "land_surface__elevation"
 };
 
 int
