@@ -2028,7 +2028,7 @@ WeatherRock (int j)
 /* Weathering rate changes along the shore, 'f' = fast weather, 's' = slow weathering			*/
 /* Function uses (but does not change) TypeOfRock[][] to determine rate					*/
 {
-  float WeatheringRatePerYear,
+  double WeatheringRatePerYear,
     AngleFactor,
     CurrentWeatherCoeff,
     mslope,
