@@ -77,7 +77,8 @@ float Dirdebug[MaxBeachLength];
 float Hddebug[MaxBeachLength];
 float xdebug[MaxBeachLength];
 float ydebug[MaxBeachLength];
-
+float WvHeight;
+float Angle;
 #else
 char SWANflag = 'n';
 #endif
@@ -174,7 +175,7 @@ void RealWaveIn (void);
 void RockCalculations (void);
 void SaveSandToFile (void);
 void SaveLineToFile (void);
-void SedTrans (int i, float ShoreAngle, char MaxT);   /*changed LMV */
+void SedTrans (int From, int To, float ShoreAngle, char MaxT, int Last);
 void ShadowSweep (void);
 void TransportSedimentSweep (void);
 void WaveOutFile (void);
@@ -2527,6 +2528,7 @@ DetermineSedTransport (void)
   char UpWindLocal;             /* Local holder for upwind/downwind condition                           */
   char MaxTrans;                /* Do we need to compute using maximum transport ?                      */
   int DoFlux;                   /* Skip sed transport calcs (added 02/04 AA)                            */
+  float DummyAngle = 1.;
 
   if (debug5)
     printf ("\nSEDTRANS: %d  @  %f \n\n", CurrentTimeStep,
@@ -2670,9 +2672,9 @@ DetermineSedTransport (void)
                 (WaveAngle - ShoreAngleUsed) * radtodeg);
 
       if (DoFlux) {
-        SedTrans (i, ShoreAngleUsed, MaxTrans);
+        // SedTrans (i, ShoreAngleUsed, MaxTrans);
         /*LMV*/
-          /* SedTrans(CalcCell, CalcCell+Next, ShoreAngleUsed, MaxTrans); Andrew's way */
+        SedTrans(i, CalcCell, ShoreAngleUsed, MaxTrans, Last);
       }
     }
 
@@ -2681,7 +2683,7 @@ DetermineSedTransport (void)
 }
 
 void
-SedTrans (int i, float ShoreAngle, char MaxT)
+SedTrans (int i, int From, float ShoreAngle, char MaxT, int Last)
 
         /*  This central function will calcualte the sediment transported from the cell i-1 to          */
         /*  the cell at i, using the input ShoreAngle   LMV                                             */
@@ -2710,7 +2712,6 @@ SedTrans (int i, float ShoreAngle, char MaxT)
   float kh;                     /* wavenumber times depth                       */
   float n;                      /* n                                            */
   float WaveLength;             /* m, current wavelength                        */
-  float WvHeight;               /* m, current wave height                       */
 
   /* Primary assumption is that waves refract over shore-parallel contours                        */
   /* New algorithm 6/02 iteratively takes wiave onshore until they break, then computes Qs        */
@@ -2803,12 +2804,12 @@ SedTrans (int i, float ShoreAngle, char MaxT)
 	  }
 	  else /* Do Qs slightly different for SWAN input */
 	  {
-		  VolumeAcrossBorder = fabs(0.2*rho*Raise(g,3.0/2.0)*Raise(WvHeight,2.5)*
+		  VolumeAcrossBorder[i] = fabs(0.2*rho*Raise(g,3.0/2.0)*Raise(WvHeight,2.5)*
 									cos(Angle-ShoreAngle)*sin(Angle-ShoreAngle)*TimeStep);
 		  
 		  if (UpWind[From] == 'u') /* Use wave characteristics updrift */
 		  {
-			  VolumeAcrossBorder = fabs(0.2*rho*Raise(g,3.0/2.0)*Raise(Hsigdebug[From+Last],2.5)*
+			  VolumeAcrossBorder[i] = fabs(0.2*rho*Raise(g,3.0/2.0)*Raise(Hsigdebug[From+Last],2.5)*
 										cos(Dirdebug[From+Last]-ShoreAngle)*sin(Dirdebug[From+Last]-ShoreAngle)*TimeStep);
 		  }
 	  }    
@@ -5930,7 +5931,7 @@ void ParseSWAN (int ShoreAngleLoc, float ShoreAngle)
 	int		xcoord, ycoord, NextInLine;
 	int		OopsImBroke = 0;			/* Flag that indicates if we've found a broken wave.
 										 0 = keep lookin', pal; 1 = eureka! */
-	int		interval = 0.1;				/* How far to search in each iteration */
+	float		interval = 0.1;				/* How far to search in each iteration */
 	float	xdist = 0.0, ydist = 0.0;	/* Distance to search for SWAN info (units are cells). */
 	float	Xpos, Ypos;					/* Tracks search distance */
 	int		LastXCell, LastYCell;		/* Tracks cells that have already been searched */
