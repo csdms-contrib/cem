@@ -19,7 +19,8 @@ extern double PercentFullSand[Xmax][2 * Ymax];       /* Fractional amount of cel
 extern double PercentFullRock[Xmax][2 * Ymax];       /* Fractional amount of a cell full of rock LMV */
 extern char TypeOfRock[Xmax][2 * Ymax];      /* Array to control weathering rates of rock along the beach LMV */
 extern int Age[Xmax][2 * Ymax];      /* Age since cell was deposited */
-extern double Topography[Xmax][2 * Ymax];    /* Holds cliff heights -- will change through time, eventually... */
+//extern double Topography[Xmax][2 * Ymax];    /* Holds cliff heights -- will change through time, eventually... */
+extern double ** Topography; // Holds cliff heights -- will change through time, eventually...
 
 extern int SinkY[6]; /* a sink is a cell that is routinely emptied (if it is on the beach) */
 extern int SinkX[6];
@@ -62,13 +63,17 @@ extern float AmountWeathered[MaxBeachLength];        /* Amount of rock weathered
 /* SWAN */
 extern char SWANflag;
 
-#if defined(WITH_SWAN)
+//#if defined(WITH_SWAN)
 extern float BreakDepth; /* Breaking wave depth found from SWAN run */
 
 /* Special SWAN matrices. */
-extern double ShelfDepth[Xmax][2*Ymax]; /* SWAN bathymetry. */
-extern double Hsig[Xmax][2*Ymax]; /* SWAN wave heights. */
-extern double Dir[Xmax][2*Ymax]; /* SWAN wave angles. */
+extern double ** ShelfDepth; /* SWAN bathymetry. */
+extern double ** Hsig; /* SWAN wave heights. */
+extern double ** Dir; /* SWAN wave angles. */
+
+//extern double ShelfDepth[Xmax][2*Ymax]; /* SWAN bathymetry. */
+//extern double Hsig[Xmax][2*Ymax]; /* SWAN wave heights. */
+//extern double Dir[Xmax][2*Ymax]; /* SWAN wave angles. */
 extern double EvaluateAngle; /* Temporary angle holder for the ConvertAngle function */
 
 /* for temporary debugging only, 5-5-14 */
@@ -81,7 +86,7 @@ extern float xdebug[MaxBeachLength];
 extern float ydebug[MaxBeachLength];
 extern float Angle;
 extern float WvHeight;
-#endif
+//#endif
 
 /* Miscellaneous Global Variables -- also will be included in the BMI structure */
 

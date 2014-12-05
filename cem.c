@@ -18,7 +18,8 @@ double PercentFullSand[Xmax][2 * Ymax];       /* Fractional amount of cell full 
 double PercentFullRock[Xmax][2 * Ymax];       /* Fractional amount of a cell full of rock LMV */
 char TypeOfRock[Xmax][2 * Ymax];      /* Array to control weathering rates of rock along the beach LMV */
 int Age[Xmax][2 * Ymax];      /* Age since cell was deposited */
-double Topography[Xmax][2 * Ymax];    /* Holds cliff heights -- will change through time, eventually... */
+//double Topography[Xmax][2 * Ymax];    /* Holds cliff heights -- will change through time, eventually... */
+double ** Topography;
 
 int SinkY[] = { 158, 361, 158, 361, 158, 361 };       /* a sink is a cell that is routinely emptied (if it is on the beach) */
 int SinkX[] = { 190, 190, 189, 189, 191, 191 };
@@ -60,13 +61,20 @@ float AmountWeathered[MaxBeachLength];        /* Amount of rock weathered from r
 
 #if defined(WITH_SWAN)
 char SWANflag = 'y'; /* Is SWAN doing wave transformations? */
+#else
+char SWANflag = 'n';
+#endif
 
 float BreakDepth; /* Breaking wave depth found from SWAN run */
 
 /* Special SWAN matrices. */
-double ShelfDepth[Xmax][2*Ymax]; /* SWAN bathymetry. */
-double Hsig[Xmax][2*Ymax]; /* SWAN wave heights. */
-double Dir[Xmax][2*Ymax]; /* SWAN wave angles. */
+double ** ShelfDepth = NULL;
+double ** Hsig = NULL; /* SWAN wave heights. */
+double ** Dir = NULL; /* SWAN wave angles. */
+
+//double ShelfDepth[Xmax][2*Ymax]; /* SWAN bathymetry. */
+//double Hsig[Xmax][2*Ymax]; /* SWAN wave heights. */
+//double Dir[Xmax][2*Ymax]; /* SWAN wave angles. */
 double EvaluateAngle; /* Temporary angle holder for the ConvertAngle function */
 
 /* for temporary debugging only, 5-5-14 */
@@ -79,9 +87,6 @@ float xdebug[MaxBeachLength];
 float ydebug[MaxBeachLength];
 float WvHeight;
 float Angle;
-#else
-char SWANflag = 'n';
-#endif
 
 /* Miscellaneous Global Variables -- also will be included in the BMI structure */
 
@@ -208,6 +213,28 @@ cem_initialize (void)
     srand (time (NULL));
   else
     srand (seed);
+
+  // Allocate memory for arrays.
+  {
+    int i;
+    const int n_rows = Xmax;
+    const int n_cols = 2 * Ymax;
+
+    Topography = (double**) malloc (sizeof(double *) * n_rows);
+    Topography[0] = (double *) malloc (sizeof(double) * n_rows * n_cols);
+    ShelfDepth = (double**) malloc (sizeof(double *) * n_rows);
+    ShelfDepth[0] = (double *) malloc (sizeof(double) * n_rows * n_cols);
+    Hsig = (double**) malloc (sizeof(double *) * n_rows);
+    Hsig[0] = (double *) malloc (sizeof(double) * n_rows * n_cols);
+    Dir = (double**) malloc (sizeof(double *) * n_rows);
+    Dir[0] = (double *) malloc (sizeof(double) * n_rows * n_cols);
+    for (i=1; i<n_rows; i++) {
+      Topography[i] = Topography[i - 1] + n_cols;
+      ShelfDepth[i] = ShelfDepth[i - 1] + n_cols;
+      Hsig[i] = Hsig[i - 1] + n_cols;
+      Dir[i] = Dir[i - 1] + n_cols;
+    }
+  }
 
   /* Start from file or not? */
   if (PromptStart == 'y') {
@@ -415,9 +442,19 @@ cem_update (void)
 int
 cem_finalize (void)
 {
+  free(Topography[0]);
+  free(Topography);
+  free(ShelfDepth[0]);
+  free(ShelfDepth);
+  free(Hsig[0]);
+  free(Hsig);
+  free(Dir[0]);
+  free(Dir);
+
   printf ("Run Complete.  Output file: %s \n", savefilename);
   getchar ();
-  return (0);
+
+  return 0;
 }
 
 
@@ -5918,9 +5955,9 @@ float ConvertAngle(float EvaluteAngle, int type)
 		else if(EvaluateAngle == 0 || EvaluateAngle == 360)
 		{
 			return 0;
-			
 		}
 	}
+  return 0.;
 }
 
 /* SWAN data parse function! PWL, 10-18-13. #SWAN */
@@ -5947,7 +5984,7 @@ void ParseSWAN (int ShoreAngleLoc, float ShoreAngle)
 	
 	xcoord = X[ShoreAngleLoc];
 	ycoord = Y[ShoreAngleLoc];
-	
+
 	if (ShoreAngleLoc == 0)
 	{
 		printf("\n no alongshore location, barf \n");
@@ -6011,6 +6048,7 @@ void ParseSWAN (int ShoreAngleLoc, float ShoreAngle)
 		ydebug[ShoreAngleLoc] = 6;
 		/* Is this a breaking wave cell? Also, make sure not to divide by zero or else your computer will explode */
 		/* May need to lower breaking wave threshold and/or change resolution of nested grid -- do some tests! #SWAN */
+
 		if (ShelfDepth[xcoord][ycoord] > 0 && ShelfDepth[LastXCell][ycoord] > 0 && Hsig[LastXCell][ycoord] > 0)
 		{
 			Hd = Hsig[xcoord][ycoord]/(ShelfDepth[xcoord][ycoord]);
