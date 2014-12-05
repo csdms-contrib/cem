@@ -8,7 +8,7 @@ extern "C"
 
 
 /* IMPORTANT -- specify wave transformation routine */
-#define WITH_SWAN
+#undef WITH_SWAN
 
 /* Aspect Parameters */
 #define CellWidth			100     /* size of cells (meters) */
