@@ -4948,12 +4948,6 @@ PauseRun (int x, int y, int in)
 /* Pauses run until the 'q' key is pressed 	*/
 /* Can Print or Plot Out Useful info		*/
 {
-
-  int xsee = 1,
-    ysee = -1,
-    isee = -1,
-    i;
-
   printf ("\nPaused \n");
 
   if (SaveLine)
@@ -5952,19 +5946,24 @@ float ConvertAngle(float EvaluteAngle, int type)
 /* SWAN data parse function! PWL, 10-18-13. #SWAN */
 void ParseSWAN (int ShoreAngleLoc, float ShoreAngle)
 {
-	float	LookOffshore;				/* What direction to look offshore to find a breaking wave? */
-	float	LookSlope;					/* What slope (x,y) is the line of sight? */
-	int		xcoord, ycoord, NextInLine;
-	int		OopsImBroke = 0;			/* Flag that indicates if we've found a broken wave.
-										 0 = keep lookin', pal; 1 = eureka! */
-	float		interval = 0.1;				/* How far to search in each iteration */
-	float	xdist = 0.0, ydist = 0.0;	/* Distance to search for SWAN info (units are cells). */
-	float	Xpos, Ypos;					/* Tracks search distance */
-	int		LastXCell, LastYCell;		/* Tracks cells that have already been searched */
-	int		CurrentXCell, CurrentYCell;	/* Tracks integer value cell position */
+	float	LookOffshore;	/* What direction to look offshore to find a breaking wave? */
+	/* float	LookSlope; */	/* What slope (x,y) is the line of sight? */
+	int		xcoord, ycoord;
+  /* int NextInLine; */
+	/* int		OopsImBroke = 0;*/ /* Flag that indicates if we've found a broken wave.
+                                  0 = keep lookin', pal; 1 = eureka! */
+	/* float		interval = 0.1; */				/* How far to search in each iteration */
+	/* float	xdist = 0.0, ydist = 0.0; */ /* Distance to search for SWAN info (units are cells). */
+	/* float	Xpos, Ypos; */					/* Tracks search distance */
+
+	/* Tracks cells that have already been searched */
+  /* int	LastYCell; */
+	int	LastXCell;
+
+	/*int		CurrentXCell, CurrentYCell; */	/* Tracks integer value cell position */
 	double	Hd;							/* Wave height divided by water depth */
 	float	CAngle;						/* Angle converted from ConvertAngle function -- extraneous for dubugging */
-	float	RAngle;						/* Angle retrieved from SWAN -- extraneous for dubugging */
+	/* float	RAngle; */						/* Angle retrieved from SWAN -- extraneous for dubugging */
 	
 	int		HowFar;						/* Used for debugging -- tracks how many cells the routine goes offshore to find
 										 wave breaking threshold*/
