@@ -3363,7 +3363,7 @@ ErodeTheBeach (int i)
 
   if (InShadow[i] == 'n')
     PercentEroded = ((ErosionRatePerYear * TimeStep) / 365) / CellWidth;
-  else if (InShadow[i] == 'y')
+  else /* if (InShadow[i] == 'y') */
     PercentEroded = 0.0;
 
   if (PercentEroded > PercentFullSand[X[i]][Y[i]]) {
