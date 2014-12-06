@@ -4,6 +4,10 @@ project (cem)
 
 set (CEM_VERSION 0.1)
 
+set (CMAKE_C_FLAGS
+  "-ansi -Wall -Wundef -Wstrict-prototypes -Wmissing-prototypes \
+  -Wmissing-declarations -O2")
+
 ########### CEM BMI library ###############
 
 set (BUILD_SHARED_LIBS ON)
