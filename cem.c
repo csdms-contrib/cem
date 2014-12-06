@@ -193,6 +193,13 @@ void DoOverwash (int xfrom, int yfrom, int xto, int yto, float xintto,
                  float yintto, float widthin, int ishore);
 
 
+void InitNormal (void);
+int initBlock (void);
+int InitWiggly (void);
+void Delay (void);
+void PrintLocalConds (int x, int y, int in);
+
+
 int cem_initialize (void);
 int cem_update (void);
 int cem_update_until (int);
