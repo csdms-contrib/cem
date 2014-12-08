@@ -18,7 +18,6 @@ double PercentFullSand[Xmax][2 * Ymax];       /* Fractional amount of cell full 
 double PercentFullRock[Xmax][2 * Ymax];       /* Fractional amount of a cell full of rock LMV */
 char TypeOfRock[Xmax][2 * Ymax];      /* Array to control weathering rates of rock along the beach LMV */
 int Age[Xmax][2 * Ymax];      /* Age since cell was deposited */
-//double Topography[Xmax][2 * Ymax];    /* Holds cliff heights -- will change through time, eventually... */
 double ** Topography;
 
 int SinkY[] = { 158, 361, 158, 361, 158, 361 };       /* a sink is a cell that is routinely emptied (if it is on the beach) */
@@ -72,9 +71,6 @@ double ** ShelfDepth = NULL;
 double ** Hsig = NULL; /* SWAN wave heights. */
 double ** Dir = NULL; /* SWAN wave angles. */
 
-//double ShelfDepth[Xmax][2*Ymax]; /* SWAN bathymetry. */
-//double Hsig[Xmax][2*Ymax]; /* SWAN wave heights. */
-//double Dir[Xmax][2*Ymax]; /* SWAN wave angles. */
 double EvaluateAngle; /* Temporary angle holder for the ConvertAngle function */
 
 /* for temporary debugging only, 5-5-14 */
@@ -197,6 +193,13 @@ void DoOverwash (int xfrom, int yfrom, int xto, int yto, float xintto,
                  float yintto, float widthin, int ishore);
 
 
+void InitNormal (void);
+int initBlock (void);
+int InitWiggly (void);
+void Delay (void);
+void PrintLocalConds (int x, int y, int in);
+
+
 int cem_initialize (void);
 int cem_update (void);
 int cem_update_until (int);
@@ -208,14 +211,12 @@ cem_initialize (void)
 {
   ShadowXMax = Xmax;    /* RCL: was Xmax-5; */
 
-  //srandom(seed); //AB
   if (seed == -999)
     srand (time (NULL));
   else
     srand (seed);
 
-  // Allocate memory for arrays.
-  {
+  { /* Allocate memory for arrays. */
     int i;
     const int n_rows = Xmax;
     const int n_cols = 2 * Ymax;
@@ -320,7 +321,6 @@ int
 cem_update (void)
 {
 /* 'until' is sent from BMI call ...12/3/14 */
-  //int StopAfter = until;
   int xx;                       /* duration loop variable, moved from former (now deleted) 'main.c' above */
 
   {
@@ -328,7 +328,8 @@ cem_update (void)
 
     /*  Calculate Wave Angle */
     WaveAngle = FindWaveAngle ();
-    //output wave data
+
+    /* output wave data */
     if (Wavedata == 'y')
       WaveOutFile ();
 
@@ -344,7 +345,7 @@ cem_update (void)
                 CurrentTimeStep);
       }
 
-      PeriodicBoundaryCopy ();  //Copy visible data to external model - creates boundaries
+      PeriodicBoundaryCopy ();  /* Copy visible data to external model - creates boundaries */
 
       ZeroVars ();
 
@@ -505,7 +506,7 @@ FindWaveAngle (void)
 
     Angle = ((float)(WaveAngleIn)) + coastrotation;     /*align waveclimate to coastline in CEM */
     if (Angle >= 180.0)
-      Angle -= 360.0;   //conversion to CEM angles (-180 -- 0 -- +180)
+      Angle -= 360.0;   /* conversion to CEM angles (-180 -- 0 -- +180) */
     Angle *= -1;   /*-1 is there as wave angle is from 90 in the west to -90 in the east*/
 
     Period = WavePeriodIn * waveperiodchange;
@@ -2286,10 +2287,6 @@ FindIfInShadow (int xin, int yin, int ShadMax)
     ycheck = yin + rint (ydistance);
 
     if (debug2a) {
-/*
-CWT: call to PutPixel() commented out at present
-*/
-//              PutPixel(ycheck*CellPixelSize,xcheck*CellPixelSize,0,250,250);
       printf ("\n Iteration: %d \n", iteration);
       printf ("Xdist : %f  ", xdistance);
       printf ("    Xcheck: %d \n", xcheck);
@@ -2708,7 +2705,7 @@ DetermineSedTransport (void)
                 (WaveAngle - ShoreAngleUsed) * radtodeg);
 
       if (DoFlux) {
-        // SedTrans (i, ShoreAngleUsed, MaxTrans);
+        /* SedTrans (i, ShoreAngleUsed, MaxTrans); */
         /*LMV*/
         SedTrans(i, CalcCell, ShoreAngleUsed, MaxTrans, Last);
       }
@@ -3365,7 +3362,7 @@ ErodeTheBeach (int i)
 
   if (InShadow[i] == 'n')
     PercentEroded = ((ErosionRatePerYear * TimeStep) / 365) / CellWidth;
-  else if (InShadow[i] == 'y')
+  else /* if (InShadow[i] == 'y') */
     PercentEroded = 0.0;
 
   if (PercentEroded > PercentFullSand[X[i]][Y[i]]) {
@@ -4200,7 +4197,6 @@ FixBeach (void)
       }
     }
   }
-  //if(!done) printf("final fb loop didn't fix all problems\n");
   if (debug9)
     printf ("done checking grid for overfull, underfull \n");
 }
@@ -4258,7 +4254,7 @@ RandZeroToOne (void)
         /* function will return a random number equally distributed between zero and one */
         /* currently this function has no seed */
 {
-  //return random()/(Raise(2,31)-1);
+  /* return random()/(Raise(2,31)-1); */
   double AB_rand = rand () % 1000;
   AB_rand = (AB_rand + 1) / 1000;
   return ((float)(AB_rand));
@@ -4462,7 +4458,7 @@ InitWiggly (void)
   int curveFactor = 3;          /* decrease fundamental wavelength/increase frequency (by a factor)
                                    --make it 1 for wavelength = Ymax */
   float Amp,
-    AmpMax = InitRock / 6.0;    /* InitRock/4.0; *//* maximum amplitude of the component sin waves */
+    AmpMax = InitRock / 6.0;    /* InitRock/4.0; maximum amplitude of the component sin waves */
   int Min = 0.10 * Xmax,
     Max = 0.95 * Xmax;  /* determines acceptable max amplitude of resulting curve */
   printf ("init wiggly\n");
@@ -4841,16 +4837,16 @@ SaveSandToFile (void)
           fprintf (SaveSandFile, " %d", Age[x][y]);
   }
 
-  //Array output
   if (SaveFile == 2) {
+    /* Array output */
 
-    //for (x=0; x<Xmax; x++)
+    /* for (x=0; x<Xmax; x++) */
     for (x = (Xmax - 1); x >= 0; x--) {
       for (y = Ymax / 2; y < 3 * Ymax / 2; y++) {
         fprintf (SaveSandFile, " %c", TypeOfRock[x][y]);
         /*LMV*/
-          //if (TypeOfRock[x][y]=='f') fprintf(SaveSandFile, " 0");        /* Switch on if numbers required*/
-          //else fprintf(SaveSandFile, " 1");
+        /* if (TypeOfRock[x][y]=='f') fprintf(SaveSandFile, " 0"); */        /* Switch on if numbers required*/
+        /* else fprintf(SaveSandFile, " 1"); */
       }
       fprintf (SaveSandFile, "\n");
     }
@@ -4958,12 +4954,6 @@ PauseRun (int x, int y, int in)
 /* Pauses run until the 'q' key is pressed 	*/
 /* Can Print or Plot Out Useful info		*/
 {
-
-  int xsee = 1,
-    ysee = -1,
-    isee = -1,
-    i;
-
   printf ("\nPaused \n");
 
   if (SaveLine)
@@ -5425,20 +5415,20 @@ CheckOverwash (int icheck)
   }
 
   if (SurroundingAngle[icheck] > 0)
-    ysign = 1;  // check right
+    ysign = 1;  /* check right */
   else
-    ysign = -1; // check left
+    ysign = -1; /* check left */
 
-  if (AllBeach[X[icheck] - 1][Y[icheck]] == 'y' //if the cell below is all beach
-      || ((AllBeach[X[icheck]][Y[icheck] - 1] == 'y')   //or if the cell to the left is all beach
-          && (AllBeach[X[icheck]][Y[icheck] + 1] == 'y')))      //and the cell to the right is all beach
+  if (AllBeach[X[icheck] - 1][Y[icheck]] == 'y' /* if the cell below is all beach */
+      || ((AllBeach[X[icheck]][Y[icheck] - 1] == 'y')   /* or if the cell to the left is all beach */
+          && (AllBeach[X[icheck]][Y[icheck] + 1] == 'y')))      /* and the cell to the right is all beach */
     /* 'regular condition' */
     /* plus 'stuck in the middle' situation (unlikely scenario) */
   {
     xin = X[icheck] + PercentFullSand[X[icheck]][Y[icheck]];
     yin = Y[icheck] + 0.5;
   }
-  else if (AllBeach[X[icheck]][Y[icheck] - 1] == 'y')   //if the cell to the left is all beach
+  else if (AllBeach[X[icheck]][Y[icheck] - 1] == 'y')   /* if the cell to the left is all beach */
     /* on right side */
   {
     xin = X[icheck] + 0.5;
@@ -5962,19 +5952,24 @@ float ConvertAngle(float EvaluteAngle, int type)
 /* SWAN data parse function! PWL, 10-18-13. #SWAN */
 void ParseSWAN (int ShoreAngleLoc, float ShoreAngle)
 {
-	float	LookOffshore;				/* What direction to look offshore to find a breaking wave? */
-	float	LookSlope;					/* What slope (x,y) is the line of sight? */
-	int		xcoord, ycoord, NextInLine;
-	int		OopsImBroke = 0;			/* Flag that indicates if we've found a broken wave.
-										 0 = keep lookin', pal; 1 = eureka! */
-	float		interval = 0.1;				/* How far to search in each iteration */
-	float	xdist = 0.0, ydist = 0.0;	/* Distance to search for SWAN info (units are cells). */
-	float	Xpos, Ypos;					/* Tracks search distance */
-	int		LastXCell, LastYCell;		/* Tracks cells that have already been searched */
-	int		CurrentXCell, CurrentYCell;	/* Tracks integer value cell position */
+	float	LookOffshore;	/* What direction to look offshore to find a breaking wave? */
+	/* float	LookSlope; */	/* What slope (x,y) is the line of sight? */
+	int		xcoord, ycoord;
+  /* int NextInLine; */
+	/* int		OopsImBroke = 0;*/ /* Flag that indicates if we've found a broken wave.
+                                  0 = keep lookin', pal; 1 = eureka! */
+	/* float		interval = 0.1; */				/* How far to search in each iteration */
+	/* float	xdist = 0.0, ydist = 0.0; */ /* Distance to search for SWAN info (units are cells). */
+	/* float	Xpos, Ypos; */					/* Tracks search distance */
+
+	/* Tracks cells that have already been searched */
+  /* int	LastYCell; */
+	int	LastXCell;
+
+	/*int		CurrentXCell, CurrentYCell; */	/* Tracks integer value cell position */
 	double	Hd;							/* Wave height divided by water depth */
 	float	CAngle;						/* Angle converted from ConvertAngle function -- extraneous for dubugging */
-	float	RAngle;						/* Angle retrieved from SWAN -- extraneous for dubugging */
+	/* float	RAngle; */						/* Angle retrieved from SWAN -- extraneous for dubugging */
 	
 	int		HowFar;						/* Used for debugging -- tracks how many cells the routine goes offshore to find
 										 wave breaking threshold*/
