@@ -2029,7 +2029,6 @@ WeatherRock (int j)
 /* Function uses (but does not change) TypeOfRock[][] to determine rate					*/
 {
   double WeatheringRatePerYear,
-    AngleFactor,
     CurrentWeatherCoeff,
     mslope,
     wscale,
@@ -2066,15 +2065,15 @@ WeatherRock (int j)
   if ((MinDistToBeach[j]) <= NoWeathering) {    /*think in terms of vertical equivalence */
 
     if (Abrasion == 'n') {
-      WeatheringRatePerYear = AngleFactor * CurrentWeatherCoeff * (exp (-MinDistToBeach[j]));   /*exponential weathering (in meters/yr) based on sed cover */
+      WeatheringRatePerYear = CurrentWeatherCoeff * (exp (-MinDistToBeach[j]));   /*exponential weathering (in meters/yr) based on sed cover */
       /*printf("weathering rate: %f", WeatheringRatePerYear); */
     }
 
     if (Abrasion == 'y') {
       if (MinDistToBeach[j] <= Wcrit) {
         mslope = (CurrentWeatherCoeff * (N - 1)) / Wcrit;       /* Slope of line between N*BareRock and BareRock PWL */
-        WeatheringRatePerYear =
-          AngleFactor * (CurrentWeatherCoeff + (mslope * MinDistToBeach[j]));
+        WeatheringRatePerYear = CurrentWeatherCoeff +
+          mslope * MinDistToBeach[j];
         /*if (!debug12b) printf("\nabrasion weathering rate: %f\n",WeatheringRatePerYear); */
       }
 
@@ -2907,7 +2906,7 @@ FlowInCell (void)
   int i;
 
   /* float AverageFull; */
-  float TotalPercentInBeaches;
+  float TotalPercentInBeaches = 0.;
 
   for (i = 1; i <= TotalBeachCells; i++) {
     if ((DirectionAcrossBorder[i - 1] == 'r') &&
