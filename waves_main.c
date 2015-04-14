@@ -22,7 +22,7 @@
 #include <glib.h>
 
 #include "waves_cli.h"
-#include "waves_api.h"
+#include "bmi_waves.h"
 
 #define WAVES_PROGRAM_STR   "waves"
 #define WAVES_MAJOR_VERSION (0)
@@ -35,7 +35,6 @@ int
 main (int argc, char *argv[])
 {
   waves_args_st *args = NULL;
-
   GError *error = NULL;
 
   args = parse_command_line (argc, argv, &error);
@@ -50,81 +49,62 @@ main (int argc, char *argv[])
 
   {
     gint i;
-
     double a;
-
     GRand *rand = g_rand_new_with_seed (args->seed);
-
     const gint len = args->n_waves;
-
     const double asymmetry = args->asymmetry;
-
     const double highness = args->highness;
-
     const double scale = (args->radians) ? 1. : 180. / M_PI;
 
-    Waves_state *waves_state = NULL;
-    BMI_Model *w = NULL;
-    int err;
+    BMI_Model *model = (BMI_Model*) malloc(sizeof(BMI_Model));
 
     if (args->verbose)
     {
-      gchar *units = (args->radians) ? "Radians" : "Degrees";
+      const gchar *units = (args->radians) ? "Radians" : "Degrees";
 
       fprintf (stderr, "Highness factor: %f\n", highness);
       fprintf (stderr, "Asymmetry factor: %f\n", asymmetry);
       fprintf (stderr, "Units: %s\n", units);
     }
 
-    fprintf (stdout, "Initializing... ");
-    err = BMI_WAVES_Initialize (NULL, &w);
+    register_bmi_waves(model);
 
-    if (err) {
+    fprintf (stdout, "Initializing... ");
+    if (model->initialize(NULL, &(model->self)) == BMI_FAILURE) {
       fprintf (stdout, "FAIL.\n");
-      fprintf (stderr, "Error: %d: Unable to initialize\n", err);
+      fprintf (stderr, "Unable to initialize\n");
+      return EXIT_FAILURE;
     }
     else
       fprintf (stdout, "PASS.\n");
 
-    err = BMI_WAVES_Set_double (w, "wave_asymmetry", &(args->asymmetry));
-    err = BMI_WAVES_Set_double (w, "wave_highness", &(args->highness));
+    if (model->set_value(model->self, "sea_shoreline_wave~incoming~deepwater__ashton_et_al_approach_angle_asymmetry_parameter", &(args->asymmetry)) == BMI_FAILURE)
+      return EXIT_FAILURE;
+    if (model->set_value(model->self, "sea_shoreline_wave~incoming~deepwater__ashton_et_al_approach_angle_highness_parameter", &(args->highness)) == BMI_FAILURE)
+      return EXIT_FAILURE;
+    
     for (i = 0; i < len; i++) {
       fprintf (stdout, "Updating... ");
-      if (BMI_WAVES_Update (w) == BMI_SUCCESS)
+      if (model->update(model->self) == BMI_SUCCESS)
         fprintf (stdout, "PASS\n");
       else {
         fprintf (stdout, "FAIL.\n");
-        fprintf (stderr, "Error: %d: Unable to update\n", err);
+        fprintf (stderr, "Unable to update\n");
       }
 
-      if (BMI_WAVES_Get_double (w, "sea_surface_wave_from_direction", &a) == BMI_SUCCESS)
+      if (model->get_value(model->self, "sea_surface_water_wave__azimuth_angle_of_opposite_of_phase_velocity", &a) == BMI_SUCCESS)
         fprintf (stdout, "Wave angle: %f\n", a * scale);
       else
-        fprintf (stderr, "Error: %d: Unable to get wave angle\n", err);
+        fprintf (stderr, "Unable to get wave angle\n");
     }
 
     fprintf (stdout, "Finalizing... ");
-    if (BMI_WAVES_Finalize (w) == BMI_SUCCESS)
+    if (model->finalize(model->self) == BMI_SUCCESS)
       fprintf (stdout, "PASS\n");
     else {
       fprintf (stdout, "FAIL.\n");
-      fprintf (stderr, "Error: %d: Unable to finalize\n", err);
+      fprintf (stderr, "Unable to finalize\n");
     }
-/*
-    waves_state = waves_init (NULL);
-    waves_set_angle_asymmetry (waves_state, args->asymmetry);
-    waves_set_angle_highness (waves_state, args->highness);
-
-    for (i = 0; i < len; i++)
-    {
-      waves_run_until (waves_state, i);
-      a = waves_get_wave_angle (waves_state) * scale;
-      //a = waves_next_angle (rand, asymmetry, highness)*scale;
-      fprintf (stdout, "%f\n", a);
-    }
-
-    waves_state = waves_finalize (waves_state, TRUE);
-*/
     g_rand_free (rand);
   }
 
