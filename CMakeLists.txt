@@ -159,9 +159,6 @@ install(FILES deltas_api.h deltas_cli.h
         DESTINATION include
         COMPONENT deltas)
 
-install(FILES waves_cli.h
-        DESTINATION include
-        COMPONENT deltas)
 install (FILES deltas_api.h RENAME bmi_cem.h
         DESTINATION include
         COMPONENT deltas)
