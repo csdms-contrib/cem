@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 2.6)
 project (deltas)
 include (CTest)
 
+set (CMAKE_C_FLAGS "-ansi -Wall -Wundef -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -O2")
 set (BUILD_SHARED_LIBS ON)
 
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/waves.pc.cmake ${CMAKE_CURRENT_SOURCE_DIR}/waves.pc )
@@ -54,10 +55,11 @@ endif (WITH_X11)
 include_directories( ${CMAKE_CURRENT_SOURCE_DIR} )
 
 set( deltas_lib_SRCS
+  bmi_cem.c
   deltas_cli.c
   ndelta4.c
   deltas_api.c)
-set_source_files_properties (${deltas_lib_SRCS} PROPERTIES LANGUAGE CXX)
+set_source_files_properties (${deltas_lib_SRCS} PROPERTIES LANGUAGE C)
 
 add_library(bmicem ${deltas_lib_SRCS})
 add_library(bmicem-static STATIC ${deltas_lib_SRCS})
@@ -66,26 +68,35 @@ target_link_libraries(bmicem-static m ${GLIB2_LIBRARIES} ${GTHREAD2_LIBRARIES})
 
 install(TARGETS bmicem DESTINATION lib COMPONENT deltas)
 
+add_library(bmi_cem ${deltas_lib_SRCS})
+add_library(bmi_cem-static STATIC ${deltas_lib_SRCS})
+install(TARGETS bmi_cem DESTINATION lib)
+install(TARGETS bmi_cem-static DESTINATION lib)
+install(FILES bmi.h bmi_cem.h DESTINATION include/cem)
+
 ########### libwaves ###############
 
 include_directories (${CMAKE_CURRENT_SOURCE_DIR})
 
 set (waves_lib_SRCS
-  waves_api.c
+  bmi_waves.c
+  waves_model.c
   waves.c)
-set_source_files_properties (${waves_lib_SRCS} PROPERTIES LANGUAGE CXX)
+set_source_files_properties (${waves_lib_SRCS} PROPERTIES LANGUAGE C)
 
-add_library(bmiwaves ${waves_lib_SRCS})
-add_library(bmiwaves-static STATIC ${waves_lib_SRCS})
-target_link_libraries (bmiwaves m glib-2.0)
-target_link_libraries(bmiwaves-static m ${GLIB2_LIBRARIES} ${GTHREAD2_LIBRARIES})
+add_library(bmi_waves ${waves_lib_SRCS})
+add_library(bmi_waves-static STATIC ${waves_lib_SRCS})
 
-install(TARGETS bmiwaves DESTINATION lib COMPONENT bmiwaves)
+target_link_libraries(bmi_waves ${GLIB2_LIBRARIES} ${GTHREAD2_LIBRARIES})
+
+install(TARGETS bmi_waves DESTINATION lib)
+install(TARGETS bmi_waves-static DESTINATION lib)
+install(FILES bmi.h bmi_waves.h DESTINATION include/waves)
 
 ########### deltas main program ###############
 
 set( deltas_SRCS deltas_main.c)
-set_source_files_properties (${deltas_SRCS} PROPERTIES LANGUAGE CXX)
+set_source_files_properties (${deltas_SRCS} PROPERTIES LANGUAGE C)
 
 add_executable(run_deltas ${deltas_SRCS})
 target_link_libraries(run_deltas bmicem-static)
@@ -98,9 +109,10 @@ install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/run_deltas
 ########### waves main program ###############
 
 set (waves_SRCS waves_main.c waves_cli.c)
+set_source_files_properties (${waves_SRCS} PROPERTIES LANGUAGE C)
 
 add_executable(run_waves ${waves_SRCS})
-target_link_libraries(run_waves bmiwaves-static)
+target_link_libraries(run_waves bmi_waves-static ${GLIB2_LIBRARIES} ${GTHREAD2_LIBRARIES})
 
 install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/run_waves
         DESTINATION bin
@@ -148,9 +160,6 @@ install(FILES deltas_api.h deltas_cli.h
         COMPONENT deltas)
 
 install(FILES waves_cli.h
-        DESTINATION include
-        COMPONENT deltas)
-install (FILES waves_api.h RENAME bmi_waves.h
         DESTINATION include
         COMPONENT deltas)
 install (FILES deltas_api.h RENAME bmi_cem.h
