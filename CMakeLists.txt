@@ -86,6 +86,7 @@ set_source_files_properties (${waves_lib_SRCS} PROPERTIES LANGUAGE C)
 
 add_library(bmi_waves ${waves_lib_SRCS})
 add_library(bmi_waves-static STATIC ${waves_lib_SRCS})
+set_target_properties(bmi_waves-static PROPERTIES OUTPUT_NAME bmi_waves)
 
 target_link_libraries(bmi_waves ${GLIB2_LIBRARIES} ${GTHREAD2_LIBRARIES})
 
