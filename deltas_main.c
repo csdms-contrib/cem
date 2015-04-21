@@ -2,16 +2,16 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include <deltas_api.h>
 #include <deltas_cli.h>
+#include "bmi_cem.h"
 
 void print_matrix (double *x, int *shape);
 
 int
 main (int argc, char *argv[])
 {
-  BMI_Model *self = NULL;
-  int err;
+  BMI_Model *model = (BMI_Model*) malloc(sizeof(BMI_Model));
+  int status;
 
   if (argc > 1) {
     if (strcmp (argv[1], "--version") == 0) {
@@ -24,18 +24,23 @@ main (int argc, char *argv[])
     }
   }
 
-  if (argc>1)
-    err = BMI_CEM_Initialize (argv[1], &self);
-  else
-    err = BMI_CEM_Initialize (NULL, &self);
+  register_bmi_cem(model);
 
-  if (err) {
-    fprintf (stderr, "Error: %d: Unable to initialize\n", err);
+  fprintf (stdout, "Initializing... ");
+  if (argc>1)
+    status = model->initialize(argv[1], &(model->self));
+  else
+    status = model->initialize(NULL, &(model->self));
+
+  if (status == BMI_FAILURE) {
+    fprintf (stdout, "FAIL.\n");
+    fprintf (stderr, "Unable to initialize\n");
     return EXIT_FAILURE;
   }
 
   {
     int i;
+    int grid;
     int rank;
     int *shape = NULL;
     int len;
@@ -44,31 +49,55 @@ main (int argc, char *argv[])
     double stop_time;
     const double river_flux = 250.;
 
-    BMI_CEM_Get_var_rank (self, "surface__elevation", &rank);
+    if (model->get_var_grid(model->self, "land_surface__elevation", &grid) == BMI_FAILURE) {
+      fprintf(stderr, "unable to get var grid\n");
+      return EXIT_FAILURE;
+    }
+    if (model->get_grid_rank(model->self, grid, &rank) == BMI_FAILURE) {
+      fprintf(stderr, "unable to get var grid\n");
+      return EXIT_FAILURE;
+    }
+
     fprintf (stderr, "Grid rank: %d\n", rank);
 
     shape = (int*) malloc (sizeof (int)*rank);
-    BMI_CEM_Get_grid_shape (self, "surface__elevation", shape);
+    if (model->get_grid_shape(model->self, grid, shape) == BMI_FAILURE) {
+      fprintf(stderr, "unable to get var grid\n");
+      return EXIT_FAILURE;
+    }
+
     fprintf (stderr, "Grid shape: %d x %d\n", shape[0], shape[1]);
 
-    BMI_CEM_Get_var_point_count (self, "surface__elevation", &len);
+    if (model->get_grid_size(model->self, grid, &len) == BMI_FAILURE) {
+      fprintf(stderr, "unable to get var grid\n");
+      return EXIT_FAILURE;
+    }
 
     qs = (double *)malloc (sizeof (double) * len);
     z = (double *)malloc (sizeof (double) * len);
     fprintf (stderr, "len is %d\n", len);
 
-    BMI_CEM_Get_end_time (self, &stop_time);
+    model->get_end_time(model->self, &stop_time);
     stop_time = 1000;
+
     for (i = 1; i <= stop_time; i++) {
-      deltas_avulsion (self, qs, river_flux);
+      deltas_avulsion (model->self, qs, river_flux);
 
-      err = BMI_CEM_Set_double (self, "surface_bed_load_sediment__mass_flow_rate", qs);
-      if (err)
-        fprintf (stderr, "Error %d\n", err);
+      if (model->set_value(model->self, "land_surface_water_sediment~bedload__mass_flow_rate", qs) == BMI_FAILURE) {
+        fprintf(stderr, "unable to set qs\n");
+        return EXIT_FAILURE;
+      }
 
-      BMI_CEM_Update (self);
+      if (model->update(model->self) == BMI_FAILURE) {
+        fprintf(stderr, "unable to update\n");
+        return EXIT_FAILURE;
+      }
 
-      BMI_CEM_Get_double (self, "sea_water_to_sediment__depth_ratio", z);
+      if (model->get_value(model->self, "sea_water__depth", z) == BMI_FAILURE) {
+        fprintf(stderr, "unable to get water depth\n");
+        return EXIT_FAILURE;
+      }
+
       if (i%100 == 0) {
         fprintf (stderr, "\n");
         fprintf (stderr, "Time: %d\n", i);
@@ -85,16 +114,17 @@ main (int argc, char *argv[])
       double time;
       int error;
 
-      error = BMI_CEM_Get_current_time (self, &time);
+      model->get_current_time(model->self, &time);
       if (error || fabs (time - stop_time) > 1e-6)
         return EXIT_FAILURE;
     }
   }
 
-  BMI_CEM_Finalize (self);
+  model->finalize(model->self);
 
   return EXIT_SUCCESS;
 }
+
 
 void
 print_matrix (double *x, int *shape)
@@ -112,66 +142,3 @@ print_matrix (double *x, int *shape)
 
   return;
 }
-
-#if 0
-int
-main (int argc, char *argv[])
-{
-  cem_args_st *args;
-
-  args = parse_command_line (argc, argv);
-
-  {
-    //Deltas_state* s = deltas_init (NULL);
-    Deltas_state *s = deltas_new ();
-    int dimen[2] = { 200, 1000 };
-
-    fprintf (stderr, "Set grid shape\n");
-    deltas_init_grid_shape (s, dimen);
-
-    fprintf (stderr, "Set cell width\n");
-    deltas_init_cell_width (s, 100.);
-
-    fprintf (stderr, "Initialize\n");
-    deltas_init (s);
-
-    fprintf (stderr, "Set save file\n");
-    //deltas_set_save_file( s, "fileout_0" );
-    deltas_set_save_file (s, args->out_prefix);
-
-//    deltas_run_until( s, args->stop_time );
-    {
-      int i;
-
-      const double dt = 5.2;
-
-      const double river_flux = 250.;
-
-      const int len = deltas_get_nx (s) * deltas_get_ny (s);
-
-      double *qs = (double *)malloc (sizeof (double) * len);
-
-      deltas_use_sed_flux (s);
-
-      for (i = 0; i <= args->stop_time; i++)
-      {
-        fprintf (stderr, "Run (%d)\n", i);
-        //deltas_set_river_sed_flux (s, river_flux, 0);
-        //deltas_find_river_mouth (s, 0);
-
-        deltas_avulsion (s, qs, river_flux);
-        deltas_set_sediment_flux_grid (s, qs);
-
-        deltas_run_until (s, i);
-      }
-    }
-
-    deltas_finalize (s, TRUE);
-  }
-
-  free (args);
-
-  return EXIT_SUCCESS;
-}
-#endif
-
