@@ -30,7 +30,7 @@ Program Notes:
 #include <limits.h>
 #include <string.h>
 
-#include "deltas.h"
+#include "cem_model.h"
 
 #define DEBUG_ON
 
@@ -157,94 +157,94 @@ int OWflag = 0;         /**< debugger */
 #define OVERWASH_LIMIT (75) /**< beyond what angle don't do overwash */
 
 /* Function Prototypes */
-void AdjustShore (State * _s, int i);
+void AdjustShore (CemModel * _s, int i);
 
-void AgeCells (State * _s);
+void AgeCells (CemModel * _s);
 
-void ButtonEnter (State * _s);
+void ButtonEnter (CemModel * _s);
 
-void CheckOverwash (State * _s, int icheck);
+void CheckOverwash (CemModel * _s, int icheck);
 
-void CheckOverwashSweep (State * _s);
+void CheckOverwashSweep (CemModel * _s);
 
-void DeliverSediment (State * _s);
+void DeliverSediment (CemModel * _s);
 
-void DeliverRivers (State * _s);
+void DeliverRivers (CemModel * _s);
 
-void AddRiverFlux (State * _s, int xin, int yin, double sedin);
+void AddRiverFlux (CemModel * _s, int xin, int yin, double sedin);
 
-double FindFluvialShorefaceDepth (State * _s, int i);
+double FindFluvialShorefaceDepth (CemModel * _s, int i);
 
-void ActualizeFluvialSed (State * _s, int xin, int yin, double Depth,
+void ActualizeFluvialSed (CemModel * _s, int xin, int yin, double Depth,
                           double SedIn);
-void DeliverSedimentFlux (State * _s);
+void DeliverSedimentFlux (CemModel * _s);
 
-void DetermineAngles (State * _s);
+void DetermineAngles (CemModel * _s);
 
-void DetermineSedTransport (State * _s);
+void DetermineSedTransport (CemModel * _s);
 
-void DoOverwash (State * _s, int xfrom, int yfrom, int xto, int yto,
+void DoOverwash (CemModel * _s, int xfrom, int yfrom, int xto, int yto,
                  double xintto, double yintto, double distance, int ishore);
-void FindBeachCells (State * _s, int YStart);
+void FindBeachCells (CemModel * _s, int YStart);
 
-char FindIfInShadow (State * _s, int icheck, int ShadMax);
+char FindIfInShadow (CemModel * _s, int icheck, int ShadMax);
 
-void FindNextCell (State * _s, int x, int y, int z);
+void FindNextCell (CemModel * _s, int x, int y, int z);
 
-double FindWaveAngle (State * _s);
+double FindWaveAngle (CemModel * _s);
 
-void FixBeach (State * _s);
+void FixBeach (CemModel * _s);
 
-double GetOverwashDepth (State * _s, int xin, int yin, double xintto,
+double GetOverwashDepth (CemModel * _s, int xin, int yin, double xintto,
                         double yintto, int ishore);
-void GraphCells (State * _s);
+void GraphCells (CemModel * _s);
 
-void InitConds (State * _s);
+void InitConds (CemModel * _s);
 
-void InitPert (State * _s);
+void InitPert (CemModel * _s);
 
-double MassCount (State * _s);
+double MassCount (CemModel * _s);
 
-void OopsImEmpty (State * _s, int x, int y);
+void OopsImEmpty (CemModel * _s, int x, int y);
 
-void OopsImFull (State * _s, int x, int y);
+void OopsImFull (CemModel * _s, int x, int y);
 
-void OpenWindow (State * _s);
+void OpenWindow (CemModel * _s);
 
-void PauseRun (State * _s, int x, int y, int in);
+void PauseRun (CemModel * _s, int x, int y, int in);
 
-void PeriodicBoundaryCopy (State * _s);
+void PeriodicBoundaryCopy (CemModel * _s);
 
-void PutPixel (State * _s, double x, double y, double R, double G, double B);
+void PutPixel (CemModel * _s, double x, double y, double R, double G, double B);
 
-void PrintLocalConds (State * _s, int x, int y, int in);
+void PrintLocalConds (CemModel * _s, int x, int y, int in);
 
 double Raise (double b, double e);
 
 double RandZeroToOne ();
 
-void ReadSandFromFile (State * _s);
+void ReadSandFromFile (CemModel * _s);
 
-void ReadWaveIn (State * _s);
+void ReadWaveIn (CemModel * _s);
 
-void SaveSandToFile (State * _s);
+void SaveSandToFile (CemModel * _s);
 
-void SaveLineToFile (State * _s);
+void SaveLineToFile (CemModel * _s);
 
-void ScreenInit (State * _s);
+void ScreenInit (CemModel * _s);
 
-void SedTrans (State * _s, int From, int To, double ShoreAngle, char MaxT);
+void SedTrans (CemModel * _s, int From, int To, double ShoreAngle, char MaxT);
 
-void ShadowSweep (State * _s);
+void ShadowSweep (CemModel * _s);
 
-void TransportSedimentSweep (State * _s);
+void TransportSedimentSweep (CemModel * _s);
 
-int XMaxBeach (State * _s, int Max);
+int XMaxBeach (CemModel * _s, int Max);
 
-void ZeroVars (State * _s);
+void ZeroVars (CemModel * _s);
 
 void
-deltas_init_state (State * s)
+deltas_init_state (CemModel * s)
 {
   s->use_sed_flux = FALSE;
   s->SedFlux = SED_FLUX;
@@ -359,7 +359,7 @@ deltas_init_state (State * s)
 }
 
 void
-deltas_free_state (State * s)
+deltas_free_state (CemModel * s)
 {
   if (s->savefilename)
     free (s->savefilename);
@@ -378,7 +378,7 @@ deltas_free_state (State * s)
 
 */
 int
-_cem_initialize (State * _s)
+_cem_initialize (CemModel * _s)
 {       /* Initialize Variables and Device */
   int seed = 44;
 
@@ -477,7 +477,7 @@ _cem_initialize (State * _s)
 }
 
 int
-_cem_run_until (State * _s, int until)
+_cem_run_until (CemModel * _s, int until)
 {       /* PRIMARY PROGRAM LOOP */
   int xx;                       /* duration loop variable */
 
@@ -744,7 +744,7 @@ _cem_run_until (State * _s, int until)
 }
 
 int
-_cem_finalize (State * _s)
+_cem_finalize (CemModel * _s)
 {
   if (_s->savefilename)
     printf ("Run Complete.  Output file: %s\n", _s->savefilename);
@@ -754,7 +754,7 @@ _cem_finalize (State * _s)
 
 /** calculates wave angle for given time step */
 double
-FindWaveAngle (State * _s)
+FindWaveAngle (CemModel * _s)
 {
 
   double Angle;
@@ -856,7 +856,7 @@ This function will affect and determine the global arrays:  _s->X[] and _s->Y[]
 This function calls FindNextCell
 This will define _s->TotalBeachCells for this time step				*/
 void
-FindBeachCells (State * _s, int YStart)
+FindBeachCells (CemModel * _s, int YStart)
 {
   int y,
     z,
@@ -972,7 +972,7 @@ This function will use but not affect the global arrays:  AllBeach [][],
 _s->X[], and _s->Y[]
 */
 void
-FindNextCell (State * _s, const int x, const int y, const int z)
+FindNextCell (CemModel * _s, const int x, const int y, const int z)
 {
   const int y_left = (y == 0) ? 2 * _s->ny - 1 : y - 1;
 
@@ -1323,7 +1323,7 @@ This function will use and adjust the variable:   _s->ShadowXMax
 This function will use but not adjust the variable:  _s->TotalBeachCells
 */
 void
-ShadowSweep (State * _s)
+ShadowSweep (CemModel * _s)
 {
 
   int i;
@@ -1352,7 +1352,7 @@ Starts searching at a point 3 rows higher than input Max
 Function returns integer value equal to max extent of 'allbeach'
 */
 int
-XMaxBeach (State * _s, int Max)
+XMaxBeach (CemModel * _s, int Max)
 {
   int xtest,
     ytest;
@@ -1394,7 +1394,7 @@ This function will use but not affect the global arrays:
 _s->AllBeach[][] and _s->PercentFull[][]
 This function refers to global variable:  _s->WaveAngle				*/
 char
-FindIfInShadow (State * _s, int icheck, int ShadMax)
+FindIfInShadow (CemModel * _s, int icheck, int ShadMax)
 {
 
   double slope;                  /* search line slope - slope of zero goes staight forward */
@@ -1710,7 +1710,7 @@ ADA Revised underside, SurroundingAngle 6/03, 2/04 fixed
 ADA Revised angle calc 5/04
 */
 void
-DetermineAngles (State * _s)
+DetermineAngles (CemModel * _s)
 {
 
   int i,
@@ -1923,7 +1923,7 @@ This function will use but not affect the following arrays and values:
    _s->PercentFull[][], _s->AllBeach[][], _s->WaveAngle
 */
 void
-DetermineSedTransport (State * _s)
+DetermineSedTransport (CemModel * _s)
 {
 
   int i;                        /* Loop variable */
@@ -2076,7 +2076,7 @@ This function will use the global values defining the wave field:
 Revised 6/02 - New iterative calc for refraction and breaking, parameters revised
 */
 void
-SedTrans (State * _s, int From, int To, double ShoreAngle, char MaxT)
+SedTrans (CemModel * _s, int From, int To, double ShoreAngle, char MaxT)
 {
 
   /* Coefficients - some of these are important */
@@ -2222,7 +2222,7 @@ sweepsign added to ensure that direction of actuating changes does not
 produce unwanted artifacts (e.g. make sure symmetrical
 */
 void
-TransportSedimentSweep (State * _s)
+TransportSedimentSweep (CemModel * _s)
 {
 
   int i,
@@ -2280,7 +2280,7 @@ Uses global variables: ShelfSlope, _s->cell_width, ShorefaceSlope, InitialDepth
 NEW - AA 05/04 fully utilize shoreface depths
 */
 void
-AdjustShore (State * _s, int i)
+AdjustShore (CemModel * _s, int i)
 {
 
   double Depth = -9999;          /* Depth of convergence */
@@ -2517,7 +2517,7 @@ Function adjusts primary data arrays:
    _s->AllBeach[][] and _s->PercentFull[][]
 */
 void
-OopsImEmpty (State * _s, int x, int y)
+OopsImEmpty (CemModel * _s, int x, int y)
 {
 
   int emptycells = 0;
@@ -2639,7 +2639,7 @@ Function adjusts primary data arrays:
    _s->AllBeach[][] and _s->PercentFull[][]
 */
 void
-OopsImFull (State * _s, int x, int y)
+OopsImFull (CemModel * _s, int x, int y)
 {
 
   int fillcells = 0;
@@ -2765,7 +2765,7 @@ Uses but does not change
 sandrevx.c - added sweepsign to reduce chances of asymmetrical artifacts
 */
 void
-FixBeach (State * _s)
+FixBeach (CemModel * _s)
 {
   int i,
     x,
@@ -3009,7 +3009,7 @@ Uses
 and InitialDepth, _s->cell_width, ShelfSlope
 */
 double
-MassCount (State * _s)
+MassCount (CemModel * _s)
 {
 
   int x,
@@ -3069,7 +3069,7 @@ Flat beach with zone of AllBeach = 'y' separated by AllBeach = 'n'
 Bounding layer set to random fraction of fullness
 */
 void
-InitConds (State * _s)
+InitConds (CemModel * _s)
 {
   int x,
     y;
@@ -3228,7 +3228,7 @@ InitConds (State * _s)
 /** Andrew's initial bump
 */
 void
-InitPert (State * _s)
+InitPert (CemModel * _s)
 {
 
   int x,
@@ -3308,7 +3308,7 @@ InitPert (State * _s)
 and end of arrays
 */
 void
-PeriodicBoundaryCopy (State * _s)
+PeriodicBoundaryCopy (CemModel * _s)
 {
   int x,
     y;
@@ -3362,7 +3362,7 @@ PeriodicBoundaryCopy (State * _s)
 /** Resets all arrays recalculated at each time step to 'zero' conditions
 */
 void
-ZeroVars (State * _s)
+ZeroVars (CemModel * _s)
 {
 
   int z;
@@ -3384,7 +3384,7 @@ ZeroVars (State * _s)
    _s->AllBeach[][] & _s->PercentFull[][]
 */
 void
-ReadSandFromFile (State * _s)
+ReadSandFromFile (CemModel * _s)
 {
   int x,
     y;
@@ -3437,7 +3437,7 @@ data arrays to file
 
 Save file name will add extension '.' and the _s->CurrentTimeStep		*/
 void
-SaveSandToFile (State * _s)
+SaveSandToFile (CemModel * _s)
 {
   int x,
     y;
@@ -3481,7 +3481,7 @@ SaveSandToFile (State * _s)
 Main concern is to have only one data point at each alongshore location
 Save file name will add extension '.' and the _s->CurrentTimeStep		*/
 void
-SaveLineToFile (State * _s)
+SaveLineToFile (CemModel * _s)
 {
 
   int y,
@@ -3559,7 +3559,7 @@ SaveLineToFile (State * _s)
 /** Prints Local Array Conditions aound x,y
 */
 void
-PrintLocalConds (State * _s, int x, int y, int in)
+PrintLocalConds (CemModel * _s, int x, int y, int in)
 {
 
   int i,
@@ -3722,7 +3722,7 @@ PrintLocalConds (State * _s, int x, int y, int in)
 Can Print or Plot Out Useful info
 */
 void
-PauseRun (State * _s, int x, int y, int in)
+PauseRun (CemModel * _s, int x, int y, int in)
 {
   //int xsee=1,ysee=-1,isee=-1,i;
 
@@ -3740,7 +3740,7 @@ PauseRun (State * _s, int x, int y, int in)
 }
 
 void
-ButtonEnter (State * _s)
+ButtonEnter (CemModel * _s)
 {
 
   char newdigit = 'z';
@@ -3766,7 +3766,7 @@ ButtonEnter (State * _s)
 /** Age Cells
 */
 void
-AgeCells (State * _s)
+AgeCells (CemModel * _s)
 {
   int x,
     y;
@@ -3785,7 +3785,7 @@ AgeCells (State * _s)
 /** Input Wave Distribution
 */
 void
-ReadWaveIn (State * _s)
+ReadWaveIn (CemModel * _s)
 {
   int i;
 
@@ -3828,7 +3828,7 @@ WaitForNotify (Display * d, XEvent * e, char *arg)
 }
 
 void
-OpenWindow (State * _s)
+OpenWindow (CemModel * _s)
 {
 
   static int attributeListSgl[] =
@@ -3899,7 +3899,7 @@ OpenWindow (State * _s)
 }
 
 void
-PutPixel (State * _s, double x, double y, double R, double G, double B)
+PutPixel (CemModel * _s, double x, double y, double R, double G, double B)
 {
 
   double xstart,
@@ -3923,7 +3923,7 @@ PutPixel (State * _s, double x, double y, double R, double G, double B)
 /** Plots entire Array
 */
 void
-GraphCells (State * _s)
+GraphCells (CemModel * _s)
 {
   int x,
     y;
@@ -4020,7 +4020,7 @@ GraphCells (State * _s)
 /** this is for the keyboard thingies to work
 */
 void
-ScreenInit (State * _s)
+ScreenInit (CemModel * _s)
 {
   WINDOW *mainwnd;
 
@@ -4043,7 +4043,7 @@ ScreenInit (State * _s)
 At certain alongshore location, add certain amount of sed to the coast
 */
 void
-DeliverSediment (State * _s)
+DeliverSediment (CemModel * _s)
 {
 
   int x,
@@ -4066,7 +4066,7 @@ DeliverSediment (State * _s)
 }
 
 void
-DeliverRivers (State * _s)
+DeliverRivers (CemModel * _s)
 {
   int i;
 
@@ -4078,7 +4078,7 @@ DeliverRivers (State * _s)
 }
 
 double
-FindFluvialShorefaceDepth (State * _s, int i)
+FindFluvialShorefaceDepth (CemModel * _s, int i)
 /* this function taken from AdjustShore but made just for river flux */
 /* removed 'fixing the shoreface' situation */
 {
@@ -4155,7 +4155,7 @@ FindFluvialShorefaceDepth (State * _s, int i)
 }
 
 void
-ActualizeFluvialSed (State * _s, int xin, int yin, double Depth, double SedIn)
+ActualizeFluvialSed (CemModel * _s, int xin, int yin, double Depth, double SedIn)
 /* AAshton 09/10 newly added for fluvial case */
 {
 
@@ -4182,7 +4182,7 @@ fprintf (stderr, "  (x,y) = %d, %d\n", xin, yin);
 }
 
 void
-AddRiverFlux (State * _s, int xin, int yin, double sedin)
+AddRiverFlux (CemModel * _s, int xin, int yin, double sedin)
 /* sedin in units of kg/s */
 {
   int iflag = -1;
@@ -4290,7 +4290,7 @@ Uses state variable SedFlux (in kg/s) to deposit sediment at the shore.
 @param _s A CEM state
 */
 void
-DeliverSedimentFlux (State * _s)
+DeliverSedimentFlux (CemModel * _s)
 {
 
   int x,
@@ -4350,7 +4350,7 @@ DeliverSedimentFlux (State * _s)
 Nothing done here, but can be down when CheckOVerwash is called
 */
 void
-CheckOverwashSweep (State * _s)
+CheckOverwashSweep (CemModel * _s)
 {
   double OverwashLimit = OVERWASH_LIMIT;
 
@@ -4406,7 +4406,7 @@ Need to change sweepsign because filling cells should affect neighbors
 'x' and 'y' hold real-space values, will be mapped onto ineger array
 */
 void
-CheckOverwash (State * _s, int icheck)
+CheckOverwash (CemModel * _s, int icheck)
 {
 
   double slope;                  /* slope of zero goes staight back */
@@ -4738,7 +4738,7 @@ will change and use
    _s->PercentFull[][] and AllBeach [][]
 */
 void
-DoOverwash (State * _s, int xfrom, int yfrom, int xto, int yto, double xintto,
+DoOverwash (CemModel * _s, int xfrom, int yfrom, int xto, int yto, double xintto,
             double yintto, double widthin, int ishore)
 {
   double BBneed,
@@ -4839,7 +4839,7 @@ OWType = 1 geometric rule based upon distance from back to shoreline
 AA 5/04
 */
 double
-GetOverwashDepth (State * _s, int xin, int yin, double xinfl, double yinfl,
+GetOverwashDepth (CemModel * _s, int xin, int yin, double xinfl, double yinfl,
                   int ishore)
 {
   int xdepth;
