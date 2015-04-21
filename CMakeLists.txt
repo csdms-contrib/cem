@@ -56,20 +56,16 @@ include_directories( ${CMAKE_CURRENT_SOURCE_DIR} )
 
 set( deltas_lib_SRCS
   bmi_cem.c
-  deltas_cli.c
-  ndelta4.c
-  deltas_api.c)
+  cem_model.c
+  ndelta4.c)
 set_source_files_properties (${deltas_lib_SRCS} PROPERTIES LANGUAGE C)
-
-add_library(bmicem ${deltas_lib_SRCS})
-add_library(bmicem-static STATIC ${deltas_lib_SRCS})
-target_link_libraries (bmicem m ${OPENGL_LIBRARIES})
-target_link_libraries(bmicem-static m ${GLIB2_LIBRARIES} ${GTHREAD2_LIBRARIES})
-
-install(TARGETS bmicem DESTINATION lib COMPONENT deltas)
 
 add_library(bmi_cem ${deltas_lib_SRCS})
 add_library(bmi_cem-static STATIC ${deltas_lib_SRCS})
+set_target_properties(bmi_cem-static PROPERTIES OUTPUT_NAME bmi_cem)
+
+target_link_libraries(bmi_cem m ${GLIB2_LIBRARIES} ${GTHREAD2_LIBRARIES})
+
 install(TARGETS bmi_cem DESTINATION lib)
 install(TARGETS bmi_cem-static DESTINATION lib)
 install(FILES bmi.h bmi_cem.h DESTINATION include/cem)
@@ -100,7 +96,7 @@ set( deltas_SRCS deltas_main.c)
 set_source_files_properties (${deltas_SRCS} PROPERTIES LANGUAGE C)
 
 add_executable(run_deltas ${deltas_SRCS})
-target_link_libraries(run_deltas bmicem-static)
+target_link_libraries(run_deltas bmi_cem-static)
 
 install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/run_deltas
         DESTINATION bin
