@@ -1,0 +1,12 @@
+summary: The Coastline Evolution Model addresses predominately sandy,
+  wave-dominated coastlines on time scales ranging from years to millenia and
+  on spatial scales ranging from kilometers to hundreds of kilometers. CEM
+  simulates planview coastline evolution due to wave-driven alongshore sediment
+  transport. This model can incorporate river influence and transport fluvial
+  sediment from one or more point sources along the coastline.
+url: http://csdms.colorado.edu/wiki/Model_help:CEM
+author: A. Brad Murray
+email: eric.hutton@colorado.edu
+version: "0.1.1"
+license: MIT
+doi: "10.1594/IEDA/100100"

@@ -1,0 +1,7 @@
+summary: Generates a shallow-water wave climate for a longshore transport
+  module based on a user-defined distribution.
+url: http://csdms.colorado.edu/wiki/Model_help:Waves
+author: Eric Hutton
+email: eric.hutton@colorado.edu
+version: "0.1"
+license: MIT

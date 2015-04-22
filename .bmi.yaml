@@ -1,0 +1,10 @@
+bmi_paths:
+  - .bmi-waves
+  - .bmi-cem
+
+build:
+  - mkdir -p _build
+  - cd _build
+  - cmake .. -DCMAKE_INSTALL_PREFIX=$CSDMS_PREFIX
+  - make -j6
+  - make install

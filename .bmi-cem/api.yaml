@@ -1,0 +1,10 @@
+name: Cem
+
+language: c
+register: register_bmi_cem
+includes:
+  - "#include <cem/bmi_cem.h>"
+cflags:
+  pkgconfig: deltas
+libs:
+  pkgconfig: deltas

@@ -1,0 +1,81 @@
+---
+_name: Run Parameters
+run_duration:
+  description: Simulation run time
+  value:
+    default: 3650.0
+    range:
+      max: 1.79769313486e+308
+      min: 1.0
+    type: int
+    units: d
+---
+_name: Grid
+number_of_rows:
+  description: Number of rows in the computational grid
+  value:
+    default: 50
+    range:
+      max: 2147483647
+      min: 30
+    type: int
+    units: "-"
+
+number_of_cols:
+  description: Number of columns in the computational grid
+  value:
+    default: 1000
+    range:
+      max: 2147483647
+      min: 30
+    type: int
+    units: "-"
+
+grid_spacing:
+  description: Grid resolution in cross and along-shore direction
+  value:
+    default: 1000
+    range:
+      max: 1.79769e308
+      min: 1.0
+    type: float
+    units: m
+---
+_name: Coastal Geometry
+
+shoreface_slope:
+  description: Gradient of the shoreface
+  value:
+    default: 0.01
+    range:
+      max: 1.0
+      min: 0.001
+    type: float
+    units: "-"
+
+shoreface_depth:
+  description: Water depth of the shoreface
+  value:
+    default: 10.0
+    range:
+      max: 100.0
+      min: 0.0
+    type: float
+    units: m
+
+shelf_slope:
+  description: Gradient of the shelf
+  value:
+    default: 0.001
+    range:
+      max: 100.0
+      min: 0.0001
+    type: float
+    units: "-"
+
+sediment_flux_flag:
+  description: Sediment flux flag
+  value:
+    default: 1
+    choices: [0, 1]
+    type: choice

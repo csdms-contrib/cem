@@ -1,0 +1,52 @@
+---
+_name: Run Parameters
+run_duration:
+  description: Simulation run time
+  value:
+    default: 3650.0
+    range:
+      max: 1.79769313486e+308
+      min: 1.0
+    type: int
+    units: d
+---
+_name: Wave Parameters
+incoming_wave_height:
+  description: Height of incoming waves
+  value:
+    default: 2.0
+    range:
+      max: 100.0
+      min: 0.0
+    type: float
+    units: m
+
+incoming_wave_period:
+  description: Period of incoming waves
+  value:
+    default: 7.0
+    range:
+      max: 100.0
+      min: 0.0
+    type: float
+    units: s
+
+angle_highness_factor:
+  description: Highness factor for incoming wave angles
+  value:
+    default: 0.2
+    range:
+      max: 1.0
+      min: 0.0
+    type: float
+    units: "-"
+
+angle_asymmetry:
+  description: Asymmetry of incoming wave angles
+  value:
+    default: 0.5
+    range:
+      max: 1.0
+      min: 0.0
+    type: float
+    units: "-"
