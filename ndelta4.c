@@ -477,6 +477,181 @@ _cem_initialize (CemModel * _s)
 }
 
 int
+cem_advance_one_time_step (CemModel * model)
+{ /* PRIMARY PROGRAM LOOP */
+  int xx; /* duration loop variable */
+  int StartSavingAt = START_SAVING_AT;
+  int SaveSpacing = SAVE_SPACING;
+  int SaveLineSpacing = SAVE_LINE_SPACING;
+  int SaveFile = SAVE_FILE;
+  int SaveLine = SAVE_LINE;
+  int AgeUpdate = AGE_UPDATE;
+
+  {
+    /*  Time Step iteration - compute same wave angle for Duration time steps */
+    /*  Calculate Wave Angle */
+    if (!model->external_waves)
+      model->WaveAngle = FindWaveAngle (model);
+
+    /*  Loop for Duration at the current wave sign and wave angle */
+    for (xx = 0; xx < Duration; xx++) {
+      if (model->CurrentTimeStep % ScreenTextSpacing == 0) {
+        printf ("==== WaveAngle: %2.2f:  MASS Percent: %1.4f:  Time Step: %d\n",
+                180 * (model->WaveAngle) / M_PI,
+                model->MassCurrent / model->MassInitial, model->CurrentTimeStep);
+      }
+
+      PeriodicBoundaryCopy (model);
+
+      ZeroVars (model);
+      /* Initialize for Find Beach Cells  (make sure strange beach does not cause trouble */
+
+      model->FellOffArray = 'y';
+      model->FindStart = 1;
+
+      /*  Look for beach - if you fall off of array, bump over a little and try again */
+      while (model->FellOffArray == 'y') {
+        FindBeachCells (model, model->FindStart);
+
+        /*printf("FoundCells: %d GetO = %c \n", model->FindStart,model->FellOffArray); */
+        model->FindStart += FindCellError;
+        if (model->FellOffArray == 'y') {
+          /*printf("NOODLE  !!!!!FoundCells: %d GetO = %c \n", model->FindStart,model->FellOffArray); */
+          /*PauseRun(1,1,-1); */
+        }
+
+        /* Get Out if no good beach spots exist - finish program */
+
+        if (model->FindStart > model->ny / 2 + 1) {
+          printf ("Stopped Finding Beach - done %d %d", model->FindStart,
+                  model->ny / 2 - 5);
+          fflush (stdout);
+          SaveSandToFile (model);
+          return 1;
+        }
+      }
+
+      if (model->use_sed_flux)
+        DeliverRivers (model);
+      else
+        DeliverSediment (model);
+
+      FixBeach (model);
+      ZeroVars (model);
+
+      /* Initialize for Find Beach Cells  (make sure strange beach does not cause trouble */
+      model->FellOffArray = 'y';
+      model->FindStart = 1;
+
+      /*  Look for beach - if you fall off of array, bump over a little and try again */
+      while (model->FellOffArray == 'y') {
+        FindBeachCells (model, model->FindStart);
+        /*printf("FoundCells: %d GetO = %c \n", model->FindStart,model->FellOffArray); */
+        model->FindStart += FindCellError;
+        if (model->FellOffArray == 'y')
+        {
+          /*printf("NOODLE  !!!!!FoundCells: %d GetO = %c \n", model->FindStart,model->FellOffArray); */
+          /*PauseRun(1,1,-1); */
+        }
+
+        /* Get Out if no good beach spots exist - finish program */
+        if (model->FindStart > model->ny / 2 + 1) {
+          printf ("Stopped Finding Beach - done %d %d", model->FindStart,
+                  model->ny / 2 - 5);
+          fprintf (stderr, "Stopped Finding Beach - done %d %d",
+                   model->FindStart, model->ny / 2 - 5);
+          fflush (stderr);
+          SaveSandToFile (model);
+          return 1;
+        }
+      }
+
+      /* printf("Foundbeach!: %d \n", model->CurrentTimeStep); */
+      ShadowSweep (model);
+      DetermineAngles (model);
+      DetermineSedTransport (model);
+      TransportSedimentSweep (model);
+
+      FixBeach (model);
+
+      /* OVERWASH */
+      /* because shoreline config may have been changed, need to refind shoreline and recalc angles */
+
+      ZeroVars (model);
+      /* Initialize for Find Beach Cells  (make sure strange beach does not cause trouble */
+
+      model->FellOffArray = 'y';
+      model->FindStart = 1;
+
+      /*  Look for beach - if you fall off of array, bump over a little and try again */
+      while (model->FellOffArray == 'y') {
+        FindBeachCells (model, model->FindStart);
+
+        /*printf("FoundCells: %d GetO = %c \n", model->FindStart,model->FellOffArray); */
+        model->FindStart += FindCellError;
+        if (model->FellOffArray == 'y')
+        {
+          /*printf("NOODLE  !!!!!FoundCells: %d GetO = %c \n", model->FindStart,model->FellOffArray); */
+          /*PauseRun(1,1,-1); */
+        }
+
+        /* Get Out if no good beach spots exist - finish program */
+
+        if (model->FindStart > model->ny / 2 + 1)
+        {
+          printf ("Stopped Finding Beach - done %d %d", model->FindStart,
+                  model->ny / 2 - 5);
+          fflush (stdout);
+          SaveSandToFile (model);
+          return 1;
+        }
+      }
+
+      ShadowSweep (model);
+      DetermineAngles (model);
+      CheckOverwashSweep (model);
+      FixBeach (model);
+
+      if ((StartStop)) {
+        printf ("---- You Paused it, bud ---- \npp");
+        PauseRun (model, 1, 1, -1);
+      }
+
+      /* Age Empty Cells */
+      if ((model->CurrentTimeStep % AgeUpdate == 0) && SaveAge)
+        AgeCells (model);
+
+      /* Count Mass */
+      model->MassCurrent = MassCount (model);
+
+#ifdef WITH_OPENGL
+      /* GRAPHING */
+      if (DO_GRAPHICS && EveryPlotSpacing
+          && (model->CurrentTimeStep % EveryPlotSpacing == 0))
+        GraphCells (model);
+#endif
+
+      model->CurrentTimeStep++;
+
+      /* SAVE FILE ? */
+      if (SaveFile)
+        if (model->CurrentTimeStep % SaveSpacing == 0 &&
+            model->CurrentTimeStep >= StartSavingAt)
+          SaveSandToFile (model);
+
+      if (SaveLine)
+        if (model->CurrentTimeStep % SaveLineSpacing == 0 &&
+            model->CurrentTimeStep >= StartSavingAt)
+          SaveLineToFile (model);
+    }
+
+  }
+
+  return 0;
+}
+
+
+int
 _cem_run_until (CemModel * _s, int until)
 {       /* PRIMARY PROGRAM LOOP */
   int xx;                       /* duration loop variable */
@@ -714,9 +889,9 @@ _cem_run_until (CemModel * _s, int until)
 /*
 	    if (((_s->CurrentTimeStep%SaveSpacing == 0 && _s->CurrentTimeStep >= StartSavingAt)
 		 || (_s->CurrentTimeStep == StopAfter)) && SaveFile)
-	    {	
-		SaveSandToFile( _s );
-	    }
+	    {
+      SaveSandToFile( _s );
+      }
 */
       if (SaveFile)
         if (_s->CurrentTimeStep % SaveSpacing == 0 &&
