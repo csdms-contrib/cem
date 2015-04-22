@@ -390,8 +390,8 @@ deltas_set_sediment_flux_grid (CemModel * model, double *qs)
 
           model->river_x_ind[n_rivers] = i / qs_ncols;
           model->river_y_ind[n_rivers] = i % qs_ncols + deltas_get_ny(model) / 4;
-          model->river_x[n_rivers] = model->river_x_ind[river_id] * dx;
-          model->river_y[n_rivers] = model->river_y_ind[river_id] * dy;
+          model->river_x[n_rivers] = model->river_x_ind[n_rivers] * dx;
+          model->river_y[n_rivers] = model->river_y_ind[n_rivers] * dy;
 
           n_rivers ++;
       }
