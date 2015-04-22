@@ -102,7 +102,9 @@ typedef struct
 CemModel;
 
 int cem_initialize (const char *config_file, CemModel **handle);
+int cem_finalize (CemModel * model);
 
+int deltas_get_n_rivers (CemModel * model);
 int deltas_get_nx (CemModel * model);
 int deltas_get_ny (CemModel * model);
 double deltas_get_dx (CemModel * model);
@@ -110,11 +112,17 @@ double deltas_get_dy (CemModel * model);
 double deltas_get_current_time (CemModel * model);
 double deltas_get_end_time (CemModel * model);
 double deltas_get_time_step (CemModel * model);
+double* deltas_get_river_x_position (CemModel * model);
+double* deltas_get_river_y_position (CemModel * model);
+double* deltas_get_river_flux (CemModel * model);
+double * deltas_get_depth (CemModel * model);
+double * deltas_get_depth_dup (CemModel * model, double *dest);
 
 CemModel * deltas_set_shoreface_slope (CemModel * model, double shoreface_slope);
 CemModel * deltas_set_shelf_slope (CemModel * model, double shelf_slope);
 CemModel * deltas_set_shoreface_depth (CemModel * model, double shoreface_depth);
 CemModel * deltas_set_save_file (CemModel * model, const char *name);
+CemModel * deltas_set_sediment_flux_grid (CemModel * model, double *qs);
 
 void deltas_avulsion (CemModel * model, double *qs, double river_flux);
 

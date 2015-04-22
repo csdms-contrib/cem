@@ -3,7 +3,6 @@
 #include <string.h>
 #include <float.h>
 
-#include "deltas.h"
 #include "cem_model.h"
 
 
@@ -168,8 +167,8 @@ cem_initialize (const char *config_file, CemModel **handle)
           n_cols);
     }
     else {
-      n_rows = 50;
-      n_cols = 100;
+      n_rows = 60;
+      n_cols = 200;
       dx = 100.;
       sed_flux_flag = 1;
 
@@ -202,6 +201,36 @@ cem_initialize (const char *config_file, CemModel **handle)
     *handle = model;
 
     return 0;
+}
+
+
+int
+cem_finalize (CemModel * model)
+{
+  if (model->savefilename)
+    printf ("Run Complete.  Output file: %s\n", model->savefilename);
+
+  if (model->savefilename)
+    free(model->savefilename);
+
+  if (model->readfilename)
+    free(model->readfilename);
+
+  free(model->river_flux);
+  free(model->river_x);
+  free(model->river_y);
+  free(model->river_x_ind);
+  free(model->river_y_ind);
+  free (model->state);
+
+  return 0;
+}
+
+
+int
+deltas_get_n_rivers (CemModel * model)
+{
+  return model->n_rivers;
 }
 
 
@@ -255,6 +284,67 @@ deltas_get_time_step (CemModel * model)
 }
 
 
+double*
+deltas_get_river_x_position (CemModel * model)
+{
+  return model->river_x;
+}
+
+
+double*
+deltas_get_river_y_position (CemModel * model)
+{
+  return model->river_y;
+}
+
+
+double*
+deltas_get_river_flux (CemModel * model)
+{
+  return model->river_flux;
+}
+
+
+double *
+deltas_get_depth (CemModel * model)
+{
+  return model->CellDepth[0];
+}
+
+
+static double *
+_dup_subgrid (CemModel * model, double **src, double *dest)
+{
+  {
+    int lower[2] = { deltas_get_ny(model) / 4, 0 };
+    int upper[2] = { 3 * deltas_get_ny(model) / 4 - 1, deltas_get_nx(model) - 1 };
+    int stride[2] = { 1, deltas_get_ny(model) };
+    const int len = (upper[0] - lower[0] + 1) * (upper[1] - lower[1] + 1);
+
+    if (dest == NULL)
+        dest = (double *)malloc(sizeof(double) * len);
+
+    if (dest) {
+      int id, i, j;
+
+      for (i=lower[1], id=0; i <= upper[1]; i++)
+        for (j=lower[0]; j <= upper[0]; j++, id++)
+          dest[id] = src[i][j];
+    }
+  }
+
+  return dest;
+}
+
+
+double *
+deltas_get_depth_dup (CemModel * model, double *dest)
+{
+    return _dup_subgrid (model, model->PercentFull, dest);
+    //return _dup_subgrid (model, model->CellDepth, dest);
+}
+
+
 CemModel *
 deltas_set_shoreface_slope (CemModel * model, double shoreface_slope)
 {
@@ -276,60 +366,81 @@ deltas_set_shoreface_depth (CemModel * model, double shoreface_depth)
   return model;
 }
 
-CemModel * deltas_set_save_file (CemModel * model, const char *name)
+CemModel *
+deltas_set_save_file (CemModel * model, const char *name)
 {
   model->savefilename = strdup (name);
   return model;
 }
 
 
-static void
-_deltas_find_river_mouth (CemModel * model, int n)
+CemModel *
+deltas_set_sediment_flux_grid (CemModel * model, double *qs)
 {
-  int x, y;
+  int i;
+  int n_rivers;
+  const int len = deltas_get_nx(model) * deltas_get_ny(model) / 2;
+  const int qs_ncols = deltas_get_ny(model) / 2;
+  const double dx = deltas_get_dx(model);
+  const double dy = deltas_get_dy(model);
 
-  x = 0;
-  //y = model->stream_spot;
-  y = deltas_get_ny(model) / 2;
+  for (i=0, n_rivers=0; i < len; i++) {
+      if (qs[i] > 0) {
+          model->river_flux[n_rivers] = qs[i];
 
-  while (model->AllBeach[x][y] == 'y') {
-    x += 1;
+          model->river_x_ind[n_rivers] = i / qs_ncols;
+          model->river_y_ind[n_rivers] = i % qs_ncols + deltas_get_ny(model) / 4;
+          model->river_x[n_rivers] = model->river_x_ind[river_id] * dx;
+          model->river_y[n_rivers] = model->river_y_ind[river_id] * dy;
+
+          n_rivers ++;
+      }
   }
+  model->n_rivers = n_rivers;
 
-  model->river_x_ind[n] = x;
-  model->river_y_ind[n] = y;
-  model->river_x[n] = x * deltas_get_dx(model);
-  model->river_y[n] = y * deltas_get_dy(model);
+  return model;
+}
 
-//fprintf (stderr, "x = %d\n", x);
-//fprintf (stderr, "y = %d\n", y);
+
+static void
+_deltas_find_river_mouth(CemModel * model, int river_id, int *row, int *col)
+{
+  *row = 0;
+  *col = deltas_get_ny(model) / 2;
+
+  while (model->AllBeach[*row][*col] == 'y') {
+    *row += 1;
+  }
+}
+
+
+static void
+_deltas_set_river_mouth(CemModel * model, int river_id, int row, int col)
+{
+    model->river_x_ind[river_id] = row;
+    model->river_y_ind[river_id] = col;
+    model->river_x[river_id] = row * deltas_get_dx(model);
+    model->river_y[river_id] = col * deltas_get_dy(model);
 }
 
 
 void
 deltas_avulsion (CemModel * model, double *qs, double river_flux)
 {
-  int x, y;
-  int i;
-  int qs_x, qs_y, qs_i;
-  int len;
+  const int len = deltas_get_nx(model) * deltas_get_ny(model) / 2;
+  const int river_id = 0;
+  int row, col;
 
-  _deltas_find_river_mouth(model, 0);
+  _deltas_find_river_mouth(model, river_id, &row, &col);
+  _deltas_set_river_mouth(model, river_id, row, col);
 
-  x = model->river_x_ind[0];
-  y = model->river_y_ind[0];
+  memset(qs, 0, sizeof(double) * len);
 
-  len = deltas_get_nx (model) * deltas_get_ny (model) / 2;
-  for (i = 0; i < len; i++)
-    qs[i] = 0;
+  {
+    const int qs_row = row;
+    const int qs_col = col % deltas_get_ny(model) - deltas_get_ny(model) / 4;
+    const int qs_i = qs_row * deltas_get_ny(model) / 2 + qs_col;
 
-  qs_x = x;
-  //qs_y = y % deltas_get_ny (s) - deltas_get_ny (s) / 4;
-  qs_y = y;
-  qs_i = qs_x * deltas_get_ny(model) / 2 + qs_y;
-
-  qs[qs_i] = river_flux;
-
-  return;
+    qs[qs_i] = river_flux;
+  }
 }
-
