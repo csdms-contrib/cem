@@ -127,13 +127,22 @@ static int
 update_frac(void * self, double f)
 { /* Implement this: Update for a fraction of a time step */
     return BMI_FAILURE;
+    double now;
+    double dt = TimeStep * f;
+
+    get_current_time(self, &now);
+
+    cem_run_until((CemModel*)self, (now + 1) / dt);
+
+    return BMI_SUCCESS;
 }
 
 
 static int
 update(void * self)
 {
-    return update_frac(self, 1.);
+    cem_advance_one_time_step((CemModel*)self);
+    return BMI_SUCCESS;
 }
 
 
@@ -168,7 +177,8 @@ update_until(void * self, double then)
 static int
 finalize(void * self)
 { /* Implement this: Clean up */
-    return BMI_FAILURE;
+    cem_finalize((CemModel*)self);
+    return BMI_SUCCESS;
 }
 
 
@@ -207,11 +217,9 @@ get_grid_rank(void *self, int id, int *rank)
 static int
 get_grid_shape(void *self, int id, int *shape)
 { /* Implement this: set shape of structured grids */
-    if (id == 1) {
-        shape[0] = -1; shape[1] = -1;
-    } else if (id == 2) {
-        shape[0] = deltas_get_ny((CemModel*)self);
-        shape[1] = deltas_get_nx((CemModel*)self);
+    if (id == 2) {
+        shape[0] = deltas_get_nx((CemModel*)self);
+        shape[1] = deltas_get_ny((CemModel*)self) / 2;
     } else {
         return BMI_FAILURE;
     }
@@ -222,11 +230,9 @@ get_grid_shape(void *self, int id, int *shape)
 static int
 get_grid_spacing(void *self, int id, double *spacing)
 { /* Implement this: set spacing of uniform rectilinear grids */
-    if (id == 1) {
-        spacing[0] = -1.; spacing[1] = -1.;
-    } else if (id == 2) {
-        spacing[0] = deltas_get_dy((CemModel*)self);
-        spacing[1] = deltas_get_dx((CemModel*)self);
+    if (id == 2) {
+        spacing[0] = deltas_get_dx((CemModel*)self);
+        spacing[1] = deltas_get_dy((CemModel*)self);
     } else {
         return BMI_FAILURE;
     }
@@ -237,9 +243,7 @@ get_grid_spacing(void *self, int id, double *spacing)
 static int
 get_grid_origin(void *self, int id, double *origin)
 { /* Implement this: set origin of uniform rectilinear grids */
-    if (id == 1) {
-        origin[0] = -1.; origin[1] = -1.;
-    } else if (id == 2) {
+    if (id == 2) {
         origin[0] = 0.;
         origin[1] = 0.;
     } else {
@@ -252,22 +256,14 @@ get_grid_origin(void *self, int id, double *origin)
 static int
 get_grid_size(void *self, int id, int *size)
 {
-    int rank;
-    if (get_grid_rank(self, id, &rank) == BMI_FAILURE)
-        return BMI_FAILURE;
-
-    {
-        int * shape = (int*) malloc(sizeof(int) * rank);
-        int i;
-
-        if (get_grid_shape(self, id, shape) == BMI_FAILURE)
-            return BMI_FAILURE;
-
+    if (id == 0)
         *size = 1;
-        for (i=0; i<rank; i++)
-            *size *= shape[i];
-        free(shape);
-    }
+    else if (id == 1)
+        *size = deltas_get_n_rivers((CemModel*)self);
+    else if (id == 2)
+        *size = deltas_get_nx((CemModel*)self) * deltas_get_ny((CemModel*)self);
+    else
+        return BMI_FAILURE;
 
     return BMI_SUCCESS;
 }
@@ -422,30 +418,67 @@ get_var_nbytes(void *self, const char *name, int *nbytes)
 
 
 static int
+get_var_ndim(void *self, const char *name, int *ndim)
+{
+    int id, rank;
+
+    if (get_var_grid(self, name, &id) == BMI_FAILURE)
+        return BMI_FAILURE;
+
+    if (get_grid_rank(self, id, &rank) == BMI_FAILURE)
+        return BMI_FAILURE;
+
+    *ndim = rank;
+
+    return BMI_SUCCESS;
+}
+
+
+static int
+get_var_stride(void *self, const char *name, int *stride)
+{
+    int id, rank;
+
+    if (get_var_grid(self, name, &id) == BMI_FAILURE)
+        return BMI_FAILURE;
+
+    if (id == 1) {
+        stride[0] = 1;
+    }
+    else if (id == 2) {
+        stride[0] = deltas_get_ny((CemModel*)self);
+        stride[1] = 1;
+    }
+
+    return BMI_SUCCESS;
+}
+
+
+static int
 get_value_ptr(void *self, const char *name, void **dest)
 {
     if (strcmp(name, "basin_outlet~coastal_center__x_coordinate") == 0) {
-        *dest = NULL; /* Implement this: Pointer to basin_outlet~coastal_center__x_coordinate */
+        *dest = (double*)deltas_get_river_x_position((CemModel*)self);
     } else if (strcmp(name, "sea_surface_water_wave__azimuth_angle_of_opposite_of_phase_velocity") == 0) {
-        *dest = NULL; /* Implement this: Pointer to sea_surface_water_wave__azimuth_angle_of_opposite_of_phase_velocity */
+        *dest = &(((CemModel*)self)->WaveAngle);
     } else if (strcmp(name, "basin_outlet_water_sediment~bedload__mass_flow_rate") == 0) {
-        *dest = NULL; /* Implement this: Pointer to basin_outlet_water_sediment~bedload__mass_flow_rate */
+        *dest = NULL;
     } else if (strcmp(name, "basin_outlet~coastal_water_sediment~bedload__mass_flow_rate") == 0) {
-        *dest = NULL; /* Implement this: Pointer to basin_outlet~coastal_water_sediment~bedload__mass_flow_rate */
+        *dest = (double*)deltas_get_river_flux((CemModel*)self);
     } else if (strcmp(name, "land_surface_water_sediment~bedload__mass_flow_rate") == 0) {
-        *dest = NULL; /* Implement this: Pointer to land_surface_water_sediment~bedload__mass_flow_rate */
+        *dest = NULL;
     } else if (strcmp(name, "sea_surface_water_wave__period") == 0) {
-        *dest = NULL; /* Implement this: Pointer to sea_surface_water_wave__period */
+        *dest = &(((CemModel*)self)->wave_period);
     } else if (strcmp(name, "land_surface__elevation") == 0) {
-        *dest = NULL; /* Implement this: Pointer to land_surface__elevation */
+        *dest = NULL;
     } else if (strcmp(name, "sea_water__depth") == 0) {
-        *dest = NULL; /* Implement this: Pointer to sea_water__depth */
+        *dest = (double*)deltas_get_depth((CemModel*)self) + deltas_get_ny((CemModel*)self) / 2;
     } else if (strcmp(name, "basin_outlet_water_sediment~suspended__mass_flow_rate") == 0) {
-        *dest = NULL; /* Implement this: Pointer to basin_outlet_water_sediment~suspended__mass_flow_rate */
+        *dest = NULL;
     } else if (strcmp(name, "sea_surface_water_wave__height") == 0) {
-        *dest = NULL; /* Implement this: Pointer to sea_surface_water_wave__height */
+        *dest = &(((CemModel*)self)->wave_height);
     } else if (strcmp(name, "basin_outlet~coastal_center__y_coordinate") == 0) {
-        *dest = NULL; /* Implement this: Pointer to basin_outlet~coastal_center__y_coordinate */
+        *dest = (double*)deltas_get_river_y_position((CemModel*)self);
     } else {
         *dest = NULL; return BMI_FAILURE;
     }
@@ -460,17 +493,28 @@ get_value_ptr(void *self, const char *name, void **dest)
 int
 get_value(void * self, const char * name, void *dest)
 {
-    void *src = NULL;
-    int nbytes = 0;
+    if (strcmp(name, "sea_water__depth") == 0) {
+        deltas_get_depth_dup((CemModel*)self, dest);
+        return BMI_SUCCESS;
+    }
+    else if (strcmp(name, "sea_surface_water_wave__azimuth_angle_of_opposite_of_phase_velocity") == 0)
+        *(double*)dest = ((CemModel*)self)->WaveAngle;
+    else if (strcmp(name, "sea_surface_water_wave__height") == 0)
+        *(double*)dest = ((CemModel*)self)->wave_height;
+    else if (strcmp(name, "sea_surface_water_wave__period") == 0)
+        *(double*)dest = ((CemModel*)self)->wave_period;
+    else {
+        void *src = NULL;
+        int nbytes = 0;
 
-    if (get_value_ptr (self, name, &src) == BMI_FAILURE)
-        return BMI_FAILURE;
+        if (get_value_ptr (self, name, &src) == BMI_FAILURE)
+            return BMI_FAILURE;
 
-    if (get_var_nbytes (self, name, &nbytes) == BMI_FAILURE)
-        return BMI_FAILURE;
+        if (get_var_nbytes (self, name, &nbytes) == BMI_FAILURE)
+            return BMI_FAILURE;
 
-    memcpy(dest, src, nbytes);
-
+        memcpy(dest, src, nbytes);
+    }
     return BMI_SUCCESS;
 }
 
@@ -508,13 +552,23 @@ set_value (void *self, const char *name, void *array)
     void * dest = NULL;
     int nbytes = 0;
 
-    if (get_value_ptr(self, name, &dest) == BMI_FAILURE)
-        return BMI_FAILURE;
+    if (strcmp(name, "land_surface_water_sediment~bedload__mass_flow_rate") == 0)
+        deltas_set_sediment_flux_grid ((CemModel*)self, (double*)array);
+    else if (strcmp(name, "sea_surface_water_wave__azimuth_angle_of_opposite_of_phase_velocity") == 0)
+      ((CemModel*)self)->WaveAngle = *((double*)array);
+    else if (strcmp(name, "sea_surface_water_wave__height") == 0)
+      ((CemModel*)self)->wave_height = *((double*)array);
+    else if (strcmp(name, "sea_surface_water_wave__period") == 0)
+      ((CemModel*)self)->wave_period = *((double*)array);
+    else {
+        if (get_value_ptr(self, name, &dest) == BMI_FAILURE)
+            return BMI_FAILURE;
 
-    if (get_var_nbytes(self, name, &nbytes) == BMI_FAILURE)
-        return BMI_FAILURE;
+        if (get_var_nbytes(self, name, &nbytes) == BMI_FAILURE)
+            return BMI_FAILURE;
 
-    memcpy (dest, array, nbytes);
+        memcpy (dest, array, nbytes);
+    }
 
     return BMI_SUCCESS;
 }
