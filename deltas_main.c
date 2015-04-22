@@ -6,6 +6,7 @@
 #include "cem_model.h"
 #include "bmi_cem.h"
 
+void print_model_info(BMI_Model *model);
 void print_matrix (double *x, int *shape);
 
 int
@@ -47,7 +48,7 @@ main (int argc, char *argv[])
     int len;
     double *qs = NULL;
     double *z = NULL;
-    double stop_time;
+    double stop_time = 2500;
     const double river_flux = 1250.;
 
     if (model->get_var_grid(model->self, "land_surface__elevation", &grid) == BMI_FAILURE) {
@@ -92,10 +93,6 @@ main (int argc, char *argv[])
 
     qs = (double *)malloc (sizeof (double) * len);
     z = (double *)malloc (sizeof (double) * len);
-    fprintf (stderr, "len is %d\n", len);
-
-    model->get_end_time(model->self, &stop_time);
-    stop_time = 2500;
 
     for (i = 1; i <= stop_time; i++) {
       deltas_avulsion (model->self, qs, river_flux);
@@ -116,26 +113,7 @@ main (int argc, char *argv[])
       }
 
       if (i%100 == 0) {
-        double angle = 0.;
-        double wave_height = 0., wave_period = 0.;
-        int status = 0;
-
-        status += model->get_value(model->self, "sea_surface_water_wave__azimuth_angle_of_opposite_of_phase_velocity", &angle);
-        status += model->get_value(model->self, "sea_surface_water_wave__height", &wave_height);
-        status += model->get_value(model->self, "sea_surface_water_wave__period", &wave_period);
-
-        if (status != 0) {
-          fprintf(stderr, "Status is %d\n", status);
-          return EXIT_FAILURE;
-        }
-
-        fprintf (stderr, "\n");
-        fprintf (stderr, "Time: %d\n", i); fflush(stderr);
-        fprintf (stderr, "Angle: %f\n", angle); fflush(stderr);
-        fprintf (stderr, "Wave height: %f\n", wave_height); fflush(stderr);
-        fprintf (stderr, "Wave period: %f\n", wave_period); fflush(stderr);
-        fprintf (stderr, "Shape: %d x %d\n", shape[0], shape[1]); fflush(stderr);
-
+        print_model_info(model);
         print_matrix (z, shape);
       }
     }
@@ -156,6 +134,33 @@ main (int argc, char *argv[])
   model->finalize(model->self);
 
   return EXIT_SUCCESS;
+}
+
+
+void
+print_model_info(BMI_Model *model)
+{
+    double angle = 0.;
+    double wave_height = 0., wave_period = 0.;
+    double time = 0;
+    int status = 0;
+
+    fprintf (stderr, "\n");
+
+    status += model->get_value(model->self, "sea_surface_water_wave__azimuth_angle_of_opposite_of_phase_velocity", &angle);
+    status += model->get_value(model->self, "sea_surface_water_wave__height", &wave_height);
+    status += model->get_value(model->self, "sea_surface_water_wave__period", &wave_period);
+    status += model->get_current_time(model->self, &time);
+
+    if (status != 0) {
+        fprintf(stderr, "Error getting model info.\n");
+        return;
+    }
+
+    fprintf (stderr, "Time: %f\n", time);
+    fprintf (stderr, "Angle: %f\n", angle);
+    fprintf (stderr, "Wave height: %f\n", wave_height);
+    fprintf (stderr, "Wave period: %f\n", wave_period);
 }
 
 
