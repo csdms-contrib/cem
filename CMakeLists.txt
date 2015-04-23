@@ -96,7 +96,7 @@ set( deltas_SRCS deltas_main.c)
 set_source_files_properties (${deltas_SRCS} PROPERTIES LANGUAGE C)
 
 add_executable(run_deltas ${deltas_SRCS})
-target_link_libraries(run_deltas bmi_cem-static)
+target_link_libraries(run_deltas bmi_cem-static m)
 
 install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/run_deltas
         DESTINATION bin
@@ -109,7 +109,8 @@ set (waves_SRCS waves_main.c waves_cli.c)
 set_source_files_properties (${waves_SRCS} PROPERTIES LANGUAGE C)
 
 add_executable(run_waves ${waves_SRCS})
-target_link_libraries(run_waves bmi_waves-static ${GLIB2_LIBRARIES} ${GTHREAD2_LIBRARIES})
+target_link_libraries(run_waves bmi_waves-static ${GLIB2_LIBRARIES}
+  ${GTHREAD2_LIBRARIES} m)
 
 install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/run_waves
         DESTINATION bin
