@@ -305,27 +305,27 @@ static int
 get_var_type(void *self, const char *name, char *type)
 {
     if (strcmp(name, "basin_outlet~coastal_center__x_coordinate") == 0) {
-        strncpy(type, "float", BMI_MAX_UNITS_NAME);
+        strncpy(type, "double", BMI_MAX_UNITS_NAME);
     } else if (strcmp(name, "sea_surface_water_wave__azimuth_angle_of_opposite_of_phase_velocity") == 0) {
-        strncpy(type, "float", BMI_MAX_UNITS_NAME);
+        strncpy(type, "double", BMI_MAX_UNITS_NAME);
     } else if (strcmp(name, "basin_outlet_water_sediment~bedload__mass_flow_rate") == 0) {
-        strncpy(type, "float", BMI_MAX_UNITS_NAME);
+        strncpy(type, "double", BMI_MAX_UNITS_NAME);
     } else if (strcmp(name, "basin_outlet~coastal_water_sediment~bedload__mass_flow_rate") == 0) {
-        strncpy(type, "float", BMI_MAX_UNITS_NAME);
+        strncpy(type, "double", BMI_MAX_UNITS_NAME);
     } else if (strcmp(name, "land_surface_water_sediment~bedload__mass_flow_rate") == 0) {
-        strncpy(type, "float", BMI_MAX_UNITS_NAME);
+        strncpy(type, "double", BMI_MAX_UNITS_NAME);
     } else if (strcmp(name, "sea_surface_water_wave__period") == 0) {
-        strncpy(type, "float", BMI_MAX_UNITS_NAME);
+        strncpy(type, "double", BMI_MAX_UNITS_NAME);
     } else if (strcmp(name, "land_surface__elevation") == 0) {
-        strncpy(type, "float", BMI_MAX_UNITS_NAME);
+        strncpy(type, "double", BMI_MAX_UNITS_NAME);
     } else if (strcmp(name, "sea_water__depth") == 0) {
-        strncpy(type, "float", BMI_MAX_UNITS_NAME);
+        strncpy(type, "double", BMI_MAX_UNITS_NAME);
     } else if (strcmp(name, "basin_outlet_water_sediment~suspended__mass_flow_rate") == 0) {
-        strncpy(type, "float", BMI_MAX_UNITS_NAME);
+        strncpy(type, "double", BMI_MAX_UNITS_NAME);
     } else if (strcmp(name, "sea_surface_water_wave__height") == 0) {
-        strncpy(type, "float", BMI_MAX_UNITS_NAME);
+        strncpy(type, "double", BMI_MAX_UNITS_NAME);
     } else if (strcmp(name, "basin_outlet~coastal_center__y_coordinate") == 0) {
-        strncpy(type, "float", BMI_MAX_UNITS_NAME);
+        strncpy(type, "double", BMI_MAX_UNITS_NAME);
     } else {
         type[0] = '\0'; return BMI_FAILURE;
     }
@@ -369,27 +369,27 @@ static int
 get_var_itemsize(void *self, const char *name, int *itemsize)
 {
     if (strcmp(name, "basin_outlet~coastal_center__x_coordinate") == 0) {
-        *itemsize = sizeof(float);
+        *itemsize = sizeof(double);
     } else if (strcmp(name, "sea_surface_water_wave__azimuth_angle_of_opposite_of_phase_velocity") == 0) {
-        *itemsize = sizeof(float);
+        *itemsize = sizeof(double);
     } else if (strcmp(name, "basin_outlet_water_sediment~bedload__mass_flow_rate") == 0) {
-        *itemsize = sizeof(float);
+        *itemsize = sizeof(double);
     } else if (strcmp(name, "basin_outlet~coastal_water_sediment~bedload__mass_flow_rate") == 0) {
-        *itemsize = sizeof(float);
+        *itemsize = sizeof(double);
     } else if (strcmp(name, "land_surface_water_sediment~bedload__mass_flow_rate") == 0) {
-        *itemsize = sizeof(float);
+        *itemsize = sizeof(double);
     } else if (strcmp(name, "sea_surface_water_wave__period") == 0) {
-        *itemsize = sizeof(float);
+        *itemsize = sizeof(double);
     } else if (strcmp(name, "land_surface__elevation") == 0) {
-        *itemsize = sizeof(float);
+        *itemsize = sizeof(double);
     } else if (strcmp(name, "sea_water__depth") == 0) {
-        *itemsize = sizeof(float);
+        *itemsize = sizeof(double);
     } else if (strcmp(name, "basin_outlet_water_sediment~suspended__mass_flow_rate") == 0) {
-        *itemsize = sizeof(float);
+        *itemsize = sizeof(double);
     } else if (strcmp(name, "sea_surface_water_wave__height") == 0) {
-        *itemsize = sizeof(float);
+        *itemsize = sizeof(double);
     } else if (strcmp(name, "basin_outlet~coastal_center__y_coordinate") == 0) {
-        *itemsize = sizeof(float);
+        *itemsize = sizeof(double);
     } else {
         *itemsize = 0; return BMI_FAILURE;
     }

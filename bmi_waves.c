@@ -291,21 +291,21 @@ static int
 get_var_type(void *self, const char *name, char *type)
 {
     if (strcmp(name, "sea_surface_water_wave__min_of_increment_of_azimuth_angle_of_opposite_of_phase_velocity") == 0) {
-        strncpy(type, "float", BMI_MAX_UNITS_NAME);
+        strncpy(type, "double", BMI_MAX_UNITS_NAME);
     } else if (strcmp(name, "sea_surface_water_wave__azimuth_angle_of_opposite_of_phase_velocity") == 0) {
-        strncpy(type, "float", BMI_MAX_UNITS_NAME);
+        strncpy(type, "double", BMI_MAX_UNITS_NAME);
     } else if (strcmp(name, "sea_surface_water_wave__mean_of_increment_of_azimuth_angle_of_opposite_of_phase_velocity") == 0) {
-        strncpy(type, "float", BMI_MAX_UNITS_NAME);
+        strncpy(type, "double", BMI_MAX_UNITS_NAME);
     } else if (strcmp(name, "sea_surface_water_wave__max_of_increment_of_azimuth_angle_of_opposite_of_phase_velocity") == 0) {
-        strncpy(type, "float", BMI_MAX_UNITS_NAME);
+        strncpy(type, "double", BMI_MAX_UNITS_NAME);
     } else if (strcmp(name, "sea_surface_water_wave__height") == 0) {
-        strncpy(type, "float", BMI_MAX_UNITS_NAME);
+        strncpy(type, "double", BMI_MAX_UNITS_NAME);
     } else if (strcmp(name, "sea_surface_water_wave__period") == 0) {
-        strncpy(type, "float", BMI_MAX_UNITS_NAME);
+        strncpy(type, "double", BMI_MAX_UNITS_NAME);
     } else if (strcmp(name, "sea_shoreline_wave~incoming~deepwater__ashton_et_al_approach_angle_highness_parameter") == 0) {
-        strncpy(type, "float", BMI_MAX_UNITS_NAME);
+        strncpy(type, "double", BMI_MAX_UNITS_NAME);
     } else if (strcmp(name, "sea_shoreline_wave~incoming~deepwater__ashton_et_al_approach_angle_asymmetry_parameter") == 0) {
-        strncpy(type, "float", BMI_MAX_UNITS_NAME);
+        strncpy(type, "double", BMI_MAX_UNITS_NAME);
     } else {
         type[0] = '\0'; return BMI_FAILURE;
     }
@@ -343,21 +343,21 @@ static int
 get_var_itemsize(void *self, const char *name, int *itemsize)
 {
     if (strcmp(name, "sea_surface_water_wave__min_of_increment_of_azimuth_angle_of_opposite_of_phase_velocity") == 0) {
-        *itemsize = sizeof(float);
+        *itemsize = sizeof(double);
     } else if (strcmp(name, "sea_surface_water_wave__azimuth_angle_of_opposite_of_phase_velocity") == 0) {
-        *itemsize = sizeof(float);
+        *itemsize = sizeof(double);
     } else if (strcmp(name, "sea_surface_water_wave__mean_of_increment_of_azimuth_angle_of_opposite_of_phase_velocity") == 0) {
-        *itemsize = sizeof(float);
+        *itemsize = sizeof(double);
     } else if (strcmp(name, "sea_surface_water_wave__max_of_increment_of_azimuth_angle_of_opposite_of_phase_velocity") == 0) {
-        *itemsize = sizeof(float);
+        *itemsize = sizeof(double);
     } else if (strcmp(name, "sea_surface_water_wave__height") == 0) {
-        *itemsize = sizeof(float);
+        *itemsize = sizeof(double);
     } else if (strcmp(name, "sea_surface_water_wave__period") == 0) {
-        *itemsize = sizeof(float);
+        *itemsize = sizeof(double);
     } else if (strcmp(name, "sea_shoreline_wave~incoming~deepwater__ashton_et_al_approach_angle_highness_parameter") == 0) {
-        *itemsize = sizeof(float);
+        *itemsize = sizeof(double);
     } else if (strcmp(name, "sea_shoreline_wave~incoming~deepwater__ashton_et_al_approach_angle_asymmetry_parameter") == 0) {
-        *itemsize = sizeof(float);
+        *itemsize = sizeof(double);
     } else {
         *itemsize = 0; return BMI_FAILURE;
     }
