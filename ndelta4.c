@@ -62,7 +62,9 @@ DEBUG_PRINT (int exp, const char *format, ...)
 #define Period       (7)    /**< seconds */
 //#define Asym         (1.0)  /**< Fractional portion of waves coming from positive (left) direction */
 #define ASYM         (.7)  /**< Fractional portion of waves coming from positive (left) direction */
+//#define ASYM         (.3)  /**< Fractional portion of waves coming from positive (left) direction */
 //#define Highness     (0.1)  /**< All New! .5 = even dist, > .5 high angle domination */
+//#define HIGHNESS     (0.6)  /**< All New! .5 = even dist, > .5 high angle domination */
 #define HIGHNESS     (0.3)  /**< All New! .5 = even dist, > .5 high angle domination */
 #define Duration     (1)    /**< Number of time steps calculations loop at same wave angle */
 #define STOP_AFTER   (2600) /**< Stop after what number of time steps */
