@@ -167,8 +167,8 @@ cem_initialize (const char *config_file, CemModel **handle)
           n_cols);
     }
     else {
-      n_rows = 60;
-      n_cols = 200;
+      n_rows = 120;
+      n_cols = 400;
       dx = 100.;
       sed_flux_flag = 1;
 
@@ -340,8 +340,7 @@ _dup_subgrid (CemModel * model, double **src, double *dest)
 double *
 deltas_get_depth_dup (CemModel * model, double *dest)
 {
-    return _dup_subgrid (model, model->PercentFull, dest);
-    //return _dup_subgrid (model, model->CellDepth, dest);
+    return _dup_subgrid (model, model->CellDepth, dest);
 }
 
 
@@ -374,41 +373,22 @@ deltas_set_save_file (CemModel * model, const char *name)
 }
 
 
-CemModel *
-deltas_set_sediment_flux_grid (CemModel * model, double *qs)
-{
-  int i;
-  int n_rivers;
-  const int len = deltas_get_nx(model) * deltas_get_ny(model) / 2;
-  const int qs_ncols = deltas_get_ny(model) / 2;
-  const double dx = deltas_get_dx(model);
-  const double dy = deltas_get_dy(model);
-
-  for (i=0, n_rivers=0; i < len; i++) {
-      if (qs[i] > 0) {
-          model->river_flux[n_rivers] = qs[i];
-
-          model->river_x_ind[n_rivers] = i / qs_ncols;
-          model->river_y_ind[n_rivers] = i % qs_ncols + deltas_get_ny(model) / 4;
-          model->river_x[n_rivers] = model->river_x_ind[n_rivers] * dx;
-          model->river_y[n_rivers] = model->river_y_ind[n_rivers] * dy;
-
-          n_rivers ++;
-      }
-  }
-  model->n_rivers = n_rivers;
-
-  return model;
-}
-
-
 static void
-_deltas_find_river_mouth(CemModel * model, int river_id, int *row, int *col)
+_deltas_prograde(CemModel * model, int *row, int *col)
 {
-  *row = 0;
-  *col = deltas_get_ny(model) / 2;
+  const int max_row = deltas_get_nx(model) - 1;
+  const int max_col = deltas_get_ny(model) - 1;
 
-  while (model->AllBeach[*row][*col] == 'y') {
+  if (*col < 0)
+    *col = 0;
+  if (*col > max_col)
+    *col = max_col;
+  if (*row < 0)
+    *row = 0;
+  if (*row >= max_row)
+    *row = max_row;
+
+  while (*row < max_row && model->AllBeach[*row][*col] == 'y') {
     *row += 1;
   }
 }
@@ -424,14 +404,46 @@ _deltas_set_river_mouth(CemModel * model, int river_id, int row, int col)
 }
 
 
+CemModel *
+deltas_set_sediment_flux_grid (CemModel * model, double *qs)
+{
+  int i;
+  int n_rivers;
+  const int len = deltas_get_nx(model) * deltas_get_ny(model) / 2;
+  const int qs_ncols = deltas_get_ny(model) / 2;
+  const double dx = deltas_get_dx(model);
+  const double dy = deltas_get_dy(model);
+
+  for (i=0, n_rivers=0; i < len; i++) {
+      if (qs[i] > 0) {
+          int row, col;
+
+          model->river_flux[n_rivers] = qs[i];
+
+          row = i / qs_ncols;
+          col = i % qs_ncols + deltas_get_ny(model) / 4;
+
+          _deltas_prograde(model, &row, &col);
+          _deltas_set_river_mouth(model, n_rivers, row, col);
+
+          n_rivers ++;
+      }
+  }
+  model->n_rivers = n_rivers;
+
+  return model;
+}
+
+
 void
 deltas_avulsion (CemModel * model, double *qs, double river_flux)
 {
   const int len = deltas_get_nx(model) * deltas_get_ny(model) / 2;
   const int river_id = 0;
-  int row, col;
+  int row = model->river_x_ind[river_id];
+  int col = model->river_y_ind[river_id];
 
-  _deltas_find_river_mouth(model, river_id, &row, &col);
+  _deltas_prograde(model, &row, &col);
   _deltas_set_river_mouth(model, river_id, row, col);
 
   memset(qs, 0, sizeof(double) * len);
