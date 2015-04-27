@@ -2,8 +2,10 @@
 #include "waves_model.h"
 
 
-#define DEFAULT_ASYMMETRY (0.5)
-#define DEFAULT_HIGHNESS (0.5)
+#define DEFAULT_ASYMMETRY (0.25)
+#define DEFAULT_HIGHNESS (0.7)
+//#define DEFAULT_ASYMMETRY (0.5)
+//#define DEFAULT_HIGHNESS (0.5)
 #define DEFAULT_HEIGHT (2.)
 #define DEFAULT_PERIOD (7.)
 #define DEFAULT_SEED (1945)
