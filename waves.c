@@ -19,6 +19,8 @@
 #include <math.h>
 #include <glib.h>
 
+#include "waves.h"
+
 
 #define WAVE_ANGLE_SIGN (0.7)
 
@@ -33,8 +35,6 @@ waves_next_angle (GRand * rand, double asymmetry, double highness)
 
   {
     double f = g_rand_double (rand);
-
-    double sign;
 
     /*
      * Variable Asym will determine fractional distribution of waves coming
