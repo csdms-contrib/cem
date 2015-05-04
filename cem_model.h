@@ -103,6 +103,7 @@ CemModel;
 
 int cem_initialize (const char *config_file, CemModel **handle);
 int cem_finalize (CemModel * model);
+int cem_advance_one_time_step (CemModel * model);
 
 int deltas_get_n_rivers (CemModel * model);
 int deltas_get_nx (CemModel * model);
