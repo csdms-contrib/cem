@@ -291,7 +291,8 @@ deltas_init_state (CemModel * s)
   s->TotalBeachCells = 0;
   s->ShadowXMax = 0;
 
-  s->external_waves = FALSE;
+  //s->external_waves = FALSE;
+  s->external_waves = TRUE;
   s->WaveAngle = 0.;
 
   s->FindStart = 0;
@@ -1094,9 +1095,10 @@ FindBeachCells (CemModel * _s, int YStart)
                  _s->NextX, _s->NextY, z);
 
     if (_s->PercentFull[_s->X[z]][_s->Y[z]] == 0)
-    {
+    {/*
       printf ("\nFINDBEACH: PercentFull Zero x: %d y: %d\n", _s->X[z],
               _s->Y[z]);
+              */
       /*PauseRun(_s->X[z],_s->Y[z],z); */
     }
 
@@ -1862,14 +1864,17 @@ fprintf (stderr, "y_right=%d\n", y_right);
       else
         /* debug ain't just an insect */
       {
+        /*
         printf
           ("'Shaddows' not responding xin: %f yin: %f xt: %f  yt: %f  \n",
            xin, yin, xtest, ytest);
+        */
         /*PauseRun(xtestint,ytestint,icheck); */
       }
-
+/*
       DEBUG_PRINT (xtest < -9998, "xtest is uninitialized!");
       DEBUG_PRINT (ytest < -9998, "ytest is uninitialized!");
+      */
 
     }
   }
