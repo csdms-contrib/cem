@@ -9,6 +9,12 @@
 #include "cem_model.h"
 
 
+#define return_on_error(stmt) { \
+  const int status = (stmt); \
+  if (status != BMI_SUCCESS) \
+    return status; \
+}
+
 static int
 get_component_name (void *self, char * name)
 {
@@ -127,14 +133,6 @@ static int
 update_frac(void * self, double f)
 { /* Implement this: Update for a fraction of a time step */
     return BMI_FAILURE;
-    double now;
-    double dt = TimeStep * f;
-
-    get_current_time(self, &now);
-
-    cem_run_until((CemModel*)self, (now + 1) / dt);
-
-    return BMI_SUCCESS;
 }
 
 
@@ -152,22 +150,15 @@ update_until(void * self, double then)
     double dt;
     double now;
 
-    if (get_time_step(self, &dt) == BMI_FAILURE)
-        return BMI_FAILURE;
-
-    if (get_current_time(self, &now) == BMI_FAILURE)
-        return BMI_FAILURE;
+    return_on_error(get_time_step(self, &dt));
+    return_on_error(get_current_time(self, &now));
 
     {
         int n;
         const double n_steps = (then - now) / dt;
         for (n=0; n<(int)n_steps; n++) {
-            if (update(self) == BMI_FAILURE)
-                return BMI_FAILURE;
+          return_on_error(update(self));
         }
-
-        if (update_frac(self, n_steps - (int)n_steps) == BMI_FAILURE)
-            return BMI_FAILURE;
     }
 
     return BMI_SUCCESS;
@@ -295,6 +286,7 @@ get_var_grid(void *self, const char *name, int *grid)
     } else if (strcmp(name, "basin_outlet~coastal_center__y_coordinate") == 0) {
         *grid = 1;
     } else {
+      fprintf(stderr, "bad grid. returning %d", BMI_FAILURE);
         *grid = -1; return BMI_FAILURE;
     }
     return BMI_SUCCESS;
@@ -402,14 +394,9 @@ get_var_nbytes(void *self, const char *name, int *nbytes)
 {
     int id, size, itemsize;
 
-    if (get_var_grid(self, name, &id) == BMI_FAILURE)
-        return BMI_FAILURE;
-
-    if (get_grid_size(self, id, &size) == BMI_FAILURE)
-        return BMI_FAILURE;
-
-    if (get_var_itemsize(self, name, &itemsize) == BMI_FAILURE)
-        return BMI_FAILURE;
+    return_on_error(get_var_grid(self, name, &id));
+    return_on_error(get_grid_size(self, id, &size));
+    return_on_error(get_var_itemsize(self, name, &itemsize));
 
     *nbytes = itemsize * size;
 
@@ -422,11 +409,8 @@ get_var_ndim(void *self, const char *name, int *ndim)
 {
     int id, rank;
 
-    if (get_var_grid(self, name, &id) == BMI_FAILURE)
-        return BMI_FAILURE;
-
-    if (get_grid_rank(self, id, &rank) == BMI_FAILURE)
-        return BMI_FAILURE;
+    return_on_error(get_var_grid(self, name, &id));
+    return_on_error(get_grid_rank(self, id, &rank));
 
     *ndim = rank;
 
@@ -437,10 +421,9 @@ get_var_ndim(void *self, const char *name, int *ndim)
 static int
 get_var_stride(void *self, const char *name, int *stride)
 {
-    int id, rank;
+    int id;
 
-    if (get_var_grid(self, name, &id) == BMI_FAILURE)
-        return BMI_FAILURE;
+    return_on_error(get_var_grid(self, name, &id));
 
     if (id == 1) {
         stride[0] = 1;
@@ -507,11 +490,8 @@ get_value(void * self, const char * name, void *dest)
         void *src = NULL;
         int nbytes = 0;
 
-        if (get_value_ptr (self, name, &src) == BMI_FAILURE)
-            return BMI_FAILURE;
-
-        if (get_var_nbytes (self, name, &nbytes) == BMI_FAILURE)
-            return BMI_FAILURE;
+        return_on_error(get_value_ptr(self, name, &src));
+        return_on_error(get_var_nbytes(self, name, &nbytes));
 
         memcpy(dest, src, nbytes);
     }
@@ -526,11 +506,8 @@ get_value_at_indices (void *self, const char *name, void *dest,
     void *src = NULL;
     int itemsize = 0;
 
-    if (get_value_ptr(self, name, &src) == BMI_FAILURE)
-        return BMI_FAILURE;
-
-    if (get_var_itemsize(self, name, &itemsize) == BMI_FAILURE)
-        return BMI_FAILURE;
+    return_on_error(get_value_ptr(self, name, &src));
+    return_on_error(get_var_itemsize(self, name, &itemsize));
 
     { /* Copy the data */
         int i;
@@ -561,11 +538,8 @@ set_value (void *self, const char *name, void *array)
     else if (strcmp(name, "sea_surface_water_wave__period") == 0)
       ((CemModel*)self)->wave_period = *((double*)array);
     else {
-        if (get_value_ptr(self, name, &dest) == BMI_FAILURE)
-            return BMI_FAILURE;
-
-        if (get_var_nbytes(self, name, &nbytes) == BMI_FAILURE)
-            return BMI_FAILURE;
+        return_on_error(get_value_ptr(self, name, &dest));
+        return_on_error(get_var_nbytes(self, name, &nbytes));
 
         memcpy (dest, array, nbytes);
     }
@@ -581,11 +555,8 @@ set_value_at_indices (void *self, const char *name, int * inds, int len,
     void * to = NULL;
     int itemsize = 0;
 
-    if (get_value_ptr (self, name, &to) == BMI_FAILURE)
-        return BMI_FAILURE;
-
-    if (get_var_itemsize(self, name, &itemsize) == BMI_FAILURE)
-        return BMI_FAILURE;
+    return_on_error(get_value_ptr(self, name, &to));
+    return_on_error(get_var_itemsize(self, name, &itemsize));
 
     { /* Copy the data */
         int i;
