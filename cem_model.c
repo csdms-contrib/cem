@@ -411,8 +411,6 @@ deltas_set_sediment_flux_grid (CemModel * model, double *qs)
   int n_rivers;
   const int len = deltas_get_nx(model) * deltas_get_ny(model) / 2;
   const int qs_ncols = deltas_get_ny(model) / 2;
-  const double dx = deltas_get_dx(model);
-  const double dy = deltas_get_dy(model);
 
   for (i=0, n_rivers=0; i < len; i++) {
       if (qs[i] > 0) {
