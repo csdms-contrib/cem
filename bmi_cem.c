@@ -23,14 +23,15 @@ get_component_name (void *self, char * name)
 }
 
 
-#define INPUT_VAR_NAME_COUNT (6)
+#define INPUT_VAR_NAME_COUNT (7)
 static const char *input_var_names[INPUT_VAR_NAME_COUNT] = {
     "sea_surface_water_wave__azimuth_angle_of_opposite_of_phase_velocity",
     "basin_outlet_water_sediment~bedload__mass_flow_rate",
     "land_surface_water_sediment~bedload__mass_flow_rate",
     "sea_surface_water_wave__period",
     "basin_outlet_water_sediment~suspended__mass_flow_rate",
-    "sea_surface_water_wave__height"
+    "sea_surface_water_wave__height",
+    "land_surface__elevation"
 };
 
 
@@ -531,6 +532,8 @@ set_value (void *self, const char *name, void *array)
 
     if (strcmp(name, "land_surface_water_sediment~bedload__mass_flow_rate") == 0)
         deltas_set_sediment_flux_grid ((CemModel*)self, (double*)array);
+    if (strcmp(name, "land_surface__elevation") == 0)
+        deltas_set_elevation_grid ((CemModel*)self, (double*)array);
     else if (strcmp(name, "sea_surface_water_wave__azimuth_angle_of_opposite_of_phase_velocity") == 0)
       ((CemModel*)self)->WaveAngle = *((double*)array);
     else if (strcmp(name, "sea_surface_water_wave__height") == 0)

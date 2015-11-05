@@ -124,6 +124,7 @@ CemModel * deltas_set_shelf_slope (CemModel * model, double shelf_slope);
 CemModel * deltas_set_shoreface_depth (CemModel * model, double shoreface_depth);
 CemModel * deltas_set_save_file (CemModel * model, const char *name);
 CemModel * deltas_set_sediment_flux_grid (CemModel * model, double *qs);
+CemModel * deltas_set_elevation_grid (CemModel * model, double *elevation);
 
 void deltas_avulsion (CemModel * model, double *qs, double river_flux);
 

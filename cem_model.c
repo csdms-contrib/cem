@@ -433,6 +433,49 @@ deltas_set_sediment_flux_grid (CemModel * model, double *qs)
 }
 
 
+CemModel *
+deltas_set_elevation_grid(CemModel * model, double * elevation)
+{
+  int i;
+  int id;
+  const int z_nrows = deltas_get_nx(model);
+  const int z_ncols = deltas_get_ny(model) / 2;
+  const int len = z_nrows * z_ncols;
+  int row, col;
+  double percent_full, cell_depth;
+
+  for (i = 0; i < len; i++)
+  {
+    row = i / z_ncols;
+    col = i % z_ncols + z_ncols / 2;
+    id = row * z_ncols * 2 + col;
+
+    if (elevation[i] > 0.) {
+      if (elevation[i] < 1.)
+        percent_full = elevation[i];
+      else if (elevation[i] >= 1.)
+        percent_full = 1.;
+      cell_depth = 0.;
+    } else {
+      percent_full = model->PercentFull[0][id];
+      cell_depth = - elevation[i];
+    }
+
+    model->CellDepth[0][id] = cell_depth;
+    model->PercentFull[0][id] = percent_full;
+
+    if (col < z_ncols)
+      id += z_ncols;
+    else
+      id -= z_ncols;
+    model->CellDepth[0][id] = cell_depth;
+    model->PercentFull[0][id] = percent_full;
+  }
+
+  return model;
+}
+
+
 void
 deltas_avulsion (CemModel * model, double *qs, double river_flux)
 {
