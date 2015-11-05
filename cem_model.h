@@ -118,6 +118,7 @@ double* deltas_get_river_y_position (CemModel * model);
 double* deltas_get_river_flux (CemModel * model);
 double * deltas_get_depth (CemModel * model);
 double * deltas_get_depth_dup (CemModel * model, double *dest);
+double * deltas_get_elevation_dup(CemModel * model, double *dest);
 
 CemModel * deltas_set_shoreface_slope (CemModel * model, double shoreface_slope);
 CemModel * deltas_set_shelf_slope (CemModel * model, double shelf_slope);

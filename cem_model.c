@@ -312,6 +312,34 @@ deltas_get_depth (CemModel * model)
 }
 
 
+double *
+deltas_get_elevation_dup(CemModel * model, double *z)
+{
+  int i;
+  int id;
+  const int z_nrows = deltas_get_nx(model);
+  const int z_ncols = deltas_get_ny(model) / 2;
+  const int len = z_nrows * z_ncols;
+  int row, col;
+  double percent_full;
+
+  for (i = 0; i < len; i++)
+  {
+    row = i / z_ncols;
+    col = i % z_ncols + z_ncols / 2;
+    id = row * z_ncols * 2 + col;
+
+    percent_full = model->PercentFull[0][id];
+    if (percent_full < 0.)
+      z[i] = - model->CellDepth[0][id];
+    else
+      z[i] = percent_full;
+  }
+
+  return z;
+}
+
+
 static double *
 _dup_subgrid (CemModel * model, double **src, double *dest)
 {

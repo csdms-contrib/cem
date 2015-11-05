@@ -481,6 +481,10 @@ get_value(void * self, const char * name, void *dest)
         deltas_get_depth_dup((CemModel*)self, dest);
         return BMI_SUCCESS;
     }
+    else if (strcmp(name, "land_surface__elevation") == 0) {
+        deltas_get_elevation_dup((CemModel*)self, dest);
+        return BMI_SUCCESS;
+    }
     else if (strcmp(name, "sea_surface_water_wave__azimuth_angle_of_opposite_of_phase_velocity") == 0)
         *(double*)dest = ((CemModel*)self)->WaveAngle;
     else if (strcmp(name, "sea_surface_water_wave__height") == 0)
