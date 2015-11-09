@@ -326,11 +326,11 @@ deltas_get_elevation_dup(CemModel * model, double *z)
   for (i = 0; i < len; i++)
   {
     row = i / z_ncols;
-    col = i % z_ncols + z_ncols / 2;
-    id = row * z_ncols * 2 + col;
+    col = i % z_ncols;
+    id = row * (2 * z_ncols) + col + z_ncols / 2;
 
     percent_full = model->PercentFull[0][id];
-    if (percent_full < 0.)
+    if (percent_full <= 1e-6)
       z[i] = - model->CellDepth[0][id];
     else
       z[i] = percent_full;
