@@ -536,7 +536,7 @@ set_value (void *self, const char *name, void *array)
 
     if (strcmp(name, "land_surface_water_sediment~bedload__mass_flow_rate") == 0)
         deltas_set_sediment_flux_grid ((CemModel*)self, (double*)array);
-    if (strcmp(name, "land_surface__elevation") == 0)
+    else if (strcmp(name, "land_surface__elevation") == 0)
         deltas_set_elevation_grid ((CemModel*)self, (double*)array);
     else if (strcmp(name, "sea_surface_water_wave__azimuth_angle_of_opposite_of_phase_velocity") == 0)
       ((CemModel*)self)->WaveAngle = *((double*)array);
