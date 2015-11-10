@@ -177,6 +177,9 @@ cem_initialize (const char *config_file, CemModel **handle)
       shelf_slope = 0.001;
     }
 
+    /* Double n_cols for the full grid with mirrors. */
+    n_cols *= 2;
+
     shape[0] = n_rows;
     shape[1] = n_cols;
 
