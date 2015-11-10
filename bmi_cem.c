@@ -253,7 +253,7 @@ get_grid_size(void *self, int id, int *size)
     else if (id == 1)
         *size = deltas_get_n_rivers((CemModel*)self);
     else if (id == 2)
-        *size = deltas_get_nx((CemModel*)self) * deltas_get_ny((CemModel*)self);
+        *size = deltas_get_nx((CemModel*)self) * deltas_get_ny((CemModel*)self) / 2;
     else
         return BMI_FAILURE;
 
