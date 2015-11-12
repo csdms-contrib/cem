@@ -474,6 +474,7 @@ deltas_set_elevation_grid(CemModel * model, double * elevation)
   const int len = z_nrows * z_ncols;
   int row, col;
   double percent_full, cell_depth;
+  char all_beach;
 
   for (i = 0; i < len; i++)
   {
@@ -490,10 +491,16 @@ deltas_set_elevation_grid(CemModel * model, double * elevation)
     } else {
       percent_full = model->PercentFull[0][id];
       cell_depth = - elevation[i];
+
+      if (cell_depth < model->shoreface_depth)
+        cell_depth = model->shoreface_depth;
     }
+
+    all_beach = (percent_full < 1.) ? 'n' : 'y';
 
     model->CellDepth[0][id] = cell_depth;
     model->PercentFull[0][id] = percent_full;
+    model->AllBeach[0][id] = all_beach;
 
     if (col < z_ncols)
       id += z_ncols;
@@ -501,6 +508,7 @@ deltas_set_elevation_grid(CemModel * model, double * elevation)
       id -= z_ncols;
     model->CellDepth[0][id] = cell_depth;
     model->PercentFull[0][id] = percent_full;
+    model->AllBeach[0][id] = all_beach;
   }
 
   return model;
