@@ -489,7 +489,8 @@ deltas_set_elevation_grid(CemModel * model, double * elevation)
         percent_full = 1.;
       cell_depth = 0.;
     } else {
-      percent_full = model->PercentFull[0][id];
+      // percent_full = model->PercentFull[0][id];
+      percent_full = 0.;
       cell_depth = - elevation[i];
 
       if (cell_depth < model->shoreface_depth)
