@@ -483,11 +483,14 @@ deltas_set_elevation_grid(CemModel * model, double * elevation)
     id = row * z_ncols * 2 + col;
 
     if (elevation[i] > 0.) {
-      if (elevation[i] < 1.)
+      if (elevation[i] < 1.) {
         percent_full = elevation[i];
-      else if (elevation[i] >= 1.)
+        cell_depth = 0.;
+      } else if (elevation[i] >= 1.) {
         percent_full = 1.;
-      cell_depth = 0.;
+        cell_depth = - elevation[i];
+      }
+      // cell_depth = 0.;
     } else {
       // percent_full = model->PercentFull[0][id];
       percent_full = 0.;
