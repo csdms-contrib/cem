@@ -335,10 +335,8 @@ deltas_get_elevation_dup(CemModel * model, double *z)
     percent_full = model->PercentFull[0][id];
     if (percent_full < 1e-6)
       z[i] = - model->CellDepth[0][id];
-    else if (percent_full > 1. - 1e-6) {
+    else if (percent_full > 1. - 1e-6)
       z[i] = - model->CellDepth[0][id];
-      fprintf(stderr, "z[%d] = %f\n", i, z[i]); fflush(stderr);
-    }
     else
       z[i] = percent_full;
   }
@@ -493,7 +491,6 @@ deltas_set_elevation_grid(CemModel * model, double * elevation)
       } else if (elevation[i] >= 1.) {
         percent_full = 1.;
         cell_depth = - elevation[i];
-        fprintf(stderr, "z[%d] = %f\n", i, cell_depth); fflush(stderr);
       }
       // cell_depth = 0.;
     } else {
