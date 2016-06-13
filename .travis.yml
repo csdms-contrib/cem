@@ -1,0 +1,19 @@
+os:
+- linux
+- osx
+sudo: false
+install:
+- echo "Build on $TRAVIS_OS_NAME"
+- if [[ "$TRAVIS_TAG" == v* ]]; then export BUILD_STR=""; else export BUILD_STR="dev";
+  fi
+- bash .ci/travis/install_python.sh
+- export PATH="$HOME/miniconda/bin:$PATH"
+- conda build -q conda-recipe -c csdms
+- conda install -q cem --use-local -c csdms
+script:
+- deltas -h
+after_success:
+- bash .ci/travis/deploy_to_anaconda.sh
+env:
+  global:
+    secure: L+Yqd1nmMuQtCDKbhFPpfKiO1dPwH9J4jcdq6KW3vMixlFYs2546ZxhFaDXVgMXogVziq1FcSrNspaPxn0Zxk1ZuUAeFYU+gVp8/jqZGnkTL4UORMk0hHX6EwFNoUJl9LxpmO3140S67td14U0vBz8dOh9oeNui+VrMJn7NGlpI=
