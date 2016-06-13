@@ -1,0 +1,31 @@
+package:
+  name: cem
+  version: "0.1"
+
+source:
+  path: ..
+
+requirements:
+  build:
+    - cmake
+    - gcc
+    - pkgconfig-command [osx]
+    - glib [osx]
+
+  run:
+    - libgcc
+    - glib [osx]
+
+test:
+  commands:
+  - deltas -h
+  - waves -h
+
+about:
+  home: https://github.com/csdms-contrib/cem
+  license: MIT
+  license_file: LICENSE
+  summary: The Coastline Evolution Model
+
+build:
+  string: {{ environ.get('BUILD_STR', '') }}
