@@ -11,7 +11,8 @@ install:
 - conda build -q conda-recipe -c csdms
 - conda install -q cem --use-local -c csdms
 script:
-- deltas -h
+- deltas --help
+- waves --help
 after_success:
 - bash .ci/travis/deploy_to_anaconda.sh
 env:
