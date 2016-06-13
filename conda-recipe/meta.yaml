@@ -18,8 +18,10 @@ requirements:
 
 test:
   commands:
-  - deltas -h
-  - waves -h
+  - deltas --version
+  - deltas --help
+  - waves --version
+  - waves --help
 
 about:
   home: https://github.com/csdms-contrib/cem
