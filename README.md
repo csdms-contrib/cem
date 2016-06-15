@@ -3,7 +3,7 @@ CEM
 
 A version of *Coastline Evolution Model* with a *BMI*.
 
-You can find the official version of CEM here:
+You can find the official version of CEM source code here:
 https://github.com/csdms-contrib/cem.
 
 
@@ -12,7 +12,9 @@ Install a pre-built version of CEM
 
 To install a pre-built version of this package with conda run:
 
-    $ conda install -c csdms cem
+```bash
+$ conda install -c csdms cem # -c csdms to look at the csdms channel
+```
 
 This will grab the latest version of *CEM* from the CSDMS channel on
 [Anaconda.org](https://anaconda.org/csdms/cem) and install it into your
@@ -23,10 +25,12 @@ Build and install from source
 
 To build and install from source:
 
-    mkdir _build && cd _build
-    cmake .. -DCMAKE_INSTALL_PREFIX=$PREFIX -DCMAKE_BUILD_TYPE=Release
-    make all -j4
-    make install
+```bash
+$ mkdir _build && cd _build
+$ cmake .. -DCMAKE_INSTALL_PREFIX=$PREFIX -DCMAKE_BUILD_TYPE=Release
+$ make all -j4
+$ make install
+```
 
 Create a new release
 --------------------
@@ -38,8 +42,10 @@ with the letter "v" is
 [GitHub](https://github.com/csdms-contrib/cem). As an example, the following
 will cause a new release to be built,
 
-    $ git tag v0.1.1
-    $ git push --tags
+```bash
+$ git tag v0.1.1 # Create the tag locally
+$ git push --tags # Push the tag to the remote
+```
 
 A new release is created (*v0.1.1*) and the tag pushed to GitHub.
 [Travis-CI](https://travis-ci.org/csdms-contrib/cem) notices the tagged commit,
@@ -54,8 +60,11 @@ A couple notes about creating a new version:
     always [delete the tag and recreate it](https://git-scm.com/docs/git-tag).
     To do this, you'll need to delete both the remote tag and the local tag:
 
-        $ git push --delete origin <tagname> # Delete the tag on the remote repository
-        $ git tag --delete <tagname> # Delete the tag from the local repository
+    ```bash
+    $ git push --delete origin <tagname> # Delete the tag on the remote repository
+    $ git tag --delete <tagname> # Delete the tag from the local repository
+    ```
+    where `<tagname>` is the name of your tag (`v0.1.1`, for example).
 1.  If your new tag was successfully pushed to GitHub, you will be able to see
     it with the rest of the
     [releases](https://github.com/csdms-contrib/cem/releases) and
