@@ -21,7 +21,7 @@
 
 #include "waves.h"
 
-#define WAVE_ANGLE_SIGN (0.7)
+#define WAVE_ANGLE_SIGN (1.0)
 #define DEFAULT_ASYMMETRY (0.5)
 #define DEFAULT_HIGHNESS (0.5)
 #define DEFAULT_HEIGHT (2.)
