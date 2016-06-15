@@ -1,10 +1,14 @@
-cem-old
-=======
+CEM
+===
 
-A version of CEM with a BMI
+A version of *Coastline Evolution Model* with a *BMI*.
 
-Install
--------
+You can find the official version of CEM here:
+https://github.com/csdms-contrib/cem.
+
+
+Install a pre-built version of CEM
+----------------------------------
 
 To install a pre-built version of this package with conda run:
 
@@ -14,8 +18,8 @@ This will grab the latest version of *CEM* from the CSDMS channel on
 [Anaconda.org](https://anaconda.org/csdms/cem) and install it into your
 current environment.
 
-Build from source
------------------
+Build and install from source
+-----------------------------
 
 To build and install from source:
 
@@ -68,7 +72,8 @@ A couple notes about creating a new version:
        for a description of `conda` and how to use it, or you can always use
        `conda -h` from the command line.
 
-Some helpful links:
+Helpful links
+-------------
 
 1.  [Using conda](http://conda.pydata.org/docs/using/index.html): What `conda`
     is and how to use it.
@@ -77,3 +82,7 @@ Some helpful links:
 1.  [The git tag command](https://git-scm.com/docs/git-tag): A description
     of all of the options for the `git tag` command (including `git tag
     --delete`).
+1.  [CEM on Travis](https://travis-ci.org/csdms-contrib/cem): The latest
+    Travis builds of CEM.
+1.  [CEM on Anaconda](https://anaconda.org/csdms/cem): The conda packages for
+    CEM releases.
