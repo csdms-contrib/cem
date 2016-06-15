@@ -22,7 +22,7 @@
 #include "waves.h"
 
 
-#define WAVE_ANGLE_SIGN (0.7)
+#define WAVE_ANGLE_SIGN (1.0)
 
 
 double
