@@ -46,19 +46,16 @@ A couple notes about creating a new version:
 
 1.  The version given in the tag name should match that in
     `conda-recipe/meta.yaml`.
-
 1.  If you mess up (forget to update all the versions, for example), you can
     always [delete the tag and recreate it](https://git-scm.com/docs/git-tag).
     To do this, you'll need to delete both the remote tag and the local tag:
 
-       $ git push --delete origin <tagname> # Delete the tag on the remote repository
-       $ git tag --delete <tagname> # Delete the tag from the local repository
-
+        $ git push --delete origin <tagname> # Delete the tag on the remote repository
+        $ git tag --delete <tagname> # Delete the tag from the local repository
 1.  If your new tag was successfully pushed to GitHub, you will be able to see
     it with the rest of the
     [releases](https://github.com/csdms-contrib/cem/releases) and
     [tags](https://github.com/csdms-contrib/cem/tags).
-
 1.  To see if your new release was created successfully, you can do one or all
     of the following:
 
