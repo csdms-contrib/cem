@@ -491,6 +491,8 @@ cem_advance_one_time_step (CemModel * model)
   int AgeUpdate = AGE_UPDATE;
 
   {
+    FixBeach(model);
+    FixBeach(model);
     /*  Time Step iteration - compute same wave angle for Duration time steps */
     /*  Calculate Wave Angle */
     if (!model->external_waves)
@@ -533,6 +535,8 @@ cem_advance_one_time_step (CemModel * model)
           return 1;
         }
       }
+
+      FixBeach(model);
 
       if (model->use_sed_flux)
         DeliverRivers (model);
