@@ -27,7 +27,7 @@
 #define WAVES_PROGRAM_STR   "waves"
 #define WAVES_MAJOR_VERSION (0)
 #define WAVES_MINOR_VERSION (1)
-#define WAVES_MICRO_VERSION (0)
+#define WAVES_MICRO_VERSION (1)
 
 double waves_next_angle (GRand * rand, double asymmetry, double highness);
 
