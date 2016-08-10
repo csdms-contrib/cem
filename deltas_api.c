@@ -167,7 +167,7 @@ BMI_CEM_Update (BMI_Model * s)
   BMI_CEM_Get_current_time (s, &now);
 
   //fprintf (stderr, "Update until %f\n", now+1);
-  _cem_run_until (p, (now+1) / TimeStep);
+  _cem_run_until (p, (now+1) / p->time_step);
 
   BMI_CEM_Get_current_time (s, &now);
   //fprintf (stderr, "Current time is %f\n", now);
@@ -179,7 +179,7 @@ int
 BMI_CEM_Update_until (Deltas_state * s, double time_in_days)
 {
   State *p = (State *) s;
-  int until_time_step = time_in_days / TimeStep;
+  int until_time_step = time_in_days / p->time_step;
 
   _cem_run_until (p, until_time_step);
 
@@ -191,7 +191,7 @@ deltas_run_until (Deltas_state * s, double time_in_days)
 {
   State *p = (State *) s;
 
-  int until_time_step = time_in_days / TimeStep;
+  int until_time_step = time_in_days / p->time_step;
 
   return _cem_run_until (p, until_time_step);
 }
@@ -1309,7 +1309,7 @@ int
 BMI_CEM_Get_current_time (Deltas_state * s, double * time)
 {
   State *p = (State *) s;
-  *time = p->CurrentTimeStep * TimeStep;
+  *time = p->CurrentTimeStep * p->time_step;
   return BMI_SUCCESS;
 }
 
@@ -1323,7 +1323,8 @@ BMI_CEM_Get_start_time (Deltas_state * s, double * time)
 int
 BMI_CEM_Get_time_step (Deltas_state * s, double * dt)
 {
-  *dt = TimeStep;
+  State *p = (State *) s;
+  *dt = p->time_step;
   return BMI_SUCCESS;
 }
 
@@ -1350,7 +1351,7 @@ deltas_get_current_time (Deltas_state * s)
 {
   State *p = (State *) s;
 
-  return p->CurrentTimeStep * TimeStep;
+  return p->CurrentTimeStep * p->time_step;
 }
 
 int
