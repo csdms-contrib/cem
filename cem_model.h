@@ -8,8 +8,7 @@ extern "C" {
 
 #define DEFAULT_CELL_WIDTH (100.0) /**< size of cells (meters) */
 /*#define MaxBeachLength  (8*Ymax) */ /**< maximum length of arrays that contain beach data at each time step */
-#define TimeStep     (0.2)  /**< days - reflects rate of sediment transport per
-                             time step */
+// #define TimeStep     (0.2)  /**< days - reflects rate of sediment transport per time step */
 
 typedef struct
 {
@@ -69,6 +68,7 @@ typedef struct
 
    /** Miscellaneous State Variables */
   int CurrentTimeStep;  /**< Time step of current calculation */
+  double time_step; /**< Model time step in days - reflects rate of sediment transport per time step. */
 
   int NextX;  /**< used to iterate FindNextCell in global array - */
   int NextY;

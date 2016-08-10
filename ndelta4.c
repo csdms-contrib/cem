@@ -56,8 +56,8 @@ DEBUG_PRINT (int exp, const char *format, ...)
 #endif
 
 /*  Run Control Parameters */
-#define TimeStep     (0.2)  /**< days - reflects rate of sediment transport per
-                             time step */
+#define TimeStep     (0.2)  /**< days - reflects rate of sediment transport per time step */
+
 #define OffShoreWvHt (2)    /**< meters */
 #define Period       (7)    /**< seconds */
 //#define Asym         (1.0)  /**< Fractional portion of waves coming from positive (left) direction */
@@ -284,6 +284,7 @@ deltas_init_state (CemModel * s)
   s->readfilename = NULL;
 
   s->CurrentTimeStep = 0;
+  s->time_step = TimeStep;
 
   s->NextX = 0;
   s->NextY = 0;
@@ -2384,7 +2385,7 @@ SedTrans (CemModel * _s, int From, int To, double ShoreAngle, char MaxT)
 
     VolumeAcrossBorder =
       fabs (1.1 * rho * Raise (GRAV, 3.0 / 2.0) * Raise (WvHeight, 2.5) *
-            cos (Angle) * sin (Angle) * TimeStep);
+            cos (Angle) * sin (Angle) * _s->time_step);
 
     _s->VolumeOut[From] = _s->VolumeOut[From] + VolumeAcrossBorder;
 
@@ -4350,7 +4351,7 @@ ActualizeFluvialSed (CemModel * _s, int xin, int yin, double Depth, double SedIn
   double SedFixed;               /* fixed for correct units */
 
   // convert to m^3/day, then number of days simulated
-  SedFixed = SedIn / (2650 * 0.6) * 86400 * TimeStep;   /* assuming some things about the sed delivered */
+  SedFixed = SedIn / (2650 * 0.6) * 86400 * _s->time_step;   /* assuming some things about the sed delivered */
 
   DeltaArea = SedFixed / Depth;
 /*
@@ -4504,7 +4505,7 @@ DeliverSedimentFlux (CemModel * _s)
     double fraction;
 
     sed_rate = _s->SedFlux / (1500. * _s->cell_width * _s->cell_width);
-    meters_of_sediment = sed_rate * 86400. * TimeStep;
+    meters_of_sediment = sed_rate * 86400. * _s->time_step;
     //fraction = meters_of_sediment / (_s->InitDepth[x][y]+2*LandHeight);
     //fraction = meters_of_sediment / _s->InitDepth[x][y];
     fraction = meters_of_sediment;

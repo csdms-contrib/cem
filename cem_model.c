@@ -269,7 +269,7 @@ deltas_get_dy (CemModel * model)
 double
 deltas_get_current_time (CemModel * model)
 {
-  return model->CurrentTimeStep * TimeStep;
+  return model->CurrentTimeStep * model->time_step;
 }
 
 
@@ -283,7 +283,7 @@ deltas_get_end_time (CemModel * model)
 double
 deltas_get_time_step (CemModel * model)
 {
-  return TimeStep;
+  return model->time_step;
 }
 
 
