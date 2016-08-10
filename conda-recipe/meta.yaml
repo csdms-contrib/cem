@@ -22,6 +22,8 @@ test:
   - deltas --help
   - waves --version
   - waves --help
+  - cem --version
+  - cem --help
 
 about:
   home: https://github.com/csdms-contrib/cem

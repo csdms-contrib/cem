@@ -13,6 +13,7 @@ install:
 script:
 - deltas --help
 - waves --help
+- cem --help
 after_success:
 - bash .ci/travis/deploy_to_anaconda.sh
 env:
