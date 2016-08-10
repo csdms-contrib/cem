@@ -117,6 +117,20 @@ install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/run_waves
         RENAME waves
         COMPONENT waves)
 
+########### cem main program ###############
+
+set (cem_SRCS cem_main.c)
+set_source_files_properties (${cem_SRCS} PROPERTIES LANGUAGE C)
+
+add_executable(run_cem ${cem_SRCS})
+target_link_libraries(run_cem bmi_waves-static bmi_cem-static
+  ${GLIB2_LIBRARIES} ${GTHREAD2_LIBRARIES} m)
+
+install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/run_cem
+        DESTINATION bin
+        RENAME cem
+        COMPONENT cem)
+
 ########### Python bindings ###############
 
 option (PYTHON_BINDINGS "Use SWIG to build Python bindings" OFF)
