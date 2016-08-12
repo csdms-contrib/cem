@@ -69,7 +69,7 @@ main (int argc, char *argv[])
     double *z = NULL;
     double stop_time = 2500;
     double time;
-    const double river_flux = 1250.;
+    const double river_flux = 1750.;
     double angle, wave_height, wave_period;
     double time_step;
 
@@ -143,7 +143,7 @@ main (int argc, char *argv[])
 
       i += 1;
 
-      if (i%100 == 0) {
+      if (i%1000 == 0) {
         print_model_info(cem);
         print_matrix (z, shape, output_file);
       }
