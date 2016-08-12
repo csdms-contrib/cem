@@ -17,7 +17,7 @@ main (int argc, char *argv[])
 
   if (argc > 1) {
     if (strcmp (argv[1], "--version") == 0) {
-      fprintf (stdout, "The Coastal Evolution Model version 0.1.1\n");
+      fprintf (stdout, "The Coastal Evolution Model version 0.1.2\n");
       exit (0);
     }
     else if (strcmp (argv[1], "--help") == 0) {

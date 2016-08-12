@@ -8,7 +8,7 @@
 #define CEM_PROGRAM_STR   "cem"
 #define CEM_MAJOR_VERSION (0)
 #define CEM_MINOR_VERSION (1)
-#define CEM_MICRO_VERSION (1)
+#define CEM_MICRO_VERSION (2)
 
 #define CEM_DEFAULT_END_TIME (100)
 #define CEM_DEFAULT_OUT_PREFIX "fileout"

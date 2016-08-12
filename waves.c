@@ -1,21 +1,3 @@
-/*
- * =====================================================================
- *
- *       Filename:  waves.c
- *
- *    Description:  Generate wave angles
- *
- *        Version:  1.0
- *        Created:  04/16/2010 02:42:44 PM
- *       Revision:  none
- *       Compiler:  gcc
- *
- *         Author:  Eric Hutton (eh), huttone@colorado.edu
- *        Company:  Community Surface Dynamics Modeling System
- *
- * =====================================================================
- */
-
 #include <math.h>
 #include <glib.h>
 

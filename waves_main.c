@@ -1,21 +1,3 @@
-/*
- * =====================================================================
- *
- *       Filename:  waves_main.c
- *
- *    Description:
- *
- *        Version:  1.0
- *        Created:  04/16/2010 04:04:40 PM
- *       Revision:  none
- *       Compiler:  gcc
- *
- *         Author:  Eric Hutton (eh), huttone@colorado.edu
- *        Company:  Community Surface Dynamics Modeling System
- *
- * =====================================================================
- */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -27,7 +9,7 @@
 #define WAVES_PROGRAM_STR   "waves"
 #define WAVES_MAJOR_VERSION (0)
 #define WAVES_MINOR_VERSION (1)
-#define WAVES_MICRO_VERSION (1)
+#define WAVES_MICRO_VERSION (2)
 
 double waves_next_angle (GRand * rand, double asymmetry, double highness);
 
