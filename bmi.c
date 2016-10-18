@@ -346,26 +346,6 @@ get_value_ptr (void *self, const char *long_var_name, void **dest)
 
 
 static int
-get_value_at_indices (void *self, const char *long_var_name, void *dest, int * inds, int len)
-{
-  double *src = NULL;
-
-  if (get_value_ptr (self, long_var_name, (void*)&src) == BMI_FAILURE)
-    return BMI_FAILURE;
-
-  { /* Copy the data */
-    int i;
-    double * to = (double*) dest;
-    for (i=0; i<len; i++) {
-      to[i] = src[inds[i]];
-    }
-  }
-
-  return BMI_SUCCESS;
-}
-
-
-static int
 get_double (void *self, const char *long_var_name, double *dest)
 {
   double *src = NULL;
@@ -394,25 +374,6 @@ get_double_ptr (void *self, const char *long_var_name, double **dest)
 
 
 static int
-get_double_at_indices (void *self, const char *long_var_name, double *dest, int * inds, int len)
-{
-  double *src = NULL;
-
-  if (get_value_ptr (self, long_var_name, (void*)&src) == BMI_FAILURE)
-    return BMI_FAILURE;
-
-  { /* Copy the data */
-    int i;
-    for (i=0; i<len; i++) {
-      dest[i] = src[inds[i]];
-    }
-  }
-
-  return BMI_SUCCESS;
-}
-
-
-static int
 set_value (void *self, const char *name, void *array)
 {
   void * dest = NULL;
@@ -425,26 +386,6 @@ set_value (void *self, const char *name, void *array)
     memcpy (dest, array, nbytes);
     return BMI_SUCCESS;
   }
-}
-
-
-static int
-set_value_at_indices (void *self, const char *long_var_name, int * inds, int len, void *src)
-{
-  double * dest = NULL;
-
-  if (get_value_ptr (self, long_var_name, (void*)&dest) == BMI_FAILURE)
-    return BMI_FAILURE;
-
-  { /* Copy the data */
-    int i;
-    double * from = src;
-    for (i=0; i<len; i++) {
-      dest[inds[i]] = from[i];
-    }
-  }
-
-  return BMI_SUCCESS;
 }
 
 
@@ -519,11 +460,11 @@ register_bmi_cem(BMI_Model *model)
 
     model->get_value = get_value;
     model->get_value_ptr = get_value_ptr;
-    model->get_value_at_indices = get_value_at_indices;
+    model->get_value_at_indices = NULL;
 
     model->set_value = set_value;
     model->set_value_ptr = NULL;
-    model->set_value_at_indices = set_value_at_indices;
+    model->set_value_at_indices = NULL;
 
     model->get_grid_rank = get_grid_rank;
     model->get_grid_size = get_grid_size;
