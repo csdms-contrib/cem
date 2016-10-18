@@ -7,186 +7,177 @@
 #include "consts.h"
 #include "globals.h"
 
-#define AngleFactor (1.)
+// Global variables to be share with other files.
 
-double CellDepth[Xmax][2 * Ymax]; /* Depth array */
-double CliffHeightSlow =
-    30; /* Cliff height above sea level for slow weathering rock PWL */
-double CliffHeightFast =
-    0; /* Cliff height above sea level for fast weathering rock PWL */
-
-/* Overall Shoreface Configuration Arrays - Data file information */
-char AllBeach[Xmax][2 * Ymax]; /* Flag indicating of cell is entirely beach */
-char AllRock[Xmax][2 * Ymax]; /* Flag indicating if cell is entirely rock LMV */
-double PercentFullSand[Xmax][2 * Ymax]; /* Fractional amount of cell full of
-                                           sediment LMV */
-double PercentFullRock[Xmax][2 * Ymax]; /* Fractional amount of a cell full of
-                                           rock LMV */
-char TypeOfRock[Xmax][2 * Ymax]; /* Array to control weathering rates of rock
-                                    along the beach LMV */
-int Age[Xmax][2 * Ymax];         /* Age since cell was deposited */
+// Holds cliff heights -- will change through time, eventually...
 double **Topography;
 
-int SinkY[] = {158, 361, 158, 361,
-               158, 361}; /* a sink is a cell that is routinely emptied (if it
-                             is on the beach) */
-int SinkX[] = {190, 190, 189, 189, 191, 191};
+// Special SWAN matrices.
+double **ShelfDepth = NULL; // SWAN bathymetry
+double **Hsig = NULL; // SWAN wave heights.
+double **Dir = NULL;  // SWAN wave angles.
 
-FILE *SaveSandFile;
-FILE *WaveFileOutput;
-FILE *InitMetaFile;
-FILE *ReadSandFile;
-FILE *ReadWaveFile;
-FILE *ReadRealWaveFile;
-FILE *ReadControlFile;
+int CurrentTimeStep = 0;  // Time step of current calculation
+double StopAfter = 36500; // Stop after what number of time steps
+double TimeStep = 1; // days; reflects rate of sediment transport per time step
 
-/* Computational Arrays (determined for each time step)  -- will eventually be
- * in a structure for BMI */
 
-int X[MaxBeachLength];                 /* X Position of ith beach element */
-int Y[MaxBeachLength];                 /* Y Position of ith beach element */
-int XBehind[MaxBeachLength];           /* Cell that is "behind" X[i] LMV */
-int YBehind[MaxBeachLength];           /* Cell that is "behind" Y[i] LMV */
-int XRock[MaxBeachLength];             /* X Position of ith rock element LMV */
-int YRock[MaxBeachLength];             /* Y Position of ith rock element LMV */
-int XRockBehind[MaxBeachLength];       /* Cell that is "behind" XRock[i] LMV */
-int YRockBehind[MaxBeachLength];       /* Cell that is "behind" YRock[i] LMV */
-char InShadow[MaxBeachLength];         /* Is ith beach element in shadow? */
-double ShorelineAngle[MaxBeachLength]; /* Angle between cell and right (z+1)
-                                          neighbor  */
-double SurroundingAngle[MaxBeachLength]; /* Angle between left and right
-                                            neighbors */
-char UpWind[MaxBeachLength]; /* Upwind or downwind condition used to calculate
-                                sediment transport */
-double VolumeIn[MaxBeachLength];  /* Sediment volume into ith beach element */
-double VolumeOut[MaxBeachLength]; /* Sediment volume out of ith beach element */
-double VolumeAcrossBorder[MaxBeachLength]; /* Sediment volume across border of
-                                              ith beach element in m^3/day LMV
-                                              */
+// Global variables to be used only within this file.
+static const double kAngleFactor = 1.;
+
+// Depth array
+static double cell_depth[Xmax][2 * Ymax];
+// Cliff height above sea level for slow weathering rock PWL
+static const double kCliffHeightSlow = 30;
+// Cliff height above sea level for fast weathering rock PWL
+static const double kCliffHeightFast = 0;
+
+// Overall Shoreface Configuration Arrays - Data file information
+
+// Flag indicating of cell is entirely beach
+static char AllBeach[Xmax][2 * Ymax];
+// Flag indicating if cell is entirely rock LMV
+static char AllRock[Xmax][2 * Ymax];
+// Fractional amount of cell full of sediment LMV
+static double PercentFullSand[Xmax][2 * Ymax];
+// Fractional amount of a cell full of rock LMV
+static double PercentFullRock[Xmax][2 * Ymax];
+// Array to control weathering rates of rock along the beach LMV
+static char TypeOfRock[Xmax][2 * Ymax];
+// Age since cell was deposited
+static int Age[Xmax][2 * Ymax];
+
+// A sink is a cell that is routinely emptied (if it is on the beach)
+static const int kSinkY[] = {158, 361, 158, 361, 158, 361};
+static const int kSinkX[] = {190, 190, 189, 189, 191, 191};
+
+static FILE *SaveSandFile;
+static FILE *WaveFileOutput;
+static FILE *InitMetaFile;
+static FILE *ReadSandFile;
+static FILE *ReadWaveFile;
+static FILE *ReadRealWaveFile;
+static FILE *ReadControlFile;
+
+// Computational Arrays (determined for each time step)  -- will eventually be
+// in a structure for BMI
+
+static int X[MaxBeachLength]; // X Position of ith beach element
+static int Y[MaxBeachLength]; // Y Position of ith beach element
+static int XBehind[MaxBeachLength]; // Cell that is "behind" X[i] LMV
+static int YBehind[MaxBeachLength]; // Cell that is "behind" Y[i] LMV
+static int XRock[MaxBeachLength]; // X Position of ith rock element LMV
+static int YRock[MaxBeachLength]; // Y Position of ith rock element LMV
+static int XRockBehind[MaxBeachLength]; // Cell that is "behind" XRock[i] LMV
+static int YRockBehind[MaxBeachLength]; // Cell that is "behind" YRock[i] LMV
+static char InShadow[MaxBeachLength]; // Is ith beach element in shadow?
+static double ShorelineAngle[MaxBeachLength]; // Angle between cell and right (z+1) neighbor
+static double SurroundingAngle[MaxBeachLength]; // Angle between left and right neighbors
+static char UpWind[MaxBeachLength]; // Upwind or downwind condition used to calculate sediment transport
+static double VolumeIn[MaxBeachLength]; // Sediment volume into ith beach element
+static double VolumeOut[MaxBeachLength]; // Sediment volume out of ith beach element
+static double VolumeAcrossBorder[MaxBeachLength]; // Sediment volume across border of ith beach element in m^3/day LMV
 /* amount sediment needed, not necessarily amount a cell gets */
-double
-    ActualVolumeAcross[MaxBeachLength]; /* Sediment volume that actually gets
-                                           passed across border LMV */
+static double ActualVolumeAcross[MaxBeachLength]; // Sediment volume that actually gets passed across border LMV
 /* amount sed is limited by volumes across border upstream and downstream */
-char DirectionAcrossBorder[MaxBeachLength]; /* Flag to indicate if transport
-                                               across border is L or R LMV */
-char FlowThroughCell[MaxBeachLength]; /* Is flow through ith cell Left, Right,
-                                         Convergent, or Divergent LMV */
-double DistanceToBeach
-    [MaxBeachLength]; /* Distance in meters from rock to beach LMV */
-double MinDistToBeach[MaxBeachLength]; /* From a rock cell j, min distance (in
-                                          meters) to closest beach LMV */
-int ClosestBeach[MaxBeachLength]; /* i position of closest rock to beach LMV */
-double AmountWeathered[MaxBeachLength]; /* Amount of rock weathered from rock
-                                           cell j LMV */
+static char DirectionAcrossBorder[MaxBeachLength]; // Flag to indicate if transport across border is L or R LMV
+static char FlowThroughCell[MaxBeachLength]; // Is flow through ith cell Left, Right, Convergent, or Divergent LMV
+static double DistanceToBeach[MaxBeachLength]; // Distance in meters from rock to beach LMV
+static double MinDistToBeach[MaxBeachLength]; // From a rock cell j, min distance (in meters) to closest beach LMV
+static int ClosestBeach[MaxBeachLength]; // i position of closest rock to beach LMV
+static double AmountWeathered[MaxBeachLength]; // Amount of rock weathered from rock cell j LMV
 
 #if defined(WITH_SWAN)
-char SWANflag = 'y'; /* Is SWAN doing wave transformations? */
+static const char kSwanflag = 'y'; // Is SWAN doing wave transformations?
 #else
-char SWANflag = 'n';
+static const char kSwanflag = 'n';
 #endif
 
-double BreakDepth; /* Breaking wave depth found from SWAN run */
+static double BreakDepth; // Breaking wave depth found from SWAN run
 
-/* Special SWAN matrices. */
-double **ShelfDepth = NULL;
-double **Hsig = NULL; /* SWAN wave heights. */
-double **Dir = NULL;  /* SWAN wave angles. */
+static double EvaluateAngle; // Temporary angle holder for the ConvertAngle function
 
-double EvaluateAngle; /* Temporary angle holder for the ConvertAngle function */
+// for temporary debugging only, 5-5-14
+// UPDATE 11/20/14 -- now using these for upwind scheme fixing, so keep 'em
+// around (probably should rename...)
+static double Qsdebug[MaxBeachLength];
+static double Hsigdebug[MaxBeachLength];
+static double Dirdebug[MaxBeachLength];
+static double Hddebug[MaxBeachLength];
+static double xdebug[MaxBeachLength];
+static double ydebug[MaxBeachLength];
+static double WvHeight;
+static double Angle;
 
-/* for temporary debugging only, 5-5-14 */
-/* UPDATE 11/20/14 -- now using these for upwind scheme fixing, so keep 'em
- * around (probably should rename...) */
-double Qsdebug[MaxBeachLength];
-double Hsigdebug[MaxBeachLength];
-double Dirdebug[MaxBeachLength];
-double Hddebug[MaxBeachLength];
-double xdebug[MaxBeachLength];
-double ydebug[MaxBeachLength];
-double WvHeight;
-double Angle;
+// Miscellaneous Global Variables
 
-/* Miscellaneous Global Variables -- also will be included in the BMI structure
- */
+static int NextX; // Global variables used to iterate FindNextCell in global array -
+static int NextY; // would've used pointer but wouldn't work
+static int BehindX;
+static int BehindY;
+static int BehindRockX;
+static int BehindRockY;
+static int NextRockX; // Global variables used to iterate FindNextRockCell in global array LMV
+static int NextRockY;
+static int TotalBeachCells; // Number of cells describing beach at particular iteration
+static int TotalRockCells; // Number of cells describing rock at an iteration LMV
+static int ShadowXMax; // used to determine maximum extent of beach cells
+static double WaveAngle; // wave angle for current time step
+static int FindStart; // Used to tell FindBeach at what Y value to start looking
+static int FindRockStart; // Used to tell FindRock at what Y value to start looking LMV
+static char FellOffArray; // Flag used to determine if accidentally went off array
+static char FellOffRockArray; // Flag used to determine if accidentally went off rock array LMV
+static double MassInitial; // For conservation of mass calcs
+static double MassCurrent;
+static int device;
+static short button;
+static long buttonback;
+static int NumWaveBins; // For Input Wave - number of bins
+static double WaveMax[36]; // Max Angle for specific bin
+static double WaveProb[36]; // Probability of Certain Bin
+static double WaveAngleIn;
+static double WaveHeightIn;
+static double WavePeriodIn;
+static double ControlFileIn[20]; // Initialisation data read from file
 
-int NextX; /* Global variables used to iterate FindNextCell in global array - */
-int NextY; /*      would've used pointer but wouldn't work */
-int BehindX;
-int BehindY;
-int BehindRockX;
-int BehindRockY;
-int NextRockX; /* Global variables used to iterate FindNextRockCell in global
-                  array LMV */
-int NextRockY;
-int TotalBeachCells; /* Number of cells describing beach at particular iteration
-                        */
-int TotalRockCells;  /* Number of cells describing rock at an iteration LMV */
-int ShadowXMax;      /* used to determine maximum extent of beach cells */
-double WaveAngle;    /* wave angle for current time step */
-int FindStart;     /* Used to tell FindBeach at what Y value to start looking */
-int FindRockStart; /* Used to tell FindRock at what Y value to start looking LMV
-                      */
-char FellOffArray; /* Flag used to determine if accidentally went off array */
-char FellOffRockArray; /* Flag used to determine if accidentally went off rock
-                          array LMV */
-double MassInitial;    /* For conservation of mass calcs */
-double MassCurrent;    /* " */
-int device;
-short button;
-long buttonback;
-int NumWaveBins;     /* For Input Wave - number of bins */
-double WaveMax[36];  /* Max Angle for specific bin */
-double WaveProb[36]; /* Probability of Certain Bin */
-double WaveAngleIn;
-double WaveHeightIn;
-double WavePeriodIn;
-double ControlFileIn[20]; /* Initialisation data read from file */
+static char StartFromFile = 'n'; // start from saved file?
 
-char StartFromFile = 'n'; /* start from saved file? */
+static double Period = 10.0; // seconds
+static double OffShoreWvHt = 2.0; // meters
 
-int CurrentTimeStep = 0;  /* Time step of current calculation */
-double StopAfter = 36500; /* Stop after what number of time steps */
+// Fractional portion of waves coming from positive (left) direction
+static double Asym = 0.70;
+// .5 = even dist, < .5 high angle domination. NOTE Highness actually
+// determines lowness!
+static double Highness = 0.35;
+// Number of time steps calculations loop at same wave angle
+static double Duration = 1.;
 
-double Period = 10.0;      /* seconds */
-double OffShoreWvHt = 2.0; /* meters */
+// Weathering rate of slow rock e.g. 0.5 = slow weathering, 1/2 as fast LMV
+static double SlowWeatherCoeff = 0. * NormalWeatheringRate;
+// Weathering rate of fast rock e.g. 2 = fast weathering, 2 times faster
+// than normal LMV
+static double FastWeatherCoeff = 1 * NormalWeatheringRate;
+// Percent of fast weathering rock lost because it is too fine to stay
+// in nearshore LMV
+static double PercentFineFast = 0.0;
+// Percent of slow weathering rock lost because it is too fine to stay in
+// nearshore LMV
+static double PercentFineSlow = 0.0;
+// Amount of erosion to TotalBeachCells in m/year LMV
+static double ErosionRatePerYear = 0.5;
 
-double Asym = 0.70; /* fractional portion of waves coming from positive (left)
-                       direction */
-double Highness = 0.35; /* .5 = even dist, < .5 high angle domination. NOTE
-                           Highness actually determines lowness! */
-double Duration =
-    1.; /* Number of time steps calculations loop at same wave angle */
-double TimeStep =
-    1; /* days - reflects rate of sediment transport per time step */
+// Angle (deg) used to align coastline with real wave climate
+static double coastrotation = 40.;
+// Factor applied to the input wave height; 1 = no change, 0.5 = half
+// wave height, and 2 = double wave height
+static double waveheightchange = 1.;
+// Factor applied to the input wave period; 1 = no change, 0.5 = half
+// wave period, and 2 = double wave period
+static double waveperiodchange = 1.;
 
-double SlowWeatherCoeff =
-    0. * NormalWeatheringRate; /* Weathering rate of slow rock e.g. 0.5 = slow
-                                  weathering, 1/2 as fast LMV */
-double FastWeatherCoeff =
-    1 * NormalWeatheringRate; /* Weathering rate of fast rock e.g. 2 = fast
-                                 weathering, 2 times faster than normal LMV */
-double
-    PercentFineFast =
-        0.0; /* Percent of fast weathering rock lost because it is too fine to
-                stay in nearshore LMV */
-double
-    PercentFineSlow =
-        0.0; /* Percent of slow weathering rock lost because it is too fine to
-                stay in nearshore LMV */
-double ErosionRatePerYear =
-    0.5; /* Amount of erosion to TotalBeachCells in m/year LMV */
+static int OWflag = 0; // A debugging flag for overwash routines
 
-double coastrotation =
-    40.; /* Angle (deg) used to align coastline with real wave climate */
-double waveheightchange =
-    1.; /* Factor applied to the input wave height; 1 = no change, 0.5 = half
-           wave height, and 2 = double wave height */
-double waveperiodchange =
-    1.; /* Factor applied to the input wave period; 1 = no change, 0.5 = half
-           wave period, and 2 = double wave period */
-
-int OWflag = 0; /* A debugging flag for overwash routines */
 void AdjustShore(int i);
 void AgeCells(void);
 void ControlFile(void);
@@ -1904,7 +1895,7 @@ void WeatherRock(int j)
             (NoWeathering - Wcrit) /
             (log((0.01 / N))); /* Decay coefficient for the "cover" portion of
                                   abrasion curve PWL */
-        WeatheringRatePerYear = AngleFactor * CurrentWeatherCoeff *
+        WeatheringRatePerYear = kAngleFactor * CurrentWeatherCoeff *
                                 (exp((MinDistToBeach[j] - Wcrit) / wscale));
       }
     }
@@ -1924,7 +1915,7 @@ void WeatherRock(int j)
     printf(
         "for %d (%d,%d) rock %c, angfactor %f, weathercoeff %f, mindist %f, "
         "rate %f m/yr, frac weathered %f\n",
-        j, XRock[j], YRock[j], TypeOfRock[XRock[j]][YRock[j]], AngleFactor,
+        j, XRock[j], YRock[j], TypeOfRock[XRock[j]][YRock[j]], kAngleFactor,
         CurrentWeatherCoeff, MinDistToBeach[j], WeatheringRatePerYear,
         AmountWeathered[j]);
 
@@ -2030,7 +2021,7 @@ void ShadowSweep(void)
 
   /* Determine if beach cells are in shadow */
   for (i = 0; i <= TotalBeachCells; i++) {
-    if (SWANflag == 'n') /* Use shadows when SWAN is not involved */
+    if (kSwanFlag == 'n') /* Use shadows when SWAN is not involved */
     {
       InShadow[i] = FindIfInShadow(X[i], Y[i], ShadowXMax);
 
@@ -2382,13 +2373,13 @@ void DetermineSedTransport(void)
     /* Parse SWAN here first, and make this determination with 'breaking wave'
      * angles */
     /* OY VAY */
-    if (SWANflag == 'y') {
+    if (kSwanFlag == 'y') {
       ParseSWAN(i, DummyAngle); /* Use dummy shore angle because we don't need
                                    it right now...prob a poor solution to the
                                    problem */
     }
 
-    if (SWANflag == 'y') {
+    if (kSwanFlag == 'y') {
       if ((Angle - ShorelineAngle[i]) >
           0) /* Use SWAN nearshore angle instead */
       {
@@ -2414,7 +2405,7 @@ void DetermineSedTransport(void)
       }
     }
 
-    else if (SWANflag == 'n') /* #SWAN */
+    else if (kSwanFlag == 'n') /* #SWAN */
     {
       if ((WaveAngle - ShorelineAngle[i]) > 0) {
         /*  Transport going right, center on cell to left side of border
@@ -2567,7 +2558,7 @@ void SedTrans(int i, int From, float ShoreAngle, char MaxT, int Last)
 
   if (AngleDeep > 0.995 * pi / 2.0 || AngleDeep < -0.995 * pi / 2.0) {
     return;
-  } else if (SWANflag == 'n') {
+  } else if (kSwanFlag == 'n') {
     /* Calculate Deep Water Celerity & Length, Komar 5.11 c = gT / pi, L = CT */
 
     CDeep = g * Period / (2.0 * pi);
@@ -2611,7 +2602,7 @@ void SedTrans(int i, int From, float ShoreAngle, char MaxT, int Last)
       else
         Depth -= RefractStep;
     }
-  } else if (SWANflag == 'y') /* Do SWAN */
+  } else if (kSwanFlag == 'y') /* Do SWAN */
   {
     /* Instead of shoaling above, use ParseSWAN function to find the breaking
      * wave characteristics. */
@@ -2624,7 +2615,7 @@ void SedTrans(int i, int From, float ShoreAngle, char MaxT, int Last)
    * transport   */
   /* (especially with poorly constrained coefficients), */
   /* so no attempt made to make this a more perfect imperfection */
-  if (SWANflag == 'n') {
+  if (kSwanFlag == 'n') {
     VolumeAcrossBorder[i] =
         fabs(1.1 * rho * Raise(g, 3.0 / 2.0) * Raise(WvHeight, 2.5) *
              cos(Angle) * sin(Angle) * TimeStep); /*LMV - now global array*/
@@ -2658,21 +2649,21 @@ void DoSink(void)
   if (ColumnSinks) /* treat sink as any beach cell at a particular y-value */
     for (s = 0; s < NumSinks; s++) {
       for (i = 0; i < MaxBeachLength; i++)
-        if (Y[i] == SinkY[s]) {
+        if (Y[i] == kSinkY[s]) {
           PercentFullSand[X[i]][Y[i]] = 0.0;
           foundOne = 1;
         }
-      if (!foundOne) printf("couldn't find sink %d at y == %d!\n", s, SinkY[s]);
+      if (!foundOne) printf("couldn't find sink %d at y == %d!\n", s, kSinkY[s]);
     }
   else /* treat sink as a specific cell; empty it if it is on the beach */
     for (s = 0; s < NumSinks; s++) {
       for (i = 0; i < MaxBeachLength; i++)
-        if (Y[i] == SinkY[s] && X[i] == SinkX[s]) {
+        if (Y[i] == kSinkY[s] && X[i] == kSinkX[s]) {
           PercentFullSand[X[i]][Y[i]] = 0.0;
           foundOne = 1;
         }
       /*if(!foundOne) printf("couldn't find sink %d at
-       * (%d,%d)!\n",s,SinkX[s],SinkY[s]); */
+       * (%d,%d)!\n",s,kSinkX[s],kSinkY[s]); */
     }
   if (!foundOne) printf("didn't find any sinks @ time %d\n", CurrentTimeStep);
 }
@@ -4025,7 +4016,7 @@ void InitNormal(void)
         PercentFullSand[x][y] = 0.0;
         AllRock[x][y] = 'y';
         AllBeach[x][y] = 'n';
-        Topography[x][y] = CliffHeightSlow;
+        Topography[x][y] = kCliffHeightSlow;
       }
 
       else if (x == InitialRock)
@@ -4039,7 +4030,7 @@ void InitNormal(void)
         }
         AllRock[x][y] = 'n';
         AllBeach[x][y] = 'y';
-        Topography[x][y] = CliffHeightSlow;
+        Topography[x][y] = kCliffHeightSlow;
       }
 
       else if ((x > InitialRock) && (x < InitialBeach))
@@ -4078,12 +4069,12 @@ void InitNormal(void)
       for (y = n * ChunkLength; y < ((n + 2) * ChunkLength); y++) {
         if (n % 3 == 0 && (!blocks || x > InitialRock - 3)) { /* if even */
           TypeOfRock[x][y] = 's';
-          Topography[x][y] = CliffHeightSlow;
+          Topography[x][y] = kCliffHeightSlow;
         }
 
         else { /*if odd */
           TypeOfRock[x][y] = 'f';
-          Topography[x][y] = CliffHeightFast;
+          Topography[x][y] = kCliffHeightFast;
         }
       }
     }
@@ -4234,18 +4225,18 @@ void InitConds(void) {
 
     for (y = 0; y <= 2 * Ymax; y++)
       for (x = 0; x <= Xmax; x++) {
-        /* This is the only place where CellDepth is defined -- it needs to be
+        /* This is the only place where cell_depth is defined -- it needs to be
          updated through time
          for overwash functions (i think...), so perhaps there is something
          missing in this model version?? */
-        CellDepth[x][y] =
+        cell_depth[x][y] =
             InitialDepth + ((x - InitBeach) * CellWidth * ShelfSlope);
 
         if (x < InitBeach) {
           PercentFullSand[x][y] = 1;
           PercentFullRock[x][y] = 0;
           AllBeach[x][y] = 'y';
-          CellDepth[x][y] = -LandHeight;
+          cell_depth[x][y] = -LandHeight;
         } else if (x == InitBeach) {
           if (InitialSmooth) {
             PercentFullSand[x][y] = 0.5;
@@ -4257,13 +4248,13 @@ void InitConds(void) {
             printf("x: %d  Y: %d  Per: %f\n", x, y, PercentFullSand[x][y]);
           }
           AllBeach[x][y] = 'n';
-          CellDepth[x][y] = -LandHeight;
+          cell_depth[x][y] = -LandHeight;
         } else if (x > InitBeach) {
           PercentFullSand[x][y] = 0;
           PercentFullRock[x][y] = 0;
           AllBeach[x][y] = 'n';
-          if (CellDepth[x][y] < DepthShoreface) {
-            CellDepth[x][y] = DepthShoreface;
+          if (cell_depth[x][y] < DepthShoreface) {
+            cell_depth[x][y] = DepthShoreface;
           }
         } else {
           printf("ugh! x: %d  Y: %d  Per: %f\n", x, y, PercentFullSand[x][y]);
@@ -5322,10 +5313,10 @@ float GetOverwashDepth(int xin, int yin, float xinfl, float yinfl, int ishore)
   /* Use Cell Depths for overwash depths */
   {
     xdepth = xin;
-    Depth = CellDepth[xdepth][yin];
+    Depth = cell_depth[xdepth][yin];
 
     while ((Depth < 0) && (xdepth > 0)) {
-      Depth = CellDepth[xdepth][yin];
+      Depth = cell_depth[xdepth][yin];
       xdepth--;
     }
 
