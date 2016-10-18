@@ -343,34 +343,6 @@ get_value_ptr (void *self, const char *long_var_name, void **dest)
 
 
 static int
-get_double (void *self, const char *long_var_name, double *dest)
-{
-  double *src = NULL;
-
-  if (get_value_ptr (self, long_var_name, (void*)&src) == BMI_FAILURE)
-    return BMI_FAILURE;
-
-  memcpy (dest, src, sizeof (double) * Xmax * Ymax * 2);
-
-  return BMI_SUCCESS;
-}
-
-
-static int
-get_double_ptr (void *self, const char *long_var_name, double **dest)
-{
-  double *src = NULL;
-
-  if (get_value_ptr (self, long_var_name, (void*)&src) == BMI_FAILURE)
-    return BMI_FAILURE;
-
-  *dest = src;
-
-  return BMI_SUCCESS;
-}
-
-
-static int
 set_value (void *self, const char *name, void *array)
 {
   void * dest = NULL;
