@@ -414,12 +414,14 @@ set_value (void *self, const char *long_var_name, void *array)
 {
   void * dest = NULL;
 
-  if (get_value_ptr (self, long_var_name, &dest) == BMI_FAILURE)
+  if (get_value_ptr (self, long_var_name, &dest) == BMI_FAILURE) {
     return BMI_FAILURE;
-
-  memcpy (dest, array, sizeof (double) * Xmax * Ymax * 2);
-
-  return BMI_SUCCESS;
+  } else {
+    int nbytes = 0;
+    return_on_error(get_var_nbytes(self, name, &nbytes));
+    memcpy (dest, array, nbytes);
+    return BMI_SUCCESS;
+  }
 }
 
 
@@ -436,39 +438,6 @@ set_value_at_indices (void *self, const char *long_var_name, int * inds, int len
     double * from = src;
     for (i=0; i<len; i++) {
       dest[inds[i]] = from[i];
-    }
-  }
-
-  return BMI_SUCCESS;
-}
-
-
-static int
-set_double (void *self, const char *long_var_name, double *array)
-{
-  double * dest;
-
-  if (get_value_ptr (self, long_var_name, (void*)&dest) == BMI_FAILURE)
-    return BMI_FAILURE;
-
-  memcpy (dest, array, sizeof (double) * Xmax * Ymax * 2);
-
-  return BMI_SUCCESS;
-}
-
-
-static int
-set_double_at_indices (void *self, const char *long_var_name, int * inds, int len, double *src)
-{
-  double * dest;
-
-  if (get_value_ptr (self, long_var_name, (void*)&dest) == BMI_FAILURE)
-    return BMI_FAILURE;
-
-  { /* Copy the data */
-    int i;
-    for (i=0; i<len; i++) {
-      dest[inds[i]] = src[i];
     }
   }
 
