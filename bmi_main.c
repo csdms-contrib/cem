@@ -14,7 +14,7 @@ main (void)
 
   register_bmi_cem(cem);
 
-  status = cem->initialize(NULL, &cem);
+  status = cem->initialize(NULL, &(cem->self));
   if (status == BMI_FAILURE) {
     fprintf (stdout, "FAIL.\n");
     fprintf (stderr, "Unable to initialize\n");
