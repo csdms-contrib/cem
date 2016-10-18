@@ -44,7 +44,7 @@ initialize (const char *config_file, void ** handle) {
 }
 
 
-int
+static int
 update (void *self)
 {
   if (cem_update () == 0)
@@ -54,7 +54,7 @@ update (void *self)
 }
 
 
-int
+static int
 update_frac (void *self, double f)
 {
   if (f>0) {
@@ -73,7 +73,7 @@ update_frac (void *self, double f)
 }
 
 
-int
+static int
 update_until (void *self, double t)
 {
   {
@@ -99,7 +99,7 @@ update_until (void *self, double t)
 }
 
 
-int
+static int
 finalize (void *self)
 {
   if (self) {
@@ -110,7 +110,7 @@ finalize (void *self)
 }
 
 
-int
+static int
 get_var_grid(void *self, const char *name, int *grid_id) {
   if (strcmp (name, "sea_water__depth") == 0 ||
       strcmp (name, "land_surface__elevation") == 0) {
@@ -124,7 +124,7 @@ get_var_grid(void *self, const char *name, int *grid_id) {
 }
 
 
-int
+static int
 get_var_type (void *self, const char *long_var_name, char * type)
 {
   if (strcmp (long_var_name, "sea_water__depth") == 0 ||
@@ -139,7 +139,7 @@ get_var_type (void *self, const char *long_var_name, char * type)
 }
 
 
-int
+static int
 get_var_units (void *self, const char *long_var_name, char * units)
 {
   if (strcmp (long_var_name, "sea_water__depth") == 0 ||
@@ -182,7 +182,7 @@ get_var_nbytes(void *self, const char *name, int *nbytes) {
 }
 
 
-int
+static int
 get_grid_rank (void *self, int grid_id, int * rank)
 {
   if (grid_id == 0) {
@@ -196,7 +196,7 @@ get_grid_rank (void *self, int grid_id, int * rank)
 }
 
 
-int
+static int
 get_grid_size (void *self, int grid_id, int * size)
 {
   if (grid_id == 0) {
@@ -210,7 +210,7 @@ get_grid_size (void *self, int grid_id, int * size)
 }
 
 
-int
+static int
 get_grid_shape (void *self, int grid_id, int * shape)
 {
   if (grid_id == 0) {
@@ -223,7 +223,7 @@ get_grid_shape (void *self, int grid_id, int * shape)
 }
 
 
-int
+static int
 get_grid_spacing (void *self, int grid_id, double * spacing)
 {
   if (grid_id == 0) {
@@ -236,7 +236,7 @@ get_grid_spacing (void *self, int grid_id, double * spacing)
 }
 
 
-int
+static int
 get_grid_origin (void *self, int grid_id, double * origin)
 {
   if (grid_id == 0) {
@@ -249,7 +249,7 @@ get_grid_origin (void *self, int grid_id, double * origin)
 }
 
 
-int
+static int
 get_grid_type (void *self, int grid_id, char * type)
 {
   if (grid_id == 0) {
@@ -263,7 +263,7 @@ get_grid_type (void *self, int grid_id, char * type)
 }
 
 
-int
+static int
 get_value (void *self, const char *long_var_name, void *dest)
 {
   void *src = NULL;
@@ -277,7 +277,7 @@ get_value (void *self, const char *long_var_name, void *dest)
 }
 
 
-int
+static int
 get_value_ptr (BMI_CEM_Model *self, const char *long_var_name, void **dest)
 {
   void *data = NULL;
@@ -297,7 +297,7 @@ get_value_ptr (BMI_CEM_Model *self, const char *long_var_name, void **dest)
 }
 
 
-int
+static int
 get_value_at_indices (void *self, const char *long_var_name, void *dest, int * inds, int len)
 {
   double *src = NULL;
@@ -317,7 +317,7 @@ get_value_at_indices (void *self, const char *long_var_name, void *dest, int * i
 }
 
 
-int
+static int
 get_double (void *self, const char *long_var_name, double *dest)
 {
   double *src = NULL;
@@ -331,7 +331,7 @@ get_double (void *self, const char *long_var_name, double *dest)
 }
 
 
-int
+static int
 get_double_ptr (void *self, const char *long_var_name, double **dest)
 {
   double *src = NULL;
@@ -345,7 +345,7 @@ get_double_ptr (void *self, const char *long_var_name, double **dest)
 }
 
 
-int
+static int
 get_double_at_indices (void *self, const char *long_var_name, double *dest, int * inds, int len)
 {
   double *src = NULL;
@@ -364,7 +364,7 @@ get_double_at_indices (void *self, const char *long_var_name, double *dest, int 
 }
 
 
-int
+static int
 set_value (BMI_CEM_Model *self, const char *long_var_name, void *array)
 {
   void * dest = NULL;
@@ -378,7 +378,7 @@ set_value (BMI_CEM_Model *self, const char *long_var_name, void *array)
 }
 
 
-int
+static int
 set_value_at_indices (void *self, const char *long_var_name, int * inds, int len, void *src)
 {
   double * dest = NULL;
@@ -398,7 +398,7 @@ set_value_at_indices (void *self, const char *long_var_name, int * inds, int len
 }
 
 
-int
+static int
 set_double (void *self, const char *long_var_name, double *array)
 {
   double * dest;
@@ -412,7 +412,7 @@ set_double (void *self, const char *long_var_name, double *array)
 }
 
 
-int
+static int
 set_double_at_indices (void *self, const char *long_var_name, int * inds, int len, double *src)
 {
   double * dest;
@@ -431,7 +431,7 @@ set_double_at_indices (void *self, const char *long_var_name, int * inds, int le
 }
 
 
-int
+static int
 get_component_name (void *self, char * name)
 {
   strncpy (name, "Coastline Evolution Model", BMI_MAX_COMPONENT_NAME);
@@ -444,7 +444,7 @@ const char *input_var_names[BMI_CEM_INPUT_VAR_NAME_COUNT] = {
   "sea_surface_water_wave__azimuth_angle_of_group_velocity"
 };
 
-int
+static int
 get_input_var_names (void *self, char ** names)
 {
   int i;
@@ -461,7 +461,7 @@ const char *output_var_names[BMI_CEM_OUTPUT_VAR_NAME_COUNT] = {
 };
 
 
-int
+static int
 get_output_var_names (void *self, char ** names)
 {
   int i;
@@ -472,7 +472,7 @@ get_output_var_names (void *self, char ** names)
 }
 
 
-int
+static int
 get_start_time (void *self, double * time)
 {
   if (time) {
@@ -485,7 +485,7 @@ get_start_time (void *self, double * time)
 }
 
 
-int
+static int
 get_end_time (void *self, double * time)
 {
   *time = StopAfter;
@@ -493,7 +493,7 @@ get_end_time (void *self, double * time)
 }
 
 
-int
+static int
 get_current_time (void *self, double * time)
 {
   *time = CurrentTimeStep * TimeStep;
@@ -501,7 +501,7 @@ get_current_time (void *self, double * time)
 }
 
 
-int
+static int
 get_time_step (void *self, double * dt)
 {
   *dt = TimeStep;
@@ -509,7 +509,7 @@ get_time_step (void *self, double * dt)
 }
 
 
-int
+static int
 get_time_units (void *self, char * units)
 {
   strncpy (units, "d", BMI_MAX_UNITS_NAME);
