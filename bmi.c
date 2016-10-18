@@ -153,78 +153,6 @@ finalize (void *self)
 
 
 static int
-get_var_grid(void *self, const char *name, int *grid_id) {
-  if (strcmp (name, "sea_water__depth") == 0 ||
-      strcmp (name, "land_surface__elevation") == 0) {
-    *grid_id = 0;
-    return BMI_SUCCESS;
-  }
-  else {
-    *grid_id = -1;
-    return BMI_FAILURE;
-  }
-}
-
-
-static int
-get_var_type (void *self, const char *long_var_name, char * type)
-{
-  if (strcmp (long_var_name, "sea_water__depth") == 0 ||
-      strcmp (long_var_name, "land_surface__elevation") == 0) {
-    *type = BMI_VAR_TYPE_DOUBLE;
-    return BMI_SUCCESS;
-  }
-  else {
-    *type = BMI_VAR_TYPE_UNKNOWN;
-    return BMI_FAILURE;
-  }
-}
-
-
-static int
-get_var_units (void *self, const char *long_var_name, char * units)
-{
-  if (strcmp (long_var_name, "sea_water__depth") == 0 ||
-      strcmp (long_var_name, "land_surface__elevation") == 0) {
-    strncpy (units, "meter", BMI_MAX_UNITS_NAME);
-    return BMI_SUCCESS;
-  }
-  else {
-    units[0] = '\0';
-    return BMI_FAILURE;
-  }
-}
-
-
-static int
-get_var_itemsize(void *self, const char *name, int *itemsize) {
-  if (strcmp (name, "sea_water__depth") == 0 ||
-      strcmp (name, "land_surface__elevation") == 0) {
-    *itemsize = sizeof(double);
-    return BMI_SUCCESS;
-  } else {
-    *itemsize = 0;
-    return BMI_FAILURE;
-  }
-}
-
-
-
-static int
-get_var_nbytes(void *self, const char *name, int *nbytes) {
-  int id, size, itemsize;
-
-  return_on_error(get_var_grid(self, name, &id));
-  return_on_error(get_grid_size(self, id, &size));
-  return_on_error(get_var_itemsize(self, name, &itemsize));
-
-  *nbytes = itemsize * size;
-
-  return BMI_SUCCESS;
-}
-
-
-static int
 get_grid_rank (void *self, int grid_id, int * rank)
 {
   if (grid_id == 0) {
@@ -302,6 +230,78 @@ get_grid_type (void *self, int grid_id, char * type)
     *type = BMI_GRID_TYPE_UNKNOWN;
     return BMI_FAILURE;
   }
+}
+
+
+static int
+get_var_grid(void *self, const char *name, int *grid_id) {
+  if (strcmp (name, "sea_water__depth") == 0 ||
+      strcmp (name, "land_surface__elevation") == 0) {
+    *grid_id = 0;
+    return BMI_SUCCESS;
+  }
+  else {
+    *grid_id = -1;
+    return BMI_FAILURE;
+  }
+}
+
+
+static int
+get_var_type (void *self, const char *long_var_name, char * type)
+{
+  if (strcmp (long_var_name, "sea_water__depth") == 0 ||
+      strcmp (long_var_name, "land_surface__elevation") == 0) {
+    *type = BMI_VAR_TYPE_DOUBLE;
+    return BMI_SUCCESS;
+  }
+  else {
+    *type = BMI_VAR_TYPE_UNKNOWN;
+    return BMI_FAILURE;
+  }
+}
+
+
+static int
+get_var_units (void *self, const char *long_var_name, char * units)
+{
+  if (strcmp (long_var_name, "sea_water__depth") == 0 ||
+      strcmp (long_var_name, "land_surface__elevation") == 0) {
+    strncpy (units, "meter", BMI_MAX_UNITS_NAME);
+    return BMI_SUCCESS;
+  }
+  else {
+    units[0] = '\0';
+    return BMI_FAILURE;
+  }
+}
+
+
+static int
+get_var_itemsize(void *self, const char *name, int *itemsize) {
+  if (strcmp (name, "sea_water__depth") == 0 ||
+      strcmp (name, "land_surface__elevation") == 0) {
+    *itemsize = sizeof(double);
+    return BMI_SUCCESS;
+  } else {
+    *itemsize = 0;
+    return BMI_FAILURE;
+  }
+}
+
+
+
+static int
+get_var_nbytes(void *self, const char *name, int *nbytes) {
+  int id, size, itemsize;
+
+  return_on_error(get_var_grid(self, name, &id));
+  return_on_error(get_grid_size(self, id, &size));
+  return_on_error(get_var_itemsize(self, name, &itemsize));
+
+  *nbytes = itemsize * size;
+
+  return BMI_SUCCESS;
 }
 
 
