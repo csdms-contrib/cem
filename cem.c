@@ -7,6 +7,8 @@
 #include "consts.h"
 #include "globals.h"
 
+#define AngleFactor (1.)
+
 double CellDepth[Xmax][2 * Ymax];      /* Depth array */
 double CliffHeightSlow = 30;  /* Cliff height above sea level for slow weathering rock PWL */
 double CliffHeightFast = 0;   /* Cliff height above sea level for fast weathering rock PWL */
