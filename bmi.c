@@ -323,7 +323,7 @@ get_value (void *self, const char *long_var_name, void *dest)
 
 
 static int
-get_value_ptr (BMI_CEM_Model *self, const char *long_var_name, void **dest)
+get_value_ptr (void *self, const char *long_var_name, void **dest)
 {
   void *data = NULL;
 
@@ -410,7 +410,7 @@ get_double_at_indices (void *self, const char *long_var_name, double *dest, int 
 
 
 static int
-set_value (BMI_CEM_Model *self, const char *long_var_name, void *array)
+set_value (void *self, const char *long_var_name, void *array)
 {
   void * dest = NULL;
 
