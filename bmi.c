@@ -21,6 +21,64 @@ int cem_finalize (void);
 
 
 static int
+get_component_name (void *self, char * name)
+{
+  strncpy (name, "Coastline Evolution Model", BMI_MAX_COMPONENT_NAME);
+  return BMI_SUCCESS;
+}
+
+
+#define INPUT_VAR_NAME_COUNT (2)
+const char *input_var_names[INPUT_VAR_NAME_COUNT] = {
+  "sea_surface_water_wave__significant_height",
+  "sea_surface_water_wave__azimuth_angle_of_group_velocity"
+};
+
+
+#define OUTPUT_VAR_NAME_COUNT (2)
+const char *output_var_names[OUTPUT_VAR_NAME_COUNT] = {
+  "sea_water__depth",
+  "land_surface__elevation"
+};
+
+
+static int
+get_input_var_name_count(void *self, int *count)
+{
+    *count = INPUT_VAR_NAME_COUNT;
+    return BMI_SUCCESS;
+}
+
+
+static int
+get_input_var_names (void *self, char ** names) {
+  int i;
+  for (i=0; i<INPUT_VAR_NAME_COUNT; i++) {
+    strncpy(names[i], input_var_names[i], BMI_MAX_VAR_NAME);
+  }
+  return BMI_SUCCESS;
+}
+
+static int
+get_output_var_name_count(void *self, int *count)
+{
+    *count = OUTPUT_VAR_NAME_COUNT;
+    return BMI_SUCCESS;
+}
+
+
+static int
+get_output_var_names(void *self, char **names)
+{
+    int i;
+    for (i=0; i<OUTPUT_VAR_NAME_COUNT; i++) {
+        strncpy(names[i], output_var_names[i], BMI_MAX_VAR_NAME);
+    }
+    return BMI_SUCCESS;
+}
+
+
+static int
 get_start_time (void *self, double * time)
 {
   if (time) {
@@ -355,47 +413,6 @@ set_value (void *self, const char *name, void *array)
     memcpy (dest, array, nbytes);
     return BMI_SUCCESS;
   }
-}
-
-
-static int
-get_component_name (void *self, char * name)
-{
-  strncpy (name, "Coastline Evolution Model", BMI_MAX_COMPONENT_NAME);
-  return BMI_SUCCESS;
-}
-
-
-const char *input_var_names[BMI_CEM_INPUT_VAR_NAME_COUNT] = {
-  "sea_surface_water_wave__significant_height",
-  "sea_surface_water_wave__azimuth_angle_of_group_velocity"
-};
-
-static int
-get_input_var_names (void *self, char ** names)
-{
-  int i;
-  for (i=0; i<BMI_CEM_INPUT_VAR_NAME_COUNT; i++) {
-    strncpy (names[i], input_var_names[i], BMI_MAX_VAR_NAME);
-  }
-  return BMI_SUCCESS;
-}
-
-
-const char *output_var_names[BMI_CEM_OUTPUT_VAR_NAME_COUNT] = {
-  "sea_water__depth",
-  "land_surface__elevation"
-};
-
-
-static int
-get_output_var_names (void *self, char ** names)
-{
-  int i;
-  for (i=0; i<BMI_CEM_OUTPUT_VAR_NAME_COUNT; i++) {
-    strncpy (names[i], output_var_names[i], BMI_MAX_VAR_NAME);
-  }
-  return BMI_SUCCESS;
 }
 
 
