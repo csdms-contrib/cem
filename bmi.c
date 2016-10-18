@@ -126,7 +126,7 @@ update_until (void *self, double t)
     double now;
 
     get_time_step (self, &dt);
-    gt_current_time (self, &now);
+    get_current_time (self, &now);
 
     {
       int n;
