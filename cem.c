@@ -4058,8 +4058,8 @@ void InitNormal(void)
       Age[x][y] = 0;
     }
 
-  for (x = 0; x <= Xmax;
-       x++) { /*LMV Assign fast and slow weathering portions */
+  // LMV Assign fast and slow weathering portions
+  for (x = 0; x < Xmax; x++) {
     for (n = 0; n <= 2 * NumberChunk; n++) {
       for (y = n * ChunkLength; y < ((n + 2) * ChunkLength); y++) {
         if (n % 3 == 0 && (!blocks || x > InitialRock - 3)) { /* if even */
