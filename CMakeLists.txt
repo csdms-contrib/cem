@@ -29,6 +29,6 @@ target_link_libraries(cem bmicem)
 ########### Install files ###############
 
 install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/cem DESTINATION bin COMPONENT cem)
-install(FILES bmi.h bmi_const.h
+install(FILES bmi.h
         DESTINATION include/cem
         COMPONENT cem)

@@ -5,8 +5,6 @@
 extern "C" {
 #endif
 
-#include "bmi_const.h"
-
 #define BMI_CEM_INPUT_VAR_NAME_COUNT 2
 #define BMI_CEM_OUTPUT_VAR_NAME_COUNT 2
 
