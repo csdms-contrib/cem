@@ -281,11 +281,11 @@ static int
 get_grid_type (void *self, int grid_id, char * type)
 {
   if (grid_id == 0) {
-    *type = BMI_GRID_TYPE_UNIFORM;
+    strncpy(type, "uniform_rectilinear", 2048);
     return BMI_SUCCESS;
   }
   else {
-    *type = BMI_GRID_TYPE_UNKNOWN;
+    *type = '\0';
     return BMI_FAILURE;
   }
 }
@@ -310,11 +310,11 @@ get_var_type (void *self, const char *long_var_name, char * type)
 {
   if (strcmp (long_var_name, "sea_water__depth") == 0 ||
       strcmp (long_var_name, "land_surface__elevation") == 0) {
-    *type = BMI_VAR_TYPE_DOUBLE;
+    strncpy(type, "double", BMI_MAX_UNITS_NAME);
     return BMI_SUCCESS;
   }
   else {
-    *type = BMI_VAR_TYPE_UNKNOWN;
+    *type = '\0';
     return BMI_FAILURE;
   }
 }
