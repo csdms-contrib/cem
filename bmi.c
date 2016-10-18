@@ -24,6 +24,51 @@ int update_frac (void *, double);
 
 
 static int
+get_start_time (void *self, double * time)
+{
+  if (time) {
+    *time = 0.;
+    return BMI_SUCCESS;
+  }
+  else {
+    return BMI_FAILURE;
+  }
+}
+
+
+static int
+get_end_time (void *self, double * time)
+{
+  *time = StopAfter;
+  return BMI_SUCCESS;
+}
+
+
+static int
+get_current_time (void *self, double * time)
+{
+  *time = CurrentTimeStep * TimeStep;
+  return BMI_SUCCESS;
+}
+
+
+static int
+get_time_step (void *self, double * dt)
+{
+  *dt = TimeStep;
+  return BMI_SUCCESS;
+}
+
+
+static int
+get_time_units (void *self, char * units)
+{
+  strncpy (units, "d", BMI_MAX_UNITS_NAME);
+  return BMI_SUCCESS;
+}
+
+
+static int
 initialize (const char *config_file, void ** handle) {
   CemModel *self = NULL;
   int status;
@@ -468,51 +513,6 @@ get_output_var_names (void *self, char ** names)
   for (i=0; i<BMI_CEM_OUTPUT_VAR_NAME_COUNT; i++) {
     strncpy (names[i], output_var_names[i], BMI_MAX_VAR_NAME);
   }
-  return BMI_SUCCESS;
-}
-
-
-static int
-get_start_time (void *self, double * time)
-{
-  if (time) {
-    *time = 0.;
-    return BMI_SUCCESS;
-  }
-  else {
-    return BMI_FAILURE;
-  }
-}
-
-
-static int
-get_end_time (void *self, double * time)
-{
-  *time = StopAfter;
-  return BMI_SUCCESS;
-}
-
-
-static int
-get_current_time (void *self, double * time)
-{
-  *time = CurrentTimeStep * TimeStep;
-  return BMI_SUCCESS;
-}
-
-
-static int
-get_time_step (void *self, double * dt)
-{
-  *dt = TimeStep;
-  return BMI_SUCCESS;
-}
-
-
-static int
-get_time_units (void *self, char * units)
-{
-  strncpy (units, "d", BMI_MAX_UNITS_NAME);
   return BMI_SUCCESS;
 }
 
