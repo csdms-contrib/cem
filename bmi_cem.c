@@ -68,17 +68,17 @@ static int get_start_time(void *self, double *time) {
 }
 
 static int get_end_time(void *self, double *time) {
-  *time = StopAfter;
+  *time = stop_after;
   return BMI_SUCCESS;
 }
 
 static int get_current_time(void *self, double *time) {
-  *time = CurrentTimeStep * TimeStep;
+  *time = current_time_step * time_step;
   return BMI_SUCCESS;
 }
 
 static int get_time_step(void *self, double *dt) {
-  *dt = TimeStep;
+  *dt = time_step;
   return BMI_SUCCESS;
 }
 
@@ -118,11 +118,11 @@ static int update_frac(void *self, double f) {
 
     get_time_step(self, &dt);
 
-    TimeStep = f * dt;
+    time_step = f * dt;
 
     update(self);
 
-    TimeStep = dt;
+    time_step = dt;
   }
 
   return BMI_SUCCESS;
@@ -279,16 +279,16 @@ static int get_value_ptr(void *self, const char *long_var_name, void **dest) {
   void *data = NULL;
 
   if (strcmp(long_var_name, "sea_water__depth") == 0)
-    data = (void *)ShelfDepth[0];
+    data = (void *)shelf_depth[0];
   else if (strcmp(long_var_name, "land_surface__elevation") == 0)
-    data = (void *)Topography[0];
+    data = (void *)topography[0];
   else if (strcmp(long_var_name,
                   "sea_surface_water_wave__significant_height") == 0)
-    data = (void *)Hsig[0];
+    data = (void *)wave_h_sig[0];
   else if (strcmp(long_var_name,
                   "sea_surface_water_wave__azimuth_angle_of_group_velocity") ==
            0)
-    data = (void *)Dir[0];
+    data = (void *)wave_dir[0];
 
   *dest = data;
 
