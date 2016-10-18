@@ -306,23 +306,6 @@ get_var_nbytes(void *self, const char *name, int *nbytes) {
 
 
 static int
-get_value (void *self, const char *name, void *dest)
-{
-  void *src = NULL;
-
-  if (get_value_ptr (self, name, &src) == BMI_FAILURE) {
-    return BMI_FAILURE;
-  } else {
-    int nbytes;
-    return_on_error(get_var_nbytes(self, name, &nbytes));
-    memcpy (dest, src, nbytes);
-  }
-
-  return BMI_SUCCESS;
-}
-
-
-static int
 get_value_ptr (void *self, const char *long_var_name, void **dest)
 {
   void *data = NULL;
@@ -339,6 +322,23 @@ get_value_ptr (void *self, const char *long_var_name, void **dest)
   *dest = data;
 
   return (data == NULL)?BMI_FAILURE:BMI_SUCCESS;
+}
+
+
+static int
+get_value (void *self, const char *name, void *dest)
+{
+  void *src = NULL;
+
+  if (get_value_ptr (self, name, &src) == BMI_FAILURE) {
+    return BMI_FAILURE;
+  } else {
+    int nbytes;
+    return_on_error(get_var_nbytes(self, name, &nbytes));
+    memcpy (dest, src, nbytes);
+  }
+
+  return BMI_SUCCESS;
 }
 
 
