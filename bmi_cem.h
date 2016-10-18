@@ -7,13 +7,9 @@ extern "C" {
 
 #include "bmi.h"
 
-BMI_Model * register_bmi_cem(BMI_Model *model);
+BMI_Model *register_bmi_cem(BMI_Model *model);
 
-
-typedef struct {
-  double time;
-} CemModel;
-
+typedef struct { double time; } CemModel;
 
 #if defined(__cplusplus)
 }
