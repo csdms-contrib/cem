@@ -1,4 +1,5 @@
 #include "bmi.h"
+#include "bmi_cem.h"
 
 #include <stdio.h>
 #include <stdlib.h>

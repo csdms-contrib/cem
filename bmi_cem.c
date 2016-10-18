@@ -4,8 +4,8 @@
 #include <float.h>
 
 #include "bmi.h"
+#include "bmi_cem.h"
 #include "globals.h"
-
 
 #define return_on_error(stmt) { \
   const int status = (stmt); \

@@ -14,7 +14,7 @@ set (BUILD_SHARED_LIBS ON)
 
 include_directories( ${CMAKE_CURRENT_SOURCE_DIR} )
 
-set (bmicem_sources cem.c bmi.c)
+set (bmicem_sources cem.c bmi_cem.c)
 
 add_library (bmicem ${bmicem_sources} )
 
@@ -29,6 +29,6 @@ target_link_libraries(cem bmicem)
 ########### Install files ###############
 
 install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/cem DESTINATION bin COMPONENT cem)
-install(FILES bmi.h
+install(FILES bmi.h bmi_cem.h
         DESTINATION include/cem
         COMPONENT cem)

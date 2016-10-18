@@ -74,13 +74,6 @@ typedef struct {
 } BMI_Model;
 
 
-typedef struct {
-  double time;
-} CemModel;
-
-BMI_Model * register_bmi_cem(BMI_Model *model);
-
-
 #if defined(__cplusplus)
 }
 #endif
