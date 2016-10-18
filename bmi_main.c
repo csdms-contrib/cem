@@ -2,15 +2,27 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <math.h>
 
 
 int
-main (void)
+main (int argc, char*argv[])
 {
   BMI_Model *cem = (BMI_Model*)malloc(sizeof(BMI_Model));
   int err = BMI_SUCCESS;
   int status;
+
+  if (argc > 1) {
+    if (strcmp (argv[1], "--version") == 0) {
+      fprintf (stdout, "The Coastal Evolution Model version 0.1.1\n");
+      exit (0);
+    }
+    else if (strcmp (argv[1], "--help") == 0) {
+      fprintf (stdout, "Usage: cem [--help] [--version]\n");
+      exit (0);
+    }
+  }
 
   register_bmi_cem(cem);
 
