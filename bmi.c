@@ -20,9 +20,6 @@ int cem_update_until (int);
 int cem_finalize (void);
 
 
-int update_frac (void *, double);
-
-
 static int
 get_start_time (void *self, double * time)
 {
