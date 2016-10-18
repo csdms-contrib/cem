@@ -100,7 +100,6 @@ static double EvaluateAngle; // Temporary angle holder for the ConvertAngle func
 // for temporary debugging only, 5-5-14
 // UPDATE 11/20/14 -- now using these for upwind scheme fixing, so keep 'em
 // around (probably should rename...)
-static double Qsdebug[MaxBeachLength];
 static double Hsigdebug[MaxBeachLength];
 static double Dirdebug[MaxBeachLength];
 static double Hddebug[MaxBeachLength];
@@ -129,16 +128,12 @@ static char FellOffArray; // Flag used to determine if accidentally went off arr
 static char FellOffRockArray; // Flag used to determine if accidentally went off rock array LMV
 static double MassInitial; // For conservation of mass calcs
 static double MassCurrent;
-static int device;
-static short button;
-static long buttonback;
 static int NumWaveBins; // For Input Wave - number of bins
 static double WaveMax[36]; // Max Angle for specific bin
 static double WaveProb[36]; // Probability of Certain Bin
 static double WaveAngleIn;
 static double WaveHeightIn;
 static double WavePeriodIn;
-static double ControlFileIn[20]; // Initialisation data read from file
 
 static char StartFromFile = 'n'; // start from saved file?
 
@@ -5539,8 +5534,7 @@ float ConvertAngle(float EvaluteAngle, int type)
 
 /* SWAN data parse function! PWL, 10-18-13. #SWAN */
 void ParseSWAN(int ShoreAngleLoc, float ShoreAngle) {
-  float LookOffshore; /* What direction to look offshore to find a breaking
-                         wave? */
+  // float LookOffshore; /* What direction to look offshore to find a breaking wave? */
   /* float	LookSlope; */ /* What slope (x,y) is the line of sight? */
   int xcoord, ycoord;
   /* int NextInLine; */
@@ -5565,11 +5559,6 @@ void ParseSWAN(int ShoreAngleLoc, float ShoreAngle) {
                  dubugging */
   /* float	RAngle; */ /* Angle retrieved from SWAN -- extraneous for
                                 dubugging */
-
-  int HowFar; /* Used for debugging -- tracks how many cells the routine goes
-                 offshore to find
-                       wave breaking threshold*/
-
   int x; /* iterator for simple search function, 11-12-13 -- can delete for
             shoreline angle-based version */
 
@@ -5602,7 +5591,7 @@ void ParseSWAN(int ShoreAngleLoc, float ShoreAngle) {
   /* i think this is incorrect -- PWL 11/20/14 */
   /* Don't use Surrounding Angle for Qs! This method is ignoring upwind
    * conditions */
-  LookOffshore = SurroundingAngle[ShoreAngleLoc];
+  // LookOffshore = SurroundingAngle[ShoreAngleLoc];
 
   /* NEXT STEP */
   /* Start at middle of cell and search seaward. Find next cell in path. Might
@@ -5641,7 +5630,6 @@ void ParseSWAN(int ShoreAngleLoc, float ShoreAngle) {
     /* Can remove the lines below - it's for simple search function, 11-12-13 */
     LastXCell = xcoord;
     xcoord = xcoord + x;
-    HowFar = x;
     /* ------ */
     ydebug[ShoreAngleLoc] = 6;
     /* Is this a breaking wave cell? Also, make sure not to divide by zero or
@@ -5680,11 +5668,6 @@ void ParseSWAN(int ShoreAngleLoc, float ShoreAngle) {
         /*OopsImBroke = 1;*/
         /*if (debugSWAN) */
         /*{*/
-        /*printf("WvHeight: %f , Conv Angle: %f, Adj Angle: %f, DepthBreak: %f,
-         x: %d, y: %d, LO: %f, distance: %d \n",
-         wave_h_sig[LastXCell][ycoord], CAngle, Angle, shelf_depth[LastXCell][ycoord],
-         LastXCell,
-         ycoord, LookOffshore, HowFar);*/
         /* Save to file! */
         /*printf("Saving SWAN shoreface bathy as: %s 		",
          * SWANsavename);*/
