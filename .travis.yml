@@ -1,0 +1,16 @@
+language: c
+os:
+- linux
+- osx
+sudo: false
+install:
+  - echo "Build on $TRAVIS_OS_NAME"
+  - mkdir _build
+  - cd _build
+  - cmake .. -DCMAKE_INSTALL_PREFIX=$HOME -DCMAKE_BUILD_TYPE=Release
+  - make all
+  - make install
+script:
+- which cem
+- cem --help
+- cem --version
