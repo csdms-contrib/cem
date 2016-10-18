@@ -309,14 +309,17 @@ get_grid_type (void *self, int grid_id, char * type)
 
 
 static int
-get_value (void *self, const char *long_var_name, void *dest)
+get_value (void *self, const char *name, void *dest)
 {
   void *src = NULL;
 
-  if (get_value_ptr (self, long_var_name, &src) == BMI_FAILURE)
+  if (get_value_ptr (self, name, &src) == BMI_FAILURE) {
     return BMI_FAILURE;
-
-  memcpy (dest, src, sizeof (double) * Xmax * Ymax * 2);
+  } else {
+    int nbytes;
+    return_on_error(get_var_nbytes(self, name, &nbytes));
+    memcpy (dest, src, nbytes);
+  }
 
   return BMI_SUCCESS;
 }
@@ -410,11 +413,11 @@ get_double_at_indices (void *self, const char *long_var_name, double *dest, int 
 
 
 static int
-set_value (void *self, const char *long_var_name, void *array)
+set_value (void *self, const char *name, void *array)
 {
   void * dest = NULL;
 
-  if (get_value_ptr (self, long_var_name, &dest) == BMI_FAILURE) {
+  if (get_value_ptr (self, name, &dest) == BMI_FAILURE) {
     return BMI_FAILURE;
   } else {
     int nbytes = 0;
