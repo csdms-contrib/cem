@@ -7,6 +7,13 @@
 #include "globals.h"
 
 
+#define return_on_error(stmt) { \
+  const int status = (stmt); \
+  if (status != BMI_SUCCESS) \
+  return status; \
+}
+
+
 int cem_initialize (void);
 int cem_update (void);
 int cem_update_until (int);
@@ -16,7 +23,7 @@ int cem_finalize (void);
 int update_frac (void *, double);
 
 
-int
+static int
 initialize (const char *config_file, void ** handle) {
   CemModel *self = NULL;
   int status;
@@ -104,6 +111,20 @@ finalize (void *self)
 
 
 int
+get_var_grid(void *self, const char *name, int *grid_id) {
+  if (strcmp (name, "sea_water__depth") == 0 ||
+      strcmp (name, "land_surface__elevation") == 0) {
+    *grid_id = 0;
+    return BMI_SUCCESS;
+  }
+  else {
+    *grid_id = -1;
+    return BMI_FAILURE;
+  }
+}
+
+
+int
 get_var_type (void *self, const char *long_var_name, char * type)
 {
   if (strcmp (long_var_name, "sea_water__depth") == 0 ||
@@ -133,11 +154,38 @@ get_var_units (void *self, const char *long_var_name, char * units)
 }
 
 
+static int
+get_var_itemsize(void *self, const char *name, int *itemsize) {
+  if (strcmp (name, "sea_water__depth") == 0 ||
+      strcmp (name, "land_surface__elevation") == 0) {
+    *itemsize = sizeof(double);
+    return BMI_SUCCESS;
+  } else {
+    *itemsize = 0;
+    return BMI_FAILURE;
+  }
+}
+
+
+
+static int
+get_var_nbytes(void *self, const char *name, int *nbytes) {
+  int id, size, itemsize;
+
+  return_on_error(get_var_grid(self, name, &id));
+  return_on_error(get_grid_size(self, id, &size));
+  return_on_error(get_var_itemsize(self, name, &itemsize));
+
+  *nbytes = itemsize * size;
+
+  return BMI_SUCCESS;
+}
+
+
 int
-get_var_rank (void *self, const char *long_var_name, int * rank)
+get_grid_rank (void *self, int grid_id, int * rank)
 {
-  if (strcmp (long_var_name, "sea_water__depth") == 0 ||
-      strcmp (long_var_name, "land_surface__elevation") == 0) {
+  if (grid_id == 0) {
     *rank = 2;
     return BMI_SUCCESS;
   }
@@ -149,50 +197,62 @@ get_var_rank (void *self, const char *long_var_name, int * rank)
 
 
 int
-get_grid_shape (void *self, const char *long_var_name, int * shape)
+get_grid_size (void *self, int grid_id, int * size)
 {
-  if (strcmp (long_var_name, "sea_water__depth") == 0 ||
-      strcmp (long_var_name, "land_surface__elevation") == 0) {
-    shape[0] = Xmax;
-    shape[1] = Ymax * 2;
+  if (grid_id == 0) {
+    *size = Xmax * Ymax;
+    return BMI_SUCCESS;
   }
-
-  return BMI_SUCCESS;
+  else {
+    *size = -1;
+    return BMI_FAILURE;
+  }
 }
 
 
+int
+get_grid_shape (void *self, int grid_id, int * shape)
+{
+  if (grid_id == 0) {
+    shape[0] = Xmax;
+    shape[1] = Ymax;
+    return BMI_SUCCESS;
+  } else {
+    return BMI_FAILURE;
+  }
+}
+
 
 int
-get_grid_spacing (void *self, const char *long_var_name, double * spacing)
+get_grid_spacing (void *self, int grid_id, double * spacing)
 {
-  if (strcmp (long_var_name, "sea_water__depth") == 0 ||
-      strcmp (long_var_name, "land_surface__elevation") == 0) {
+  if (grid_id == 0) {
     spacing[0] = CellWidth;
     spacing[1] = CellWidth;
+    return BMI_SUCCESS;
+  } else {
+    return BMI_FAILURE;
   }
-
-  return BMI_SUCCESS;
 }
 
 
 int
-gt_grid_origin (void *self, const char *long_var_name, double * origin)
+get_grid_origin (void *self, int grid_id, double * origin)
 {
-  if (strcmp (long_var_name, "sea_water__depth") == 0 ||
-      strcmp (long_var_name, "land_surface__elevation") == 0) {
+  if (grid_id == 0) {
     origin[0] = 0.;
     origin[1] = 0.;
+    return BMI_SUCCESS;
+  } else {
+    return BMI_FAILURE;
   }
-
-  return BMI_SUCCESS;
 }
 
 
 int
-get_grid_type (void *self, const char *long_var_name, char * type)
+get_grid_type (void *self, int grid_id, char * type)
 {
-  if (strcmp (long_var_name, "sea_water__depth") == 0 ||
-      strcmp (long_var_name, "land_surface__elevation") == 0) {
+  if (grid_id == 0) {
     *type = BMI_GRID_TYPE_UNIFORM;
     return BMI_SUCCESS;
   }
@@ -200,7 +260,6 @@ get_grid_type (void *self, const char *long_var_name, char * type)
     *type = BMI_GRID_TYPE_UNKNOWN;
     return BMI_FAILURE;
   }
-  return BMI_SUCCESS;
 }
 
 
