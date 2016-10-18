@@ -13,24 +13,18 @@ int cem_update_until (int);
 int cem_finalize (void);
 
 
-int BMI_CEM_Update_frac (BMI_CEM_Model *, double);
-
-
-struct _BMI_CEM_Model {
-  double time;
-};
+int update_frac (void *, double);
 
 
 int
-BMI_CEM_Initialize (const char *config_file, BMI_CEM_Model ** handle)
-{
-  BMI_CEM_Model *self = NULL;
+initialize (const char *config_file, void ** handle) {
+  CemModel *self = NULL;
   int status;
 
   if (!handle)
     return BMI_FAILURE;
 
-  self = malloc (sizeof (BMI_CEM_Model));
+  self = malloc (sizeof (CemModel));
 
   status = cem_initialize ();
 
@@ -44,7 +38,7 @@ BMI_CEM_Initialize (const char *config_file, BMI_CEM_Model ** handle)
 
 
 int
-BMI_CEM_Update (BMI_CEM_Model *self)
+update (void *self)
 {
   if (cem_update () == 0)
     return BMI_SUCCESS;
@@ -54,16 +48,16 @@ BMI_CEM_Update (BMI_CEM_Model *self)
 
 
 int
-BMI_CEM_Update_frac (BMI_CEM_Model *self, double f)
+update_frac (void *self, double f)
 {
   if (f>0) {
     double dt;
 
-    BMI_CEM_Get_time_step (self, &dt);
+    get_time_step (self, &dt);
 
     TimeStep = f * dt;
 
-    BMI_CEM_Update (self);
+    update (self);
 
     TimeStep = dt;
   }
@@ -73,24 +67,24 @@ BMI_CEM_Update_frac (BMI_CEM_Model *self, double f)
 
 
 int
-BMI_CEM_Update_until (BMI_CEM_Model *self, double t)
+update_until (void *self, double t)
 {
   {
     double dt;
     double now;
 
-    BMI_CEM_Get_time_step (self, &dt);
-    BMI_CEM_Get_current_time (self, &now);
+    get_time_step (self, &dt);
+    gt_current_time (self, &now);
 
     {
       int n;
       const double n_steps = (t - now) / dt;
       const int n_full_steps = (int)n_steps;
       for (n=0; n<n_full_steps; n++) {
-        BMI_CEM_Update (self);
+        update (self);
       }
 
-      BMI_CEM_Update_frac (self, n_steps - n_full_steps);
+      update_frac (self, n_steps - n_full_steps);
     }
   }
 
@@ -99,7 +93,7 @@ BMI_CEM_Update_until (BMI_CEM_Model *self, double t)
 
 
 int
-BMI_CEM_Finalize (BMI_CEM_Model *self)
+finalize (void *self)
 {
   if (self) {
     cem_finalize ();
@@ -110,7 +104,7 @@ BMI_CEM_Finalize (BMI_CEM_Model *self)
 
 
 int
-BMI_CEM_Get_var_type (BMI_CEM_Model *self, const char *long_var_name, BMI_Var_type * type)
+get_var_type (void *self, const char *long_var_name, char * type)
 {
   if (strcmp (long_var_name, "sea_water__depth") == 0 ||
       strcmp (long_var_name, "land_surface__elevation") == 0) {
@@ -125,7 +119,7 @@ BMI_CEM_Get_var_type (BMI_CEM_Model *self, const char *long_var_name, BMI_Var_ty
 
 
 int
-BMI_CEM_Get_var_units (BMI_CEM_Model *self, const char *long_var_name, char * units)
+get_var_units (void *self, const char *long_var_name, char * units)
 {
   if (strcmp (long_var_name, "sea_water__depth") == 0 ||
       strcmp (long_var_name, "land_surface__elevation") == 0) {
@@ -140,7 +134,7 @@ BMI_CEM_Get_var_units (BMI_CEM_Model *self, const char *long_var_name, char * un
 
 
 int
-BMI_CEM_Get_var_rank (BMI_CEM_Model *self, const char *long_var_name, int * rank)
+get_var_rank (void *self, const char *long_var_name, int * rank)
 {
   if (strcmp (long_var_name, "sea_water__depth") == 0 ||
       strcmp (long_var_name, "land_surface__elevation") == 0) {
@@ -155,7 +149,7 @@ BMI_CEM_Get_var_rank (BMI_CEM_Model *self, const char *long_var_name, int * rank
 
 
 int
-BMI_CEM_Get_grid_shape (BMI_CEM_Model *self, const char *long_var_name, int * shape)
+get_grid_shape (void *self, const char *long_var_name, int * shape)
 {
   if (strcmp (long_var_name, "sea_water__depth") == 0 ||
       strcmp (long_var_name, "land_surface__elevation") == 0) {
@@ -169,7 +163,7 @@ BMI_CEM_Get_grid_shape (BMI_CEM_Model *self, const char *long_var_name, int * sh
 
 
 int
-BMI_CEM_Get_grid_spacing (BMI_CEM_Model *self, const char *long_var_name, double * spacing)
+get_grid_spacing (void *self, const char *long_var_name, double * spacing)
 {
   if (strcmp (long_var_name, "sea_water__depth") == 0 ||
       strcmp (long_var_name, "land_surface__elevation") == 0) {
@@ -182,7 +176,7 @@ BMI_CEM_Get_grid_spacing (BMI_CEM_Model *self, const char *long_var_name, double
 
 
 int
-BMI_CEM_Get_grid_origin (BMI_CEM_Model *self, const char *long_var_name, double * origin)
+gt_grid_origin (void *self, const char *long_var_name, double * origin)
 {
   if (strcmp (long_var_name, "sea_water__depth") == 0 ||
       strcmp (long_var_name, "land_surface__elevation") == 0) {
@@ -195,7 +189,7 @@ BMI_CEM_Get_grid_origin (BMI_CEM_Model *self, const char *long_var_name, double 
 
 
 int
-BMI_CEM_Get_grid_type (BMI_CEM_Model *self, const char *long_var_name, BMI_Grid_type * type)
+get_grid_type (void *self, const char *long_var_name, char * type)
 {
   if (strcmp (long_var_name, "sea_water__depth") == 0 ||
       strcmp (long_var_name, "land_surface__elevation") == 0) {
@@ -211,11 +205,11 @@ BMI_CEM_Get_grid_type (BMI_CEM_Model *self, const char *long_var_name, BMI_Grid_
 
 
 int
-BMI_CEM_Get_value (BMI_CEM_Model *self, const char *long_var_name, void *dest)
+get_value (void *self, const char *long_var_name, void *dest)
 {
   void *src = NULL;
 
-  if (BMI_CEM_Get_value_ptr (self, long_var_name, &src) == BMI_FAILURE)
+  if (get_value_ptr (self, long_var_name, &src) == BMI_FAILURE)
     return BMI_FAILURE;
 
   memcpy (dest, src, sizeof (double) * Xmax * Ymax * 2);
@@ -225,7 +219,7 @@ BMI_CEM_Get_value (BMI_CEM_Model *self, const char *long_var_name, void *dest)
 
 
 int
-BMI_CEM_Get_value_ptr (BMI_CEM_Model *self, const char *long_var_name, void **dest)
+get_value_ptr (BMI_CEM_Model *self, const char *long_var_name, void **dest)
 {
   void *data = NULL;
 
@@ -245,11 +239,11 @@ BMI_CEM_Get_value_ptr (BMI_CEM_Model *self, const char *long_var_name, void **de
 
 
 int
-BMI_CEM_Get_value_at_indices (BMI_CEM_Model *self, const char *long_var_name, void *dest, int * inds, int len)
+get_value_at_indices (void *self, const char *long_var_name, void *dest, int * inds, int len)
 {
   double *src = NULL;
 
-  if (BMI_CEM_Get_value_ptr (self, long_var_name, (void*)&src) == BMI_FAILURE)
+  if (get_value_ptr (self, long_var_name, (void*)&src) == BMI_FAILURE)
     return BMI_FAILURE;
 
   { /* Copy the data */
@@ -265,11 +259,11 @@ BMI_CEM_Get_value_at_indices (BMI_CEM_Model *self, const char *long_var_name, vo
 
 
 int
-BMI_CEM_Get_double (BMI_CEM_Model *self, const char *long_var_name, double *dest)
+get_double (void *self, const char *long_var_name, double *dest)
 {
   double *src = NULL;
 
-  if (BMI_CEM_Get_value_ptr (self, long_var_name, (void*)&src) == BMI_FAILURE)
+  if (get_value_ptr (self, long_var_name, (void*)&src) == BMI_FAILURE)
     return BMI_FAILURE;
 
   memcpy (dest, src, sizeof (double) * Xmax * Ymax * 2);
@@ -279,11 +273,11 @@ BMI_CEM_Get_double (BMI_CEM_Model *self, const char *long_var_name, double *dest
 
 
 int
-BMI_CEM_Get_double_ptr (BMI_CEM_Model *self, const char *long_var_name, double **dest)
+get_double_ptr (void *self, const char *long_var_name, double **dest)
 {
   double *src = NULL;
 
-  if (BMI_CEM_Get_value_ptr (self, long_var_name, (void*)&src) == BMI_FAILURE)
+  if (get_value_ptr (self, long_var_name, (void*)&src) == BMI_FAILURE)
     return BMI_FAILURE;
 
   *dest = src;
@@ -293,11 +287,11 @@ BMI_CEM_Get_double_ptr (BMI_CEM_Model *self, const char *long_var_name, double *
 
 
 int
-BMI_CEM_Get_double_at_indices (BMI_CEM_Model *self, const char *long_var_name, double *dest, int * inds, int len)
+get_double_at_indices (void *self, const char *long_var_name, double *dest, int * inds, int len)
 {
   double *src = NULL;
 
-  if (BMI_CEM_Get_value_ptr (self, long_var_name, (void*)&src) == BMI_FAILURE)
+  if (get_value_ptr (self, long_var_name, (void*)&src) == BMI_FAILURE)
     return BMI_FAILURE;
 
   { /* Copy the data */
@@ -312,11 +306,11 @@ BMI_CEM_Get_double_at_indices (BMI_CEM_Model *self, const char *long_var_name, d
 
 
 int
-BMI_CEM_Set_value (BMI_CEM_Model *self, const char *long_var_name, void *array)
+set_value (BMI_CEM_Model *self, const char *long_var_name, void *array)
 {
   void * dest = NULL;
 
-  if (BMI_CEM_Get_value_ptr (self, long_var_name, &dest) == BMI_FAILURE)
+  if (get_value_ptr (self, long_var_name, &dest) == BMI_FAILURE)
     return BMI_FAILURE;
 
   memcpy (dest, array, sizeof (double) * Xmax * Ymax * 2);
@@ -326,11 +320,11 @@ BMI_CEM_Set_value (BMI_CEM_Model *self, const char *long_var_name, void *array)
 
 
 int
-BMI_CEM_Set_value_at_indices (BMI_CEM_Model *self, const char *long_var_name, int * inds, int len, void *src)
+set_value_at_indices (void *self, const char *long_var_name, int * inds, int len, void *src)
 {
   double * dest = NULL;
 
-  if (BMI_CEM_Get_value_ptr (self, long_var_name, (void*)&dest) == BMI_FAILURE)
+  if (get_value_ptr (self, long_var_name, (void*)&dest) == BMI_FAILURE)
     return BMI_FAILURE;
 
   { /* Copy the data */
@@ -346,11 +340,11 @@ BMI_CEM_Set_value_at_indices (BMI_CEM_Model *self, const char *long_var_name, in
 
 
 int
-BMI_CEM_Set_double (BMI_CEM_Model *self, const char *long_var_name, double *array)
+set_double (void *self, const char *long_var_name, double *array)
 {
   double * dest;
 
-  if (BMI_CEM_Get_value_ptr (self, long_var_name, (void*)&dest) == BMI_FAILURE)
+  if (get_value_ptr (self, long_var_name, (void*)&dest) == BMI_FAILURE)
     return BMI_FAILURE;
 
   memcpy (dest, array, sizeof (double) * Xmax * Ymax * 2);
@@ -360,11 +354,11 @@ BMI_CEM_Set_double (BMI_CEM_Model *self, const char *long_var_name, double *arra
 
 
 int
-BMI_CEM_Set_double_at_indices (BMI_CEM_Model *self, const char *long_var_name, int * inds, int len, double *src)
+set_double_at_indices (void *self, const char *long_var_name, int * inds, int len, double *src)
 {
   double * dest;
 
-  if (BMI_CEM_Get_value_ptr (self, long_var_name, (void*)&dest) == BMI_FAILURE)
+  if (get_value_ptr (self, long_var_name, (void*)&dest) == BMI_FAILURE)
     return BMI_FAILURE;
 
   { /* Copy the data */
@@ -379,7 +373,7 @@ BMI_CEM_Set_double_at_indices (BMI_CEM_Model *self, const char *long_var_name, i
 
 
 int
-BMI_CEM_Get_component_name (BMI_CEM_Model *self, char * name)
+get_component_name (void *self, char * name)
 {
   strncpy (name, "Coastline Evolution Model", BMI_MAX_COMPONENT_NAME);
   return BMI_SUCCESS;
@@ -392,7 +386,7 @@ const char *input_var_names[BMI_CEM_INPUT_VAR_NAME_COUNT] = {
 };
 
 int
-BMI_CEM_Get_input_var_names (BMI_CEM_Model *self, char ** names)
+get_input_var_names (void *self, char ** names)
 {
   int i;
   for (i=0; i<BMI_CEM_INPUT_VAR_NAME_COUNT; i++) {
@@ -407,8 +401,9 @@ const char *output_var_names[BMI_CEM_OUTPUT_VAR_NAME_COUNT] = {
   "land_surface__elevation"
 };
 
+
 int
-BMI_CEM_Get_output_var_names (BMI_CEM_Model *self, char ** names)
+get_output_var_names (void *self, char ** names)
 {
   int i;
   for (i=0; i<BMI_CEM_OUTPUT_VAR_NAME_COUNT; i++) {
@@ -419,7 +414,7 @@ BMI_CEM_Get_output_var_names (BMI_CEM_Model *self, char ** names)
 
 
 int
-BMI_CEM_Get_start_time (BMI_CEM_Model *self, double * time)
+get_start_time (void *self, double * time)
 {
   if (time) {
     *time = 0.;
@@ -432,7 +427,7 @@ BMI_CEM_Get_start_time (BMI_CEM_Model *self, double * time)
 
 
 int
-BMI_CEM_Get_end_time (BMI_CEM_Model *self, double * time)
+get_end_time (void *self, double * time)
 {
   *time = StopAfter;
   return BMI_SUCCESS;
@@ -440,7 +435,7 @@ BMI_CEM_Get_end_time (BMI_CEM_Model *self, double * time)
 
 
 int
-BMI_CEM_Get_current_time (BMI_CEM_Model *self, double * time)
+get_current_time (void *self, double * time)
 {
   *time = CurrentTimeStep * TimeStep;
   return BMI_SUCCESS;
@@ -448,7 +443,7 @@ BMI_CEM_Get_current_time (BMI_CEM_Model *self, double * time)
 
 
 int
-BMI_CEM_Get_time_step (BMI_CEM_Model *self, double * dt)
+get_time_step (void *self, double * dt)
 {
   *dt = TimeStep;
   return BMI_SUCCESS;
@@ -456,8 +451,59 @@ BMI_CEM_Get_time_step (BMI_CEM_Model *self, double * dt)
 
 
 int
-BMI_CEM_Get_time_units (BMI_CEM_Model *self, char * units)
+get_time_units (void *self, char * units)
 {
   strncpy (units, "d", BMI_MAX_UNITS_NAME);
   return BMI_SUCCESS;
+}
+
+
+BMI_Model*
+register_bmi_cem(BMI_Model *model)
+{
+    model->self = NULL;
+
+    model->initialize = initialize;
+    model->update = update;
+    model->update_until = update_until;
+    model->update_frac = update_frac;
+    model->finalize = finalize;
+    model->run_model = NULL;
+
+    model->get_component_name = get_component_name;
+    model->get_input_var_name_count = get_input_var_name_count;
+    model->get_output_var_name_count = get_output_var_name_count;
+    model->get_input_var_names = get_input_var_names;
+    model->get_output_var_names = get_output_var_names;
+
+    model->get_var_grid = get_var_grid;
+    model->get_var_type = get_var_type;
+    model->get_var_units = get_var_units;
+    model->get_var_nbytes = get_var_nbytes;
+    model->get_current_time = get_current_time;
+    model->get_start_time = get_start_time;
+    model->get_end_time = get_end_time;
+    model->get_time_units = get_time_units;
+    model->get_time_step = get_time_step;
+
+    model->get_value = get_value;
+    model->get_value_ptr = get_value_ptr;
+    model->get_value_at_indices = get_value_at_indices;
+
+    model->set_value = set_value;
+    model->set_value_ptr = NULL;
+    model->set_value_at_indices = set_value_at_indices;
+
+    model->get_grid_rank = get_grid_rank;
+    model->get_grid_size = get_grid_size;
+    model->get_grid_type = get_grid_type;
+    model->get_grid_shape = get_grid_shape;
+    model->get_grid_spacing = get_grid_spacing;
+    model->get_grid_origin = get_grid_origin;
+
+    model->get_grid_x = NULL;
+    model->get_grid_y = NULL;
+    model->get_grid_z = NULL;
+
+    return model;
 }
