@@ -4213,8 +4213,8 @@ void InitConds(void) {
     int x, y;
     printf("Condition Initial \n");
 
-    for (y = 0; y <= 2 * Y_MAX; y++)
-      for (x = 0; x <= X_MAX; x++) {
+    for (y = 0; y < 2 * Y_MAX; y++)
+      for (x = 0; x < X_MAX; x++) {
         /* This is the only place where cell_depth is defined -- it needs to be
          updated through time
          for overwash functions (i think...), so perhaps there is something
