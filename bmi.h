@@ -5,61 +5,72 @@
 extern "C" {
 #endif
 
-#include "bmi_const.h"
-
 #define BMI_CEM_INPUT_VAR_NAME_COUNT 2
 #define BMI_CEM_OUTPUT_VAR_NAME_COUNT 2
 
-typedef struct _BMI_CEM_Model BMI_CEM_Model;
+#define BMI_SUCCESS (0)
+#define BMI_FAILURE (1)
 
-/* Model Control functions */
-int BMI_CEM_Initialize (const char *, BMI_CEM_Model**);
-int BMI_CEM_Update (BMI_CEM_Model *);
-int BMI_CEM_Update_until (BMI_CEM_Model *, double);
-int BMI_CEM_Finalize (BMI_CEM_Model *);
-int BMI_CEM_Run_model (BMI_CEM_Model *);
+#define BMI_MAX_UNITS_NAME (2048)
+#define BMI_MAX_TYPE_NAME (2048)
+#define BMI_MAX_COMPONENT_NAME (2048)
+#define BMI_MAX_VAR_NAME (2048)
 
-/* Model information functions */
-int BMI_CEM_Get_component_name (BMI_CEM_Model *, char *);
-int BMI_CEM_Get_input_var_name_count (BMI_CEM_Model, int *);
-int BMI_CEM_Get_output_var_name_count (BMI_CEM_Model, int *);
-int BMI_CEM_Get_input_var_names (BMI_CEM_Model *, char **);
-int BMI_CEM_Get_output_var_names (BMI_CEM_Model *, char **);
+typedef struct {
+  void *self;
 
-/* Variable information functions */
-int BMI_CEM_Get_var_type (BMI_CEM_Model *, const char *, BMI_Var_type *);
-int BMI_CEM_Get_var_units (BMI_CEM_Model *, const char *, char *);
-int BMI_CEM_Get_var_rank (BMI_CEM_Model *, const char *, int *);
-int BMI_CEM_Get_current_time (BMI_CEM_Model *, double *);
-int BMI_CEM_Get_start_time (BMI_CEM_Model *, double *);
-int BMI_CEM_Get_end_time (BMI_CEM_Model *, double *);
-int BMI_CEM_Get_time_units (BMI_CEM_Model *, char *);
-int BMI_CEM_Get_time_step (BMI_CEM_Model *, double *);
+  int (*initialize)(const char *, void **);
+  int (*update)(void *);
+  int (*update_until)(void *, double);
+  int (*update_frac)(void *, double);
+  int (*finalize)(void *);
+  int (*run_model)(void *);
 
-/* Variable getter and setter functions */
-int BMI_CEM_Get_value (BMI_CEM_Model *, const char *, void *);
-int BMI_CEM_Get_value_ptr (BMI_CEM_Model *, const char *, void **);
-int BMI_CEM_Get_value_at_indices (BMI_CEM_Model *self, const char *, void *,
-    int *, int);
+  int (*get_component_name)(void *, char *);
+  int (*get_input_var_name_count)(void *, int *);
+  int (*get_output_var_name_count)(void *, int *);
+  int (*get_input_var_names)(void *, char **);
+  int (*get_output_var_names)(void *, char **);
 
-int BMI_CEM_Set_value (BMI_CEM_Model *, const char *, void *);
-int BMI_CEM_Set_value_ptr (BMI_CEM_Model *, const char *, void **);
-int BMI_CEM_Set_value_at_indices (BMI_CEM_Model *, const char *, int *, int,
-    void *);
+  int (*get_var_grid)(void *, const char *, int *);
+  int (*get_var_type)(void *, const char *, char *);
+  int (*get_var_itemsize)(void *, const char *, int *);
+  int (*get_var_units)(void *, const char *, char *);
+  int (*get_var_nbytes)(void *, const char *, int *);
+  int (*get_current_time)(void *, double *);
+  int (*get_start_time)(void *, double *);
+  int (*get_end_time)(void *, double *);
+  int (*get_time_units)(void *, char *);
+  int (*get_time_step)(void *, double *);
 
-int BMI_CEM_Get_double (BMI_CEM_Model *, const char *, double *);
-int BMI_CEM_Get_double_ptr (BMI_CEM_Model *, const char *, double **);
-int BMI_CEM_Get_double_at_indices (BMI_CEM_Model *, const char *, double *, int *, int);
+  /* Variable getter and setter functions */
+  int (*get_value)(void *, const char *, void *);
+  int (*get_value_ptr)(void *, const char *, void **);
+  int (*get_value_at_indices)(void *, const char *, void *, int *, int);
 
-int BMI_CEM_Set_double (BMI_CEM_Model *, const char *, double *);
-int BMI_CEM_Set_double_ptr (BMI_CEM_Model *, const char *, double **);
-int BMI_CEM_Set_double_at_indices (BMI_CEM_Model *, const char *, int *, int, double *);
+  int (*set_value)(void *, const char *, void *);
+  int (*set_value_ptr)(void *, const char *, void **);
+  int (*set_value_at_indices)(void *, const char *, int *, int, void *);
 
-/* Grid information functions */
-int BMI_CEM_Get_grid_type (BMI_CEM_Model *, const char *, BMI_Grid_type *);
-int BMI_CEM_Get_grid_shape (BMI_CEM_Model *, const char *, int *);
-int BMI_CEM_Get_grid_spacing (BMI_CEM_Model *, const char *, double *);
-int BMI_CEM_Get_grid_origin (BMI_CEM_Model *, const char *, double *);
+  /* Grid information functions */
+  int (*get_grid_size)(void *, int, int *);
+  int (*get_grid_rank)(void *, int, int *);
+  int (*get_grid_type)(void *, int, char *);
+  int (*get_grid_shape)(void *, int, int *);
+  int (*get_grid_spacing)(void *, int, double *);
+  int (*get_grid_origin)(void *, int, double *);
+
+  int (*get_grid_x)(void *, int, double *);
+  int (*get_grid_y)(void *, int, double *);
+  int (*get_grid_z)(void *, int, double *);
+
+  int (*get_grid_cell_count)(void *, int, int *);
+  int (*get_grid_point_count)(void *, int, int *);
+  int (*get_grid_vertex_count)(void *, int, int *);
+
+  int (*get_grid_connectivity)(void *, int, int *);
+  int (*get_grid_offset)(void *, int, int *);
+} BMI_Model;
 
 #if defined(__cplusplus)
 }
