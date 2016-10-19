@@ -15,7 +15,6 @@
 
 int cem_initialize(void);
 int cem_update(void);
-int cem_update_until(int);
 int cem_finalize(void);
 
 static int get_component_name(void *self, char *name) {
@@ -73,7 +72,7 @@ static int get_end_time(void *self, double *time) {
 }
 
 static int get_current_time(void *self, double *time) {
-  *time = current_time_step * time_step;
+  *time = current_time;
   return BMI_SUCCESS;
 }
 

@@ -18,6 +18,7 @@ double **wave_h_sig = NULL; // SWAN wave heights.
 double **wave_dir = NULL;  // SWAN wave angles.
 
 int current_time_step = 0;  // Time step of current calculation
+double current_time = 0.;  // Current model time
 double stop_after = 36500; // Stop after what number of time steps
 double time_step = 1; // days; reflects rate of sediment transport per time step
 
@@ -232,7 +233,6 @@ void PrintLocalConds(int x, int y, int in);
 
 int cem_initialize(void);
 int cem_update(void);
-int cem_update_until(int);
 int cem_finalize(void);
 
 int cem_initialize(void) {
@@ -323,24 +323,10 @@ int cem_initialize(void) {
   return 0;
 }
 
-int cem_update_until(int until) {
-  const int _stop_after = until;
-  while (current_time_step < _stop_after) {
-    cem_update();
-
-    if (current_time_step == _stop_after) {
-      if (SAVE_LINE) SaveLineToFile();
-      if (SAVE_FILE) SaveSandToFile();
-    }
-  }
-
-  return 0;
-}
-
+// Update the CEM by a single time step.
 int cem_update(void) {
-  /* 'until' is sent from BMI call ...12/3/14 */
-  int xx; /* duration loop variable, moved from former (now deleted) 'main.c'
-             above */
+  // duration loop variable, moved from former (now deleted) 'main.c' above
+  int xx;
 
   {
     /*  Time Step iteration - compute same wave angle for Duration time steps */
@@ -450,6 +436,7 @@ int cem_update(void) {
       }
 
       current_time_step++;
+      current_time += time_step;
     }
   }
   return 0;
@@ -4201,6 +4188,8 @@ int InitWiggly(void) {
 
 void InitConds(void) {
   current_time_step = 0;
+  current_time = 0.;
+
   if (INITIAL_CONDITION_TYPE == 0)
     InitNormal();
   else if (INITIAL_CONDITION_TYPE == 1)

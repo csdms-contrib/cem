@@ -14,6 +14,7 @@ extern double **shelf_depth; // SWAN bathymetry.
 extern double **wave_h_sig; // SWAN wave heights.
 extern double **wave_dir; // SWAN wave angles.
 extern int current_time_step; // Time step of current calculation
+extern double current_time; // The current model time
 extern double stop_after; // Stop after what number of time steps
 extern double time_step; // days; reflects rate of sediment transport per time step
 
