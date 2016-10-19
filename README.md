@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/csdms-contrib/cem.svg?branch=master)](https://travis-ci.org/csdms-contrib/cem)
+
 The Coastline Evolution Model (CEM)
 ===================================
 
@@ -13,7 +15,8 @@ long-term (10^2 to 10^5 yr) shoreline evolution.
 Build CEM
 ---------
 
-First create a build directory and then use [cmake](http://cmake.org) to generate a makefile,
+First create a build directory and then use [cmake](http://cmake.org)
+to generate a makefile,
 
     > mkdir _build
     > cd _build
@@ -22,6 +25,16 @@ First create a build directory and then use [cmake](http://cmake.org) to generat
 Use the makefile to compile CEM,
 
     > make
+
+Continuous Integration
+----------------------
+
+Continuous integration is handled by
+[Travis-CI](https://travis-ci.org/csdms-contrib/cem). Every push to this
+GitHub repository triggers a new build on Travis. Travis builds CEM on
+both Mac and Linux and runs a simple smoke test to see that things are
+working. The `.travis.yaml` file controls how Travis builds and runs
+tests.
 
 Build the old version of CEM
 ----------------------------
