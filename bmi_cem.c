@@ -171,7 +171,7 @@ static int get_grid_rank(void *self, int grid_id, int *rank) {
 
 static int get_grid_size(void *self, int grid_id, int *size) {
   if (grid_id == 0) {
-    *size = Xmax * Ymax;
+    *size = X_MAX * Y_MAX;
     return BMI_SUCCESS;
   } else {
     *size = -1;
@@ -181,8 +181,8 @@ static int get_grid_size(void *self, int grid_id, int *size) {
 
 static int get_grid_shape(void *self, int grid_id, int *shape) {
   if (grid_id == 0) {
-    shape[0] = Xmax;
-    shape[1] = Ymax;
+    shape[0] = X_MAX;
+    shape[1] = Y_MAX;
     return BMI_SUCCESS;
   } else {
     return BMI_FAILURE;
@@ -191,8 +191,8 @@ static int get_grid_shape(void *self, int grid_id, int *shape) {
 
 static int get_grid_spacing(void *self, int grid_id, double *spacing) {
   if (grid_id == 0) {
-    spacing[0] = CellWidth;
-    spacing[1] = CellWidth;
+    spacing[0] = CELL_WIDTH;
+    spacing[1] = CELL_WIDTH;
     return BMI_SUCCESS;
   } else {
     return BMI_FAILURE;

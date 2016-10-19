@@ -26,7 +26,7 @@ double time_step = 1; // days; reflects rate of sediment transport per time step
 static const double kAngleFactor = 1.;
 
 // Depth array
-static double cell_depth[Xmax][2 * Ymax];
+static double cell_depth[X_MAX][2 * Y_MAX];
 // Cliff height above sea level for slow weathering rock PWL
 static const double kCliffHeightSlow = 30;
 // Cliff height above sea level for fast weathering rock PWL
@@ -35,17 +35,17 @@ static const double kCliffHeightFast = 0;
 // Overall Shoreface Configuration Arrays - Data file information
 
 // Flag indicating of cell is entirely beach
-static char AllBeach[Xmax][2 * Ymax];
+static char AllBeach[X_MAX][2 * Y_MAX];
 // Flag indicating if cell is entirely rock LMV
-static char AllRock[Xmax][2 * Ymax];
+static char AllRock[X_MAX][2 * Y_MAX];
 // Fractional amount of cell full of sediment LMV
-static double PercentFullSand[Xmax][2 * Ymax];
+static double PercentFullSand[X_MAX][2 * Y_MAX];
 // Fractional amount of a cell full of rock LMV
-static double PercentFullRock[Xmax][2 * Ymax];
+static double PercentFullRock[X_MAX][2 * Y_MAX];
 // Array to control weathering rates of rock along the beach LMV
-static char TypeOfRock[Xmax][2 * Ymax];
+static char TypeOfRock[X_MAX][2 * Y_MAX];
 // Age since cell was deposited
-static int Age[Xmax][2 * Ymax];
+static int Age[X_MAX][2 * Y_MAX];
 
 // A sink is a cell that is routinely emptied (if it is on the beach)
 static const int kSinkY[] = {158, 361, 158, 361, 158, 361};
@@ -149,10 +149,10 @@ static double Highness = 0.35;
 static double Duration = 1.;
 
 // Weathering rate of slow rock e.g. 0.5 = slow weathering, 1/2 as fast LMV
-static double SlowWeatherCoeff = 0. * NormalWeatheringRate;
+static double SlowWeatherCoeff = 0. * NORMAL_WEATHERING_RATE;
 // Weathering rate of fast rock e.g. 2 = fast weathering, 2 times faster
 // than normal LMV
-static double FastWeatherCoeff = 1 * NormalWeatheringRate;
+static double FastWeatherCoeff = 1 * NORMAL_WEATHERING_RATE;
 // Percent of fast weathering rock lost because it is too fine to stay
 // in nearshore LMV
 static double PercentFineFast = 0.0;
@@ -236,17 +236,17 @@ int cem_update_until(int);
 int cem_finalize(void);
 
 int cem_initialize(void) {
-  ShadowXMax = Xmax; /* RCL: was Xmax-5; */
+  ShadowXMax = X_MAX; /* RCL: was X_MAX-5; */
 
-  if (seed == -999)
+  if (SEED == -999)
     srand(time(NULL));
   else
-    srand(seed);
+    srand(SEED);
 
   { /* Allocate memory for arrays. */
     int i;
-    const int n_rows = Xmax;
-    const int n_cols = 2 * Ymax;
+    const int n_rows = X_MAX;
+    const int n_cols = 2 * Y_MAX;
 
     topography = (double **)malloc(sizeof(double *) * n_rows);
     topography[0] = (double *)malloc(sizeof(double) * n_rows * n_cols);
@@ -265,7 +265,7 @@ int cem_initialize(void) {
   }
 
   /* Start from file or not? */
-  if (PromptStart == 'y') {
+  if (PROMPT_START == 'y') {
     printf("shall we start from a file (y or n)? \n");
     scanf("%c", &StartFromFile);
 
@@ -283,7 +283,7 @@ int cem_initialize(void) {
       printf("Saving Filename? \n");
       scanf("%s", savefilename);
       InitConds();
-      if (InitialPert) {
+      if (INITIAL_PERT) {
         InitPert();
       }
       printf("InitConds OK \n");
@@ -296,7 +296,7 @@ int cem_initialize(void) {
 
   else {
     InitConds();
-    if (InitialPert) {
+    if (INITIAL_PERT) {
       InitPert();
     }
   }
@@ -311,13 +311,13 @@ int cem_initialize(void) {
   FixBeach();
 
   /* PWL commented out to match ndelta4.c, 12/3/14 */
-  /*if (SaveLine) SaveLineToFile();
-     if (SaveFile) SaveSandToFile(); */
+  /*if (SAVE_LINE) SaveLineToFile();
+     if (SAVE_FILE) SaveSandToFile(); */
 
   /*Read in wave data? */
-  if (WaveIn == 1) ReadWaveIn(); /*Initialise WaveMax and WaveProb */
+  if (WAVE_IN == 1) ReadWaveIn(); /*Initialise WaveMax and WaveProb */
 
-  if (InitialiseFile == 'y')
+  if (INITIALIZE_FILE == 'y')
     ControlFile(); /*Read in initialisation data to control model */
 
   return 0;
@@ -329,8 +329,8 @@ int cem_update_until(int until) {
     cem_update();
 
     if (current_time_step == _stop_after) {
-      if (SaveLine) SaveLineToFile();
-      if (SaveFile) SaveSandToFile();
+      if (SAVE_LINE) SaveLineToFile();
+      if (SAVE_FILE) SaveSandToFile();
     }
   }
 
@@ -349,16 +349,16 @@ int cem_update(void) {
     WaveAngle = FindWaveAngle();
 
     /* output wave data */
-    if (Wavedata == 'y') WaveOutFile();
+    if (WAVE_DATA == 'y') WaveOutFile();
 
     /*  Loop for Duration at the current wave sign and wave angle */
     for (xx = 0; xx < Duration; xx++) {
       MassCurrent = MassCount();
 
       /* Text to Screen? */
-      if (current_time_step % ScreenTextSpacing == 0) {
+      if (current_time_step % SCREEN_TEXT_SPACING == 0) {
         printf("==== WaveAngle: %2.2f  MASS Percent: %1.4f  Time Step: %d\n",
-               180 * (WaveAngle) / pi, MassCurrent / MassInitial,
+               180 * (WaveAngle) / PI, MassCurrent / MassInitial,
                current_time_step);
       }
 
@@ -386,8 +386,8 @@ int cem_update(void) {
         }
 
         /* Get Out if no good beach spots exist - finish program */
-        if (FindStart > Ymax / 2 + 1) {
-          printf("Stopped Finding Beach - done %d %d", FindStart, Ymax / 2 - 5);
+        if (FindStart > Y_MAX / 2 + 1) {
+          printf("Stopped Finding Beach - done %d %d", FindStart, Y_MAX / 2 - 5);
           SaveSandToFile();
           getchar();
           return 1;
@@ -406,10 +406,10 @@ int cem_update(void) {
           /*PauseRun(1,1,-1); */
         }
 
-        if (FindRockStart > Ymax / 2 + 1) {
+        if (FindRockStart > Y_MAX / 2 + 1) {
           printf("Stopped Finding Rock - done %d %d", FindRockStart,
-                 Ymax / 2 - 5);
-          if (SaveFile) SaveSandToFile();
+                 Y_MAX / 2 - 5);
+          if (SAVE_FILE) SaveSandToFile();
           return 1;
         }
       }
@@ -419,7 +419,7 @@ int cem_update(void) {
         PauseRun(58, 269, -1);
       }
 
-      if (InitCType != 3) {
+      if (INITIAL_CONDITION_TYPE != 3) {
         RockCalculations();
       }
       /*LMV*/ ShadowSweep();
@@ -437,16 +437,16 @@ int cem_update(void) {
       FixBeach();
 
       /* Age Empty Cells */
-      if ((current_time_step % AgeUpdate == 0) && SaveAge) AgeCells();
+      if ((current_time_step % AGE_UPDATE == 0) && SAVE_AGE) AgeCells();
 
       /* Count Mass */
       MassCurrent = MassCount();
 
       /* SAVE FILE ? */
-      if ((current_time_step % SaveSpacing == 0 &&
-           current_time_step > StartSavingAt)) {
-        if (SaveLine) SaveLineToFile();
-        if (SaveFile) SaveSandToFile();
+      if ((current_time_step % SAVE_SPACING == 0 &&
+           current_time_step > START_SAVING_AT)) {
+        if (SAVE_LINE) SaveLineToFile();
+        if (SAVE_FILE) SaveSandToFile();
       }
 
       current_time_step++;
@@ -489,7 +489,7 @@ float FindWaveAngle(void)
   /* variables WaveProb[], WaveMax[], previously input from file using
    * ReadWaveIn()       */
 
-  if (WaveIn == 1) {
+  if (WAVE_IN == 1) {
     RandBin = RandZeroToOne();
     RandAngle = RandZeroToOne();
 
@@ -504,15 +504,15 @@ float FindWaveAngle(void)
       }
     }
 
-    Angle = -(RandAngle * (WaveMax[i] - WaveMax[i - 1]) + WaveMax[i - 1]) * pi /
+    Angle = -(RandAngle * (WaveMax[i] - WaveMax[i - 1]) + WaveMax[i - 1]) * PI /
             180;
 
     /*printf("i = %d WaveMAx[i] = %f WaveMax[i-1] = %f WaveProb[i] = %f Angle=
        %f\n",
-       i,WaveMax[i],WaveMax[i-1],WaveProb[i], Angle*180/pi); */
+       i,WaveMax[i],WaveMax[i-1],WaveProb[i], Angle*180/PI); */
   }
 
-  if (WaveIn == 2) {
+  if (WAVE_IN == 2) {
     RealWaveIn(); /*Read real data (angle/period/height) */
 
     Angle = ((float)(WaveAngleIn)) +
@@ -531,10 +531,10 @@ float FindWaveAngle(void)
           1e-10; /*if waves were to come from behind coast set to inf small */
     }
 
-    Angle /= radtodeg;
+    Angle /= RAD_TO_DEG;
   }
 
-  if (WaveIn == 0) {
+  if (WAVE_IN == 0) {
     /* Method using wave probability step function */
     /*      variable Asym will determine fractional distribution of waves coming
      * from the           */
@@ -542,13 +542,13 @@ float FindWaveAngle(void)
      * fractional wave asymmetry */
     /*  redone by RCL. note Highness actually means lowness, for some reason */
 
-    Angle = RandZeroToOne() * pi / 4.0;
+    Angle = RandZeroToOne() * PI / 4.0;
 
-    if (RandZeroToOne() >= Highness) Angle += pi / 4.0; /* make high angle */
+    if (RandZeroToOne() >= Highness) Angle += PI / 4.0; /* make high angle */
 
     if (RandZeroToOne() >= Asym) Angle = -1.0 * Angle;
 
-    /*printf("WaveAngle: %f degrees\n",Angle*radtodeg); */
+    /*printf("WaveAngle: %f degrees\n",Angle*RAD_TO_DEG); */
   }
 
   return Angle;
@@ -567,7 +567,7 @@ void FindBeachCells(int YStart)
   /* Starting at left end, find the x - value for first cell that is 'allbeach'
    */
 
-  xstart = Xmax - 1;
+  xstart = X_MAX - 1;
   y = YStart;
 
   while (AllBeach[xstart][y] == 'n') {
@@ -585,7 +585,7 @@ void FindBeachCells(int YStart)
   X[z - 1] = X[z];
   Y[z - 1] = Y[z] - 1;
 
-  while ((Y[z] < 2 * Ymax - 1) && (z < MaxBeachLength - 1)) {
+  while ((Y[z] < 2 * Y_MAX - 1) && (z < MaxBeachLength - 1)) {
     z++;
     NextX = -2;
     NextY = -2;
@@ -649,7 +649,7 @@ void FindRockCells(int YStart)
   /* Starting at left end, find the x - value for first cell that is 'allbeach'
    */
 
-  xstart = Xmax - 1;
+  xstart = X_MAX - 1;
   y = YStart;
 
   while (AllRock[xstart][y] == 'n') {
@@ -668,7 +668,7 @@ void FindRockCells(int YStart)
   XRock[z - 1] = XRock[z];
   YRock[z - 1] = YRock[z] - 1;
 
-  while ((YRock[z] < 2 * Ymax - 1) && (z < MaxBeachLength - 1)) {
+  while ((YRock[z] < 2 * Y_MAX - 1) && (z < MaxBeachLength - 1)) {
     z++;
     NextRockX = -2;
     NextRockY = -2;
@@ -1680,9 +1680,9 @@ void FindNearestBeach(int j)
   float DeltaX, DeltaY;
   int LookStart, LookEnd; /* for short rock to beach sweep */
 
-  MinDistToBeach[j] = BigDistanceToBeach;
+  MinDistToBeach[j] = BIG_DISTANCE_TO_BEACH;
 
-  if (current_time_step % TimeToSweepFullBeach == 0)
+  if (current_time_step % TIME_TO_SWEEP_FULL_BEACH == 0)
   /* do a full sweep every now and then */
   {
     for (i = 0; i <= TotalBeachCells; i++) { /*full sweep */
@@ -1690,14 +1690,14 @@ void FindNearestBeach(int j)
         DeltaX =
             ((X[i] - XRock[j] - 1) + (PercentFullSand[X[i]][Y[i]] +
                                       PercentFullSand[XRock[j]][YRock[j]])) *
-            CellWidth;
+            CELL_WIDTH;
         if (debug10)
           printf("Rock cell = %d, Beach cell = %d, DeltaX (1)= %f \n", XRock[j],
                  X[i], DeltaX);
       }
 
       else {
-        DeltaX = (PercentFullSand[X[i]][Y[i]]) * CellWidth;
+        DeltaX = (PercentFullSand[X[i]][Y[i]]) * CELL_WIDTH;
         if (debug10)
           printf("Rock cell = %d, Beach cell = %d, DeltaX (2)= %f \n", XRock[j],
                  X[i], DeltaX);
@@ -1711,11 +1711,11 @@ void FindNearestBeach(int j)
            }
            else
            { */
-        DeltaY = (Y[i] - YRock[j]) * CellWidth;
+        DeltaY = (Y[i] - YRock[j]) * CELL_WIDTH;
         if (debug10) printf("DeltaY (1) = %f \n", DeltaY);
         /*} */
       } else {
-        DeltaY = (YRock[j] - Y[i]) * CellWidth;
+        DeltaY = (YRock[j] - Y[i]) * CELL_WIDTH;
         if (debug10) printf("DeltaY (2) = %f \n", DeltaY);
       }
 
@@ -1744,18 +1744,18 @@ void FindNearestBeach(int j)
   }
 
   else
-  /* LookDist allows the program to skip the full beach sweep at every iteration
+  /* LOOK_DIST allows the program to skip the full beach sweep at every iteration
      by looking at */
   /* the location of the previous closest beach and sweeping out a small arc
-     plus or minus LookDist */
+     plus or minus LOOK_DIST */
   {
-    if (ClosestBeach[j] - LookDist >= 0)
-      LookStart = ClosestBeach[j] - LookDist;
+    if (ClosestBeach[j] - LOOK_DIST >= 0)
+      LookStart = ClosestBeach[j] - LOOK_DIST;
     else /* Only sweep right when on left end */
       LookStart = 0;
 
-    if (ClosestBeach[j] + LookDist <= TotalBeachCells)
-      LookEnd = ClosestBeach[j] + LookDist;
+    if (ClosestBeach[j] + LOOK_DIST <= TotalBeachCells)
+      LookEnd = ClosestBeach[j] + LOOK_DIST;
     else /* Only sweep left when at right end */
       LookEnd = TotalBeachCells;
 
@@ -1764,14 +1764,14 @@ void FindNearestBeach(int j)
         DeltaX =
             ((X[i] - XRock[j] - 1) + (PercentFullSand[X[i]][Y[i]] +
                                       PercentFullSand[XRock[j]][YRock[j]])) *
-            CellWidth;
+            CELL_WIDTH;
         if (debug10)
           printf("Rock cell = %d, Beach cell = %d, DeltaX (1)= %f \n", XRock[j],
                  X[i], DeltaX);
       }
 
       else {
-        DeltaX = (PercentFullSand[X[i]][Y[i]]) * CellWidth;
+        DeltaX = (PercentFullSand[X[i]][Y[i]]) * CELL_WIDTH;
         if (debug10)
           printf("Rock cell = %d, Beach cell = %d, DeltaX (2)= %f \n", XRock[j],
                  X[i], DeltaX);
@@ -1785,11 +1785,11 @@ void FindNearestBeach(int j)
            }
            else
            { */
-        DeltaY = (Y[i] - YRock[j]) * CellWidth;
+        DeltaY = (Y[i] - YRock[j]) * CELL_WIDTH;
         if (debug10) printf("DeltaY (1) = %f \n", DeltaY);
         /*} */
       } else {
-        DeltaY = (YRock[j] - Y[i]) * CellWidth;
+        DeltaY = (YRock[j] - Y[i]) * CELL_WIDTH;
         if (debug10) printf("DeltaY (2) = %f \n", DeltaY);
       }
 
@@ -1811,11 +1811,6 @@ void FindNearestBeach(int j)
     if (debug11) printf("Closest Beach is at cell i = %d \n ", ClosestBeach[j]);
     if (debug11) printf("X[i]: %d, Y[i]: %d \n\n", X[i], Y[i]);
   }
-  /*
-  CWT Commented out; not used at present
-  (debugNearest)
-  PutPixel(Y[ClosestBeach[j]]*CellPixelSize,X[ClosestBeach[j]]*CellPixelSize,50,200,50);
-  */
 }
 
 void WeatherRock(int j)
@@ -1864,9 +1859,9 @@ void WeatherRock(int j)
 
   /* Determine weathering: abrasion or no abrasion? */
   if ((MinDistToBeach[j]) <=
-      NoWeathering) { /*think in terms of vertical equivalence */
+      NO_WEATHERING) { /*think in terms of vertical equivalence */
 
-    if (Abrasion == 'n') {
+    if (ABRASION == 'n') {
       WeatheringRatePerYear =
           CurrentWeatherCoeff * (exp(-MinDistToBeach[j])); /*exponential
                                                               weathering (in
@@ -1875,10 +1870,10 @@ void WeatherRock(int j)
       /*printf("weathering rate: %f", WeatheringRatePerYear); */
     }
 
-    if (Abrasion == 'y') {
-      if (MinDistToBeach[j] <= Wcrit) {
+    if (ABRASION == 'y') {
+      if (MinDistToBeach[j] <= W_CRIT) {
         mslope = (CurrentWeatherCoeff * (N - 1)) /
-                 Wcrit; /* Slope of line between N*BareRock and BareRock PWL */
+                 W_CRIT; /* Slope of line between N*BareRock and BareRock PWL */
         WeatheringRatePerYear =
             CurrentWeatherCoeff + mslope * MinDistToBeach[j];
         /*if (!debug12b) printf("\nabrasion weathering rate:
@@ -1887,11 +1882,11 @@ void WeatherRock(int j)
 
       else {
         wscale =
-            (NoWeathering - Wcrit) /
+            (NO_WEATHERING - W_CRIT) /
             (log((0.01 / N))); /* Decay coefficient for the "cover" portion of
                                   abrasion curve PWL */
         WeatheringRatePerYear = kAngleFactor * CurrentWeatherCoeff *
-                                (exp((MinDistToBeach[j] - Wcrit) / wscale));
+                                (exp((MinDistToBeach[j] - W_CRIT) / wscale));
       }
     }
   }
@@ -1900,9 +1895,9 @@ void WeatherRock(int j)
     WeatheringRatePerYear = 0;
   }
 
-  AmountWeathered[j] = ((WeatheringRatePerYear * time_step) / 365) / CellWidth;
+  AmountWeathered[j] = ((WeatheringRatePerYear * time_step) / 365) / CELL_WIDTH;
   /* was AmountWeathered[j] = ((WeatheringRatePerYear *
-   * time_step)/365)/CellWidth; */
+   * time_step)/365)/CELL_WIDTH; */
   /* weathering per time step. units: cell units, or a percent weathered (which
    * correlates with erosion) */
 
@@ -1928,7 +1923,7 @@ void WeatherRock(int j)
     PercentFullSand[XRock[j]][YRock[j]] +=
         AmountWeathered[j] +
         (AmountWeathered[j] *
-         (topography[XRock[j]][YRock[j]] / DepthShoreface) *
+         (topography[XRock[j]][YRock[j]] / DEPTH_SHOREFACE) *
          CurrentPercentFine);
 
     if (PercentFullRock[XRock[j]][YRock[j]] < 1.0)
@@ -1951,13 +1946,13 @@ void WeatherRock(int j)
     PercentFullSand[XRockBehind[j]][YRockBehind[j]] +=
         (AmountWeathered[j] - PercentFullRock[XRock[j]][YRock[j]]) +
         ((AmountWeathered[j] - PercentFullRock[XRock[j]][YRock[j]]) *
-         (topography[XRockBehind[j]][YRockBehind[j]] / DepthShoreface) *
+         (topography[XRockBehind[j]][YRockBehind[j]] / DEPTH_SHOREFACE) *
          CurrentPercentFine);
 
     PercentFullSand[XRock[j]][YRock[j]] +=
         PercentFullRock[XRock[j]][YRock[j]] +
         (PercentFullRock[XRock[j]][YRock[j]] *
-         (topography[XRock[j]][YRock[j]] / DepthShoreface) *
+         (topography[XRock[j]][YRock[j]] / DEPTH_SHOREFACE) *
          CurrentPercentFine);
 
     PercentFullRock[XRock[j]][YRock[j]] = 0.0;
@@ -1971,7 +1966,7 @@ void WeatherRock(int j)
       printf("\n Cliff height behind (3): %f\n",
              topography[XRockBehind[j]][YRockBehind[j]]);
 
-    if (YRock[j] > 1 && YRock[j] < 2 * Ymax - 2) {
+    if (YRock[j] > 1 && YRock[j] < 2 * Y_MAX - 2) {
       if (debug12)
         printf("not enough rock to weather for %d (%d,%d). ", j, XRock[j],
                YRock[j]);
@@ -1982,7 +1977,7 @@ void WeatherRock(int j)
     PercentFullSand[XRock[j]][YRock[j]] +=
         PercentFullRock[XRock[j]][YRock[j]] +
         (PercentFullRock[XRock[j]][YRock[j]] *
-         (topography[XRock[j]][YRock[j]] / DepthShoreface) *
+         (topography[XRock[j]][YRock[j]] / DEPTH_SHOREFACE) *
          CurrentPercentFine);
 
     PercentFullRock[XRock[j]][YRock[j]] = 0.0;
@@ -1990,7 +1985,7 @@ void WeatherRock(int j)
     PercentFullSand[XRockBehind[j]][YRockBehind[j]] +=
         PercentFullRock[XRockBehind[j]][YRockBehind[j]] +
         (PercentFullRock[XRockBehind[j]][YRockBehind[j]] *
-         (topography[XRockBehind[j]][YRockBehind[j]] / DepthShoreface) *
+         (topography[XRockBehind[j]][YRockBehind[j]] / DEPTH_SHOREFACE) *
          CurrentPercentFine);
 
     PercentFullRock[XRockBehind[j]][YRockBehind[j]] = 0.0;
@@ -2008,7 +2003,7 @@ void ShadowSweep(void)
   /* Find maximum extent of beach to use as a limit for shadow searching */
 
   /*ShadowXMax = XMaxBeach(ShadowXMax) + 3; */
-  /* if(ShadowXMax > Xmax) ShadowXMax = Xmax; RCL */
+  /* if(ShadowXMax > X_MAX) ShadowXMax = X_MAX; RCL */
 
   if (debug2)
     printf("ShadowXMax: %d   XMaxBeach: %d \n", ShadowXMax,
@@ -2047,7 +2042,7 @@ int XMaxBeach(int Max)
   ytest = 0;
 
   while (xtest > 0) {
-    while (ytest < 2 * Ymax) {
+    while (ytest < 2 * Y_MAX) {
       if (AllBeach[xtest][ytest] == 'y') {
         return xtest;
       }
@@ -2060,10 +2055,10 @@ int XMaxBeach(int Max)
     xtest--;
   }
 
-  printf("***** Should've found Xmax for shadow): %d, %d ***** \n", xtest,
+  printf("***** Should've found X_MAX for shadow): %d, %d ***** \n", xtest,
          ytest);
 
-  return Xmax;
+  return X_MAX;
 }
 
 char FindIfInShadow(int xin, int yin, int ShadMax)
@@ -2081,7 +2076,7 @@ char FindIfInShadow(int xin, int yin, int ShadMax)
   int ycheck = yin;
   int iteration = 1;
 
-  while ((xcheck < ShadMax) && (ycheck > -1) && (ycheck < (2 * Ymax))) {
+  while ((xcheck < ShadMax) && (ycheck > -1) && (ycheck < (2 * Y_MAX))) {
     /*  Find a cell along the projection line moving against wave direction */
 
     xdistance = iteration * ShadowStepDistance * cos(WaveAngle);
@@ -2102,7 +2097,7 @@ char FindIfInShadow(int xin, int yin, int ShadMax)
       printf("term : %f  \n", fabs((ycheck - yin) / tan(WaveAngle)));
     }
 
-    if (xcheck >= Xmax - 1 || ycheck >= 2 * Ymax - 1) return 'n';
+    if (xcheck >= X_MAX - 1 || ycheck >= 2 * Y_MAX - 1) return 'n';
 
     /* If AllBeach is along the way, and not next neighbor                  */
     /* Probably won't get to this one, though                               */
@@ -2112,7 +2107,7 @@ char FindIfInShadow(int xin, int yin, int ShadMax)
          ((xcheck + 1) >
           (xin + (PercentFullSand[xin][yin] + PercentFullRock[xin][yin]) +
            fabs((ycheck - yin) / tan(WaveAngle))))) &&
-        (ycheck > -1) && (ycheck < 2 * Ymax - 1)) {
+        (ycheck > -1) && (ycheck < 2 * Y_MAX - 1)) {
       if (debug2) {
         printf("Allbeach used Xck: %2d  Yck: %2d   \n", xcheck, ycheck);
         printf("	      Xin: %2d  Yin: %2d   ", xin, yin);
@@ -2143,7 +2138,7 @@ or could just ignore partially full cells completely...
                          PercentFullRock[xcheck][ycheck])) >
               (xin + (PercentFullSand[xin][yin] + PercentFullRock[xin][yin]) +
                fabs((ycheck - yin) / tan(WaveAngle)))) &&
-             (ycheck > -1) && (ycheck < 2 * Ymax - 1)
+             (ycheck > -1) && (ycheck < 2 * Y_MAX - 1)
              /* && !(xcheck == xin) */
              ) {
       if (debug2a)
@@ -2188,13 +2183,13 @@ void DetermineAngles(void)
       /* math revised 6-03 */
 
       ShorelineAngle[i] =
-          pi - atan((X[i + 1] - (PercentFullSand[X[i + 1]][Y[i + 1]] +
+          PI - atan((X[i + 1] - (PercentFullSand[X[i + 1]][Y[i + 1]] +
                                  PercentFullRock[X[i + 1]][Y[i + 1]])) -
                     (X[i] - (PercentFullSand[X[i]][Y[i]]) +
                      PercentFullRock[X[i]][Y[i]]));
 
-      if (ShorelineAngle[i] > pi) {
-        ShorelineAngle[i] -= 2.0 * pi;
+      if (ShorelineAngle[i] > PI) {
+        ShorelineAngle[i] -= 2.0 * PI;
         if (debug3) printf("Next under -180 \n");
       }
 
@@ -2206,7 +2201,7 @@ void DetermineAngles(void)
             (PercentFullSand[X[i]][Y[i]] + PercentFullRock[X[i]][Y[i]]),
             X[i + 1], Y[i + 1], (PercentFullSand[X[i + 1]][Y[i + 1]] +
                                  PercentFullRock[X[i + 1]][Y[i + 1]]),
-            ShorelineAngle[i], ShorelineAngle[i] * 180 / pi);
+            ShorelineAngle[i], ShorelineAngle[i] * 180 / PI);
 
       /*PauseRun(X[i],Y[i],i); */
     }
@@ -2228,14 +2223,14 @@ void DetermineAngles(void)
             (PercentFullSand[X[i]][Y[i]] + PercentFullRock[X[i]][Y[i]]),
             X[i + 1], Y[i + 1], (PercentFullSand[X[i + 1]][Y[i + 1]] +
                                  PercentFullRock[X[i + 1]][Y[i + 1]]),
-            ShorelineAngle[i], ShorelineAngle[i] * 180 / pi);
+            ShorelineAngle[i], ShorelineAngle[i] * 180 / PI);
     }
 
     else if (Y[i] == Y[i + 1] && X[i] > X[i + 1])
     /*  Shore up and down, on right side */
     {
       ShorelineAngle[i] =
-          -pi / 2.0 + atan((Y[i + 1] + (PercentFullSand[X[i + 1]][Y[i + 1]] +
+          -PI / 2.0 + atan((Y[i + 1] + (PercentFullSand[X[i + 1]][Y[i + 1]] +
                                         PercentFullRock[X[i + 1]][Y[i + 1]])) -
                            (Y[i] + (PercentFullSand[X[i]][Y[i]] +
                                     PercentFullRock[X[i]][Y[i]])));
@@ -2248,14 +2243,14 @@ void DetermineAngles(void)
             (PercentFullSand[X[i]][Y[i]] + PercentFullRock[X[i]][Y[i]]),
             X[i + 1], Y[i + 1], (PercentFullSand[X[i + 1]][Y[i + 1]] +
                                  PercentFullRock[X[i + 1]][Y[i + 1]]),
-            ShorelineAngle[i], ShorelineAngle[i] * 180 / pi);
+            ShorelineAngle[i], ShorelineAngle[i] * 180 / PI);
     }
 
     else if (Y[i] == Y[i + 1] && X[i] < X[i + 1])
     /* Shore up and down, on left side */
     {
       ShorelineAngle[i] =
-          pi / 2.0 + atan((Y[i + 1] + (PercentFullSand[X[i + 1]][Y[i + 1]] +
+          PI / 2.0 + atan((Y[i + 1] + (PercentFullSand[X[i + 1]][Y[i + 1]] +
                                        PercentFullRock[X[i + 1]][Y[i + 1]])) -
                           (Y[i] + (PercentFullSand[X[i]][Y[i]] +
                                    PercentFullRock[X[i]][Y[i]])));
@@ -2268,7 +2263,7 @@ void DetermineAngles(void)
             (PercentFullSand[X[i]][Y[i]] + PercentFullRock[X[i]][Y[i]]),
             X[i + 1], Y[i + 1], (PercentFullSand[X[i + 1]][Y[i + 1]] +
                                  PercentFullRock[X[i + 1]][Y[i + 1]]),
-            ShorelineAngle[i], ShorelineAngle[i] * 180 / pi);
+            ShorelineAngle[i], ShorelineAngle[i] * 180 / PI);
     }
 
     else {
@@ -2281,7 +2276,7 @@ void DetermineAngles(void)
        (PercentFullSand[X[i]][Y[i]] + PercentFullRock[X[i]][Y[i]]) ,
        X[i+1], Y[i+1], (PercentFullSand[X[i+1]][Y[i+1]] +
        PercentFullRock[X[i+1]][Y[i+1]]), ShorelineAngle[i],
-       ShorelineAngle[i]*180/pi); */
+       ShorelineAngle[i]*180/PI); */
   }
 
   for (k = 1; k < TotalBeachCells; k++) {
@@ -2294,9 +2289,9 @@ void DetermineAngles(void)
         (copysign(ShorelineAngle[k - 1], ShorelineAngle[k]) !=
          ShorelineAngle[k - 1])) {
       SurroundingAngle[k] =
-          (ShorelineAngle[k - 1] + ShorelineAngle[k]) / 2 + pi;
-      if (SurroundingAngle[k] > pi) {
-        SurroundingAngle[k] -= 2.0 * pi;
+          (ShorelineAngle[k - 1] + ShorelineAngle[k]) / 2 + PI;
+      if (SurroundingAngle[k] > PI) {
+        SurroundingAngle[k] -= 2.0 * PI;
       }
       if (debug4) printf("Under: %d\n", k);
     } else {
@@ -2308,16 +2303,16 @@ void DetermineAngles(void)
   /* Note - Surrounding angle is based upon left and right cell neighbors, */
   /* and is centered on cell, not on right boundary */
 
-  if (debug4) printf("\nUp/Down   Wave Angle:%f\n", WaveAngle * radtodeg);
+  if (debug4) printf("\nUp/Down   Wave Angle:%f\n", WaveAngle * RAD_TO_DEG);
 
   for (j = 1; j < TotalBeachCells; j++) {
     if (debug4)
       printf("i: %d  Shad: %c Ang[i]: %3.1f  Sur: %3.1f  Effect: %3f  ", j,
-             InShadow[j], ShorelineAngle[j] * radtodeg,
-             SurroundingAngle[j] * radtodeg,
-             (WaveAngle - SurroundingAngle[j]) * radtodeg);
+             InShadow[j], ShorelineAngle[j] * RAD_TO_DEG,
+             SurroundingAngle[j] * RAD_TO_DEG,
+             (WaveAngle - SurroundingAngle[j]) * RAD_TO_DEG);
 
-    if (fabs(WaveAngle - SurroundingAngle[j]) >= 42.0 / radtodeg) {
+    if (fabs(WaveAngle - SurroundingAngle[j]) >= 42.0 / RAD_TO_DEG) {
       UpWind[j] = 'u';
       if (debug4) printf("U(1)  ");
     } else {
@@ -2354,7 +2349,7 @@ void DetermineSedTransport(void)
   float DummyAngle = 1.;
 
   if (debug5)
-    printf("\nSEDTRANS: %d  @  %f \n\n", current_time_step, WaveAngle * radtodeg);
+    printf("\nSEDTRANS: %d  @  %f \n\n", current_time_step, WaveAngle * RAD_TO_DEG);
 
   for (i = 1; i < TotalBeachCells - 1; i++) {
     if (debug5) printf("\n  i: %d  ", i);
@@ -2469,27 +2464,27 @@ void DetermineSedTransport(void)
       if (UpWindLocal == 'u') {
         ShoreAngleUsed = ShorelineAngle[CalcCell + Last + Correction];
         if (debug5)
-          printf("UP  ShoreAngle: %3.1f  ", ShoreAngleUsed * radtodeg);
+          printf("UP  ShoreAngle: %3.1f  ", ShoreAngleUsed * RAD_TO_DEG);
       } else if (UpWindLocal == 'd') {
         ShoreAngleUsed = ShorelineAngle[CalcCell + Correction];
         if (debug5)
-          printf("DN  ShoreAngle: %3.1f  ", ShoreAngleUsed * radtodeg);
+          printf("DN  ShoreAngle: %3.1f  ", ShoreAngleUsed * RAD_TO_DEG);
       }
 
       /* !!! Do not do transport on unerneath c'cause it gets all messed up */
-      if (fabs(ShoreAngleUsed) > pi / 2.0) {
+      if (fabs(ShoreAngleUsed) > PI / 2.0) {
         DoFlux = 0;
       }
 
       /* Send to SedTrans to calculate VolumeIn and VolumeOut */
 
       /* printf("i = %d  Cell: %d NextCell: %d Angle: %f Trans Angle: %f\n",
-         i, CalcCell, CalcCell+Next, ShoreAngleUsed*180/pi, (WaveAngle -
-         ShoreAngleUsed)*180/pi); */
+         i, CalcCell, CalcCell+Next, ShoreAngleUsed*180/PI, (WaveAngle -
+         ShoreAngleUsed)*180/PI); */
 
       if (debug5)
         printf("From: %d  To: %d  TransAngle %3.1f", CalcCell, CalcCell + Next,
-               (WaveAngle - ShoreAngleUsed) * radtodeg);
+               (WaveAngle - ShoreAngleUsed) * RAD_TO_DEG);
 
       if (DoFlux) {
         /* SedTrans (i, ShoreAngleUsed, MaxTrans); */
@@ -2539,24 +2534,24 @@ void SedTrans(int i, int From, float ShoreAngle, char MaxT, int Last)
   /* See notes 06/05/02 */
 
   if (debug6)
-    printf("Wave Angle %2.2f Shore Angle  %2.2f    ", WaveAngle * radtodeg,
-           ShoreAngle * radtodeg);
+    printf("Wave Angle %2.2f Shore Angle  %2.2f    ", WaveAngle * RAD_TO_DEG,
+           ShoreAngle * RAD_TO_DEG);
 
   AngleDeep = WaveAngle - ShoreAngle;
 
   if (MaxT == 'y') {
-    AngleDeep = pi / 4.0;
+    AngleDeep = PI / 4.0;
   }
-  if (debug6) printf("Deep Tranport Angle %2.2f \n\n", AngleDeep * radtodeg);
+  if (debug6) printf("Deep Tranport Angle %2.2f \n\n", AngleDeep * RAD_TO_DEG);
 
   /*  Don't do calculations if over 90 degrees, should be in shadow  */
 
-  if (AngleDeep > 0.995 * pi / 2.0 || AngleDeep < -0.995 * pi / 2.0) {
+  if (AngleDeep > 0.995 * PI / 2.0 || AngleDeep < -0.995 * PI / 2.0) {
     return;
   } else if (kSwanFlag == 'n') {
-    /* Calculate Deep Water Celerity & Length, Komar 5.11 c = gT / pi, L = CT */
+    /* Calculate Deep Water Celerity & Length, Komar 5.11 c = gT / PI, L = CT */
 
-    CDeep = g * Period / (2.0 * pi);
+    CDeep = GRAVITY * Period / (2.0 * PI);
     LDeep = CDeep * Period;
     if (debug6) printf("CDeep = %2.2f LDeep = %2.2f \n", CDeep, LDeep);
 
@@ -2565,7 +2560,7 @@ void SedTrans(int i, int From, float ShoreAngle, char MaxT, int Last)
 
       WaveLength =
           LDeep *
-          Raise(tanh(Raise(Raise(2.0 * pi / Period, 2) * Depth / g, .75)),
+          Raise(tanh(Raise(Raise(2.0 * PI / Period, 2) * Depth / GRAVITY, .75)),
                 2.0 / 3.0);
       C = WaveLength / Period;
       if (debug6)
@@ -2575,7 +2570,7 @@ void SedTrans(int i, int From, float ShoreAngle, char MaxT, int Last)
       /* Determine n = 1/2(1+2kh/sinh(kh)) Komar 5.21                 */
       /* First Calculate kh = 2 pi Depth/L  from k = 2 pi/L           */
 
-      kh = 2 * pi * Depth / WaveLength;
+      kh = 2 * PI * Depth / WaveLength;
       n = 0.5 * (1 + 2.0 * kh / sinh(2.0 * kh));
       if (debug6) printf("kh: %2.3f  n: %2.3f ", kh, n);
 
@@ -2584,7 +2579,7 @@ void SedTrans(int i, int From, float ShoreAngle, char MaxT, int Last)
       /* from Komar 5.47 */
 
       Angle = asin(C / CDeep * sin(AngleDeep));
-      if (debug6) printf("Angle: %2.2f", Angle * radtodeg);
+      if (debug6) printf("Angle: %2.2f", Angle * RAD_TO_DEG);
 
       /* Determine Wave height from refract calcs - Komar 5.49 */
 
@@ -2612,18 +2607,18 @@ void SedTrans(int i, int From, float ShoreAngle, char MaxT, int Last)
   /* so no attempt made to make this a more perfect imperfection */
   if (kSwanFlag == 'n') {
     VolumeAcrossBorder[i] =
-        fabs(1.1 * rho * Raise(g, 3.0 / 2.0) * Raise(WvHeight, 2.5) *
+        fabs(1.1 * rho * Raise(GRAVITY, 3.0 / 2.0) * Raise(WvHeight, 2.5) *
              cos(Angle) * sin(Angle) * time_step); /*LMV - now global array*/
   } else /* Do Qs slightly different for SWAN input */
   {
     VolumeAcrossBorder[i] =
-        fabs(0.2 * rho * Raise(g, 3.0 / 2.0) * Raise(WvHeight, 2.5) *
+        fabs(0.2 * rho * Raise(GRAVITY, 3.0 / 2.0) * Raise(WvHeight, 2.5) *
              cos(Angle - ShoreAngle) * sin(Angle - ShoreAngle) * time_step);
 
     if (UpWind[From] == 'u') /* Use wave characteristics updrift */
     {
       VolumeAcrossBorder[i] = fabs(
-          0.2 * rho * Raise(g, 3.0 / 2.0) * Raise(Hsigdebug[From + Last], 2.5) *
+          0.2 * rho * Raise(GRAVITY, 3.0 / 2.0) * Raise(Hsigdebug[From + Last], 2.5) *
           cos(Dirdebug[From + Last] - ShoreAngle) *
           sin(Dirdebug[From + Last] - ShoreAngle) * time_step);
     }
@@ -2639,10 +2634,10 @@ void DoSink(void)
 /* empties of sand any cell that has been designated a sink */
 {
   int s, i, foundOne = 0;
-  if (!HaveSinks || RandZeroToOne() > Sinkiness) return;
+  if (!HAVE_SINKS || RandZeroToOne() > SINKINESS) return;
 
-  if (ColumnSinks) /* treat sink as any beach cell at a particular y-value */
-    for (s = 0; s < NumSinks; s++) {
+  if (COLUMN_SINKS) /* treat sink as any beach cell at a particular y-value */
+    for (s = 0; s < NUM_SINKS; s++) {
       for (i = 0; i < MaxBeachLength; i++)
         if (Y[i] == kSinkY[s]) {
           PercentFullSand[X[i]][Y[i]] = 0.0;
@@ -2651,7 +2646,7 @@ void DoSink(void)
       if (!foundOne) printf("couldn't find sink %d at y == %d!\n", s, kSinkY[s]);
     }
   else /* treat sink as a specific cell; empty it if it is on the beach */
-    for (s = 0; s < NumSinks; s++) {
+    for (s = 0; s < NUM_SINKS; s++) {
       for (i = 0; i < MaxBeachLength; i++)
         if (Y[i] == kSinkY[s] && X[i] == kSinkX[s]) {
           PercentFullSand[X[i]][Y[i]] = 0.0;
@@ -2750,13 +2745,13 @@ void FixFlow(void)
                  cells */
 
     /* calculate effective depth */
-    Depth = InitialDepth + ((X[i] - InitBeach) * CellWidth * ShelfSlope);
-    Distance = Depth / (ShorefaceSlope - ShelfSlope * cos(ShorelineAngle[i]));
-    Xintercept = X[i] + Distance * cos(ShorelineAngle[i]) / CellWidth;
+    Depth = INITIAL_DEPTH + ((X[i] - INIT_BEACH) * CELL_WIDTH * SHELF_SLOPE);
+    Distance = Depth / (SHOREFACE_SLOPE - SHELF_SLOPE * cos(ShorelineAngle[i]));
+    Xintercept = X[i] + Distance * cos(ShorelineAngle[i]) / CELL_WIDTH;
     DepthEffective =
-        InitialDepth + ((Xintercept - InitBeach) * CellWidth * ShelfSlope);
+        INITIAL_DEPTH + ((Xintercept - INIT_BEACH) * CELL_WIDTH * SHELF_SLOPE);
 
-    if (DepthEffective < DepthShoreface) DepthEffective = DepthShoreface;
+    if (DepthEffective < DEPTH_SHOREFACE) DepthEffective = DEPTH_SHOREFACE;
 
     /*set the D's first - left and right border set */
 
@@ -2767,10 +2762,10 @@ void FixFlow(void)
         if (PercentFullRock[X[i]][Y[i]] == 0.0) {
           AmountSand = (PercentFullSand[X[i]][Y[i]] +
                         PercentFullSand[XBehind[i]][YBehind[i]]) *
-                       CellWidth * CellWidth * DepthEffective;
+                       CELL_WIDTH * CELL_WIDTH * DepthEffective;
           if (debug13) printf("(D)X: %d, Y: %d\n", X[i], Y[i]);
         } else {
-          AmountSand = (PercentFullSand[X[i]][Y[i]]) * CellWidth * CellWidth *
+          AmountSand = (PercentFullSand[X[i]][Y[i]]) * CELL_WIDTH * CELL_WIDTH *
                        DepthEffective;
           if (debug13) printf("(RockD)X: %d, Y: %d\n", X[i], Y[i]);
         }
@@ -2780,7 +2775,7 @@ void FixFlow(void)
                 sand */
 
         /* printf("Check Amount sand X: %d, Y: %d \n", X[i], Y[i]); */
-        AmountSand = (PercentFullSand[X[i]][Y[i]]) * CellWidth * CellWidth *
+        AmountSand = (PercentFullSand[X[i]][Y[i]]) * CELL_WIDTH * CELL_WIDTH *
                      DepthEffective;
         if (debug13) printf("(Dd)X: %d, Y: %d\n", X[i], Y[i]);
       }
@@ -2832,13 +2827,13 @@ void FixFlow(void)
        i++) { /*get the actual volumes across right borders for R cells */
 
     /* calculate effective depth */
-    Depth = InitialDepth + ((X[i] - InitBeach) * CellWidth * ShelfSlope);
-    Distance = Depth / (ShorefaceSlope - ShelfSlope * cos(ShorelineAngle[i]));
-    Xintercept = X[i] + Distance * cos(ShorelineAngle[i]) / CellWidth;
+    Depth = INITIAL_DEPTH + ((X[i] - INIT_BEACH) * CELL_WIDTH * SHELF_SLOPE);
+    Distance = Depth / (SHOREFACE_SLOPE - SHELF_SLOPE * cos(ShorelineAngle[i]));
+    Xintercept = X[i] + Distance * cos(ShorelineAngle[i]) / CELL_WIDTH;
     DepthEffective =
-        InitialDepth + ((Xintercept - InitBeach) * CellWidth * ShelfSlope);
+        INITIAL_DEPTH + ((Xintercept - INIT_BEACH) * CELL_WIDTH * SHELF_SLOPE);
 
-    if (DepthEffective < DepthShoreface) DepthEffective = DepthShoreface;
+    if (DepthEffective < DEPTH_SHOREFACE) DepthEffective = DEPTH_SHOREFACE;
 
     if (FlowThroughCell[i] == 'R') { /*Flow from a Right cell (to a Right cell
                                         or a Convergent cell) */
@@ -2847,10 +2842,10 @@ void FixFlow(void)
         if (PercentFullRock[X[i]][Y[i]] == 0.0) {
           AmountSand = (PercentFullSand[X[i]][Y[i]] +
                         PercentFullSand[XBehind[i]][YBehind[i]]) *
-                       CellWidth * CellWidth * DepthEffective;
+                       CELL_WIDTH * CELL_WIDTH * DepthEffective;
           if (debug13) printf("(R)X: %d, Y: %d\n", X[i], Y[i]);
         } else {
-          AmountSand = (PercentFullSand[X[i]][Y[i]]) * CellWidth * CellWidth *
+          AmountSand = (PercentFullSand[X[i]][Y[i]]) * CELL_WIDTH * CELL_WIDTH *
                        DepthEffective;
           if (debug13) printf("(RockR)X: %d, Y: %d\n", X[i], Y[i]);
         }
@@ -2860,7 +2855,7 @@ void FixFlow(void)
                 sand */
 
         /* printf("Check 2 Amount sand X: %d, Y: %d \n", X[i], Y[i]); */
-        AmountSand = (PercentFullSand[X[i]][Y[i]]) * CellWidth * CellWidth *
+        AmountSand = (PercentFullSand[X[i]][Y[i]]) * CELL_WIDTH * CELL_WIDTH *
                      DepthEffective;
         if (debug13) printf("(Rd)X: %d, Y: %d\n", X[i], Y[i]);
       }
@@ -2895,13 +2890,13 @@ void FixFlow(void)
   for (i = TotalBeachCells - 1; i >= 1;
        i--) { /*get the volumes across left side of cell for L cells */
 
-    Depth = InitialDepth + ((X[i] - InitBeach) * CellWidth * ShelfSlope);
-    Distance = Depth / (ShorefaceSlope - ShelfSlope * cos(ShorelineAngle[i]));
-    Xintercept = X[i] + Distance * cos(ShorelineAngle[i]) / CellWidth;
+    Depth = INITIAL_DEPTH + ((X[i] - INIT_BEACH) * CELL_WIDTH * SHELF_SLOPE);
+    Distance = Depth / (SHOREFACE_SLOPE - SHELF_SLOPE * cos(ShorelineAngle[i]));
+    Xintercept = X[i] + Distance * cos(ShorelineAngle[i]) / CELL_WIDTH;
     DepthEffective =
-        InitialDepth + ((Xintercept - InitBeach) * CellWidth * ShelfSlope);
+        INITIAL_DEPTH + ((Xintercept - INIT_BEACH) * CELL_WIDTH * SHELF_SLOPE);
 
-    if (DepthEffective < DepthShoreface) DepthEffective = DepthShoreface;
+    if (DepthEffective < DEPTH_SHOREFACE) DepthEffective = DEPTH_SHOREFACE;
 
     if (FlowThroughCell[i] ==
         'L') { /*Flow from a Left cell (to a Convergent cell or a Left cell) */
@@ -2910,10 +2905,10 @@ void FixFlow(void)
         if (PercentFullRock[X[i]][Y[i]] == 0.0) {
           AmountSand = (PercentFullSand[X[i]][Y[i]] +
                         PercentFullSand[XBehind[i]][YBehind[i]]) *
-                       CellWidth * CellWidth * DepthEffective;
+                       CELL_WIDTH * CELL_WIDTH * DepthEffective;
           if (debug13) printf("(L)X: %d, Y: %d\n", X[i], Y[i]);
         } else {
-          AmountSand = (PercentFullSand[X[i]][Y[i]]) * CellWidth * CellWidth *
+          AmountSand = (PercentFullSand[X[i]][Y[i]]) * CELL_WIDTH * CELL_WIDTH *
                        DepthEffective;
           if (debug13) printf("(RockL)X: %d, Y: %d\n", X[i], Y[i]);
         }
@@ -2923,7 +2918,7 @@ void FixFlow(void)
                 sand */
 
         /* printf("Check 3 Amount sand X: %d, Y: %d \n", X[i], Y[i]); */
-        AmountSand = (PercentFullSand[X[i]][Y[i]]) * CellWidth * CellWidth *
+        AmountSand = (PercentFullSand[X[i]][Y[i]]) * CELL_WIDTH * CELL_WIDTH *
                      DepthEffective;
         if (debug13) printf("(Ld)X: %d, Y: %d\n", X[i], Y[i]);
       }
@@ -2981,7 +2976,7 @@ void TransportSedimentSweep(void)
   else
     sweepsign = 0;
 
-  /*if (debug7) printf("\n\n TransSedSweep  Ang %f  %d\n", WaveAngle * radtodeg,
+  /*if (debug7) printf("\n\n TransSedSweep  Ang %f  %d\n", WaveAngle * RAD_TO_DEG,
    * current_time_step); */
 
   for (i = 0; i <= TotalBeachCells - 1; i++) {
@@ -3030,7 +3025,7 @@ void TransportSedimentSweep(void)
           PercentFullSand[58][269]);
       PauseRun(-1, -1, ii);
     }
-    if (InitCType != 3) { /* Don't erode the beach if there are no rocks... */
+    if (INITIAL_CONDITION_TYPE != 3) { /* Don't erode the beach if there are no rocks... */
       ErodeTheBeach(ii);
     }
     if (PercentFullSand[X[ii]][Y[ii]] < -0.000001) { /* RCL */
@@ -3053,7 +3048,7 @@ void AdjustShore(int i)
 /*  This function will change the global data array PercentFullSand[][] */
 /*  Uses but does not adjust arrays: */
 /*              X[], Y[], ShorelineAngle[], ActualVolumeAcross  LMV */
-/*  Uses global variables: ShelfSlope, CellWidth, ShorefaceSlope, InitialDepth
+/*  Uses global variables: SHELF_SLOPE, CELL_WIDTH, SHOREFACE_SLOPE, INITIAL_DEPTH
    */
 {
   float Depth;      /* Depth of current cell */
@@ -3077,22 +3072,22 @@ void AdjustShore(int i)
   /*      FIND "A" FROM DEPTH OF 10METERS AT ABOUT 1000METERS. */
   /*      FOR NOW, USE n = 1: */
 
-  Depth = InitialDepth + ((X[i] - InitBeach) * CellWidth * ShelfSlope);
+  Depth = INITIAL_DEPTH + ((X[i] - INIT_BEACH) * CELL_WIDTH * SHELF_SLOPE);
 
-  Distance = Depth / (ShorefaceSlope - ShelfSlope * cos(ShorelineAngle[i]));
+  Distance = Depth / (SHOREFACE_SLOPE - SHELF_SLOPE * cos(ShorelineAngle[i]));
 
-  Xintercept = X[i] + Distance * cos(ShorelineAngle[i]) / CellWidth;
+  Xintercept = X[i] + Distance * cos(ShorelineAngle[i]) / CELL_WIDTH;
 
   DepthEffective =
-      InitialDepth + ((Xintercept - InitBeach) * CellWidth * ShelfSlope);
+      INITIAL_DEPTH + ((Xintercept - INIT_BEACH) * CELL_WIDTH * SHELF_SLOPE);
 
   if (debug7a)
     printf(
         "\n Depth %f  Distance %f XIntercept %f  DepthEffective %f "
         "DepthShoreFace %d",
-        Depth, Distance, Xintercept, DepthEffective, DepthShoreface);
+        Depth, Distance, Xintercept, DepthEffective, DEPTH_SHOREFACE);
 
-  if (DepthEffective < DepthShoreface) DepthEffective = DepthShoreface;
+  if (DepthEffective < DEPTH_SHOREFACE) DepthEffective = DEPTH_SHOREFACE;
   /*LMV*/ if (FlowThroughCell[i] == 'L') {
     VolumeIn[i] = ActualVolumeAcross[i];
     VolumeOut[i] = ActualVolumeAcross[i - 1];
@@ -3113,7 +3108,7 @@ void AdjustShore(int i)
   DeltaArea = (VolumeIn[i] - VolumeOut[i]) / DepthEffective;
   /* if(you want to do sinks this way && this cell is sink) DeltaArea = 0;
      RCL addded sinks but won't do them like this probably */
-  PercentFullSand[X[i]][Y[i]] += DeltaArea / (CellWidth * CellWidth);
+  PercentFullSand[X[i]][Y[i]] += DeltaArea / (CELL_WIDTH * CELL_WIDTH);
 
   if (debug14)
     printf("%c  i: %d  In: %f  Out: %f\n", FlowThroughCell[i], i, VolumeIn[i],
@@ -3135,7 +3130,7 @@ void ErodeTheBeach(int i)
   float PercentEroded;
 
   if (InShadow[i] == 'n')
-    PercentEroded = ((ErosionRatePerYear * time_step) / 365) / CellWidth;
+    PercentEroded = ((ErosionRatePerYear * time_step) / 365) / CELL_WIDTH;
   else /* if (InShadow[i] == 'y') */
     PercentEroded = 0.0;
 
@@ -3605,7 +3600,7 @@ void FixBeach(void)
   /*LMV*/ int xstart;
 
   /*if (debug9) printf("\n\nFIXBEACH      %d     %f\n", current_time_step,
-   * WaveAngle*radtodeg); */
+   * WaveAngle*RAD_TO_DEG); */
 
   if (RandZeroToOne() * 2 > 1)
     sweepsign = 1;
@@ -3613,13 +3608,13 @@ void FixBeach(void)
     sweepsign = 0;
 
   for (x = 1; x < ShadowXMax - 1; x++) {
-    for (i = 1; i < 2 * Ymax - 1;
+    for (i = 1; i < 2 * Y_MAX - 1;
          i++) { /* RCL: changing loops to ignore border */
 
       if (sweepsign == 1)
         y = i;
       else
-        y = 2 * Ymax - i;
+        y = 2 * Y_MAX - i;
 
       /*Take care of corner problem?
          if  (((AllBeach[x][y] == 'n') && (PercentFullRock[x][y] > 0.0)) &&
@@ -3791,7 +3786,7 @@ void FixBeach(void)
             printf("Complete fixbeach breakdown x: %d  y: %d\n", x, y);
             /*if (debug9) PauseRun(x,y,-1); */
 
-            xstart = Xmax - 1;
+            xstart = X_MAX - 1;
             while (AllBeach[xstart][y] == 'n') {
               xstart -= 1;
             }
@@ -3808,7 +3803,7 @@ void FixBeach(void)
 
             printf("PFS After move: %f \n", PercentFullSand[xstart][y]);
 
-            xstart = Xmax - 1;
+            xstart = X_MAX - 1;
             while (AllRock[xstart][y] == 'n') {
               xstart -= 1;
             }
@@ -3893,8 +3888,8 @@ void FixBeach(void)
   done = FALSE;
   for (counter = 0; counter < 10 && !done; counter++) {
     done = TRUE;
-    for (x = 1; x < Xmax - 1; x++) {
-      for (y = 1; y < 2 * Ymax - 1; y++) {
+    for (x = 1; x < X_MAX - 1; x++) {
+      for (y = 1; y < 2 * Y_MAX - 1; y++) {
         if ((PercentFullSand[x][y] + PercentFullRock[x][y] > 1.0) ||
             (PercentFullSand[x][y] + PercentFullRock[x][y] < 0.0) ||
             PercentFullSand[x][y] < 0.0)
@@ -3927,16 +3922,16 @@ float MassCount(void)
 /* Uses same algorhythm as AdjustShore                  */
 /* returns a float of the total sum                     */
 /* Uses AllBeach[][] and PercentFullSand[][]            */
-/* and InitialDepth, CellWidth, ShelfSlope              */
+/* and INITIAL_DEPTH, CELL_WIDTH, SHELF_SLOPE              */
 {
   int x, y;
   float Depth; /* Depth of current cell */
   float Mass = 0.0;
 
-  for (x = 0; x < Xmax; x++) {
-    Depth = InitialDepth + ((x - InitBeach) * CellWidth * ShelfSlope);
+  for (x = 0; x < X_MAX; x++) {
+    Depth = INITIAL_DEPTH + ((x - INIT_BEACH) * CELL_WIDTH * SHELF_SLOPE);
 
-    for (y = 0; y < 2 * Ymax; y++) {
+    for (y = 0; y < 2 * Y_MAX; y++) {
       Mass += PercentFullSand[x][y] * Depth;
     }
   }
@@ -3966,7 +3961,7 @@ float RandZeroToOne(void)
 
 /* function will return a random number equally distributed between zero and one
    */
-/* currently this function has no seed */
+/* currently this function has no SEED */
 {
   /* return random()/(Raise(2,31)-1); */
   double AB_rand = rand() % 1000;
@@ -3977,7 +3972,7 @@ float RandZeroToOne(void)
 void InitNormal(void)
 /* Creates initial beach conditions */
 /* Flat beach with zone of AllBeach = 'y' separated by AllBeach = 'n' */
-/* Block of rock parallel to beach begins at InitRock LMV */
+/* Block of rock parallel to beach begins at INIT_ROCK LMV */
 /* LMV Assume that AllBeach = 'Y' for AllRock cells (and All Full cells)
    */
 /* Bounding layer set to random fraction of fullness */
@@ -3992,17 +3987,17 @@ void InitNormal(void)
 
   Amp = 10;
 
-  for (y = 0; y < 2 * Ymax; y++)
-    for (x = 0; x < Xmax; x++) {
-      InitialBeach = InitBeach;
-      InitialRock = InitRock;
+  for (y = 0; y < 2 * Y_MAX; y++)
+    for (x = 0; x < X_MAX; x++) {
+      InitialBeach = INIT_BEACH;
+      InitialRock = INIT_ROCK;
 
-      if (DiffusiveHump)
+      if (DIFFUSIVE_HUMP)
       /* shoreline is a cosine curve, diffusive LMV */
       {
-        InitialRock = (InitRock + (-Amp * cos((2 * pi * y) / Ymax)) -
-                       (InitBeach - InitRock - 1));
-        InitialBeach = (InitBeach + (-Amp * cos((2 * pi * y) / Ymax)));
+        InitialRock = (INIT_ROCK + (-Amp * cos((2 * PI * y) / Y_MAX)) -
+                       (INIT_BEACH - INIT_ROCK - 1));
+        InitialBeach = (INIT_BEACH + (-Amp * cos((2 * PI * y) / Y_MAX)));
       }
 
       if (x < InitialRock)
@@ -4016,7 +4011,7 @@ void InitNormal(void)
 
       else if (x == InitialRock)
       /*LMV*/ {
-        if (InitialSmoothRock) {
+        if (INITIAL_SMOOTH_ROCK) {
           PercentFullRock[x][y] = 0.20;
           PercentFullSand[x][y] = 0.80;
         } else {
@@ -4037,7 +4032,7 @@ void InitNormal(void)
         topography[x][y] = 0;
 
       } else if (x == InitialBeach) {
-        if (InitialSmooth) {
+        if (INITIAL_SMOOTH) {
           PercentFullSand[x][y] = 0.5;
         } else {
           PercentFullSand[x][y] = RandZeroToOne();
@@ -4059,9 +4054,9 @@ void InitNormal(void)
     }
 
   // LMV Assign fast and slow weathering portions
-  for (x = 0; x < Xmax; x++) {
-    for (n = 0; n <= 2 * NumberChunk; n++) {
-      for (y = n * ChunkLength; y < ((n + 2) * ChunkLength); y++) {
+  for (x = 0; x < X_MAX; x++) {
+    for (n = 0; n <= 2 * NUMBER_CHUNK; n++) {
+      for (y = n * CHUNK_LENGTH; y < ((n + 2) * CHUNK_LENGTH); y++) {
         if (n % 3 == 0 && (!blocks || x > InitialRock - 3)) { /* if even */
           TypeOfRock[x][y] = 's';
           topography[x][y] = kCliffHeightSlow;
@@ -4073,7 +4068,7 @@ void InitNormal(void)
         }
       }
     }
-    /*for (y=0;y<=Ymax;y++)
+    /*for (y=0;y<=Y_MAX;y++)
        printf("x %d, y %d, Type %c\n", x, y, TypeOfRock[x][y]); */
   }
 }
@@ -4083,20 +4078,20 @@ int initBlock(void) {
                NumBlocks = 0; /* makes NumBlocks evenly spaced blocks */
   printf("init block\n");
 
-  for (x = 0; x < Xmax; x++) {
-    for (y = Ymax / 2; y < 3 * Ymax / 2; y++) {
-      if (x < InitRock) {
+  for (x = 0; x < X_MAX; x++) {
+    for (y = Y_MAX / 2; y < 3 * Y_MAX / 2; y++) {
+      if (x < INIT_ROCK) {
         PercentFullRock[x][y] = 1.0;
         PercentFullSand[x][y] = 0.0;
         AllRock[x][y] = 'y';
         TypeOfRock[x][y] = 'f';
         AllBeach[x][y] = 'y';
-      } else if (x < InitBeach) {
+      } else if (x < INIT_BEACH) {
         PercentFullRock[x][y] = 0.0;
         PercentFullSand[x][y] = 1.0;
         AllRock[x][y] = 'n';
         AllBeach[x][y] = 'y';
-      } else if (x == InitBeach) {
+      } else if (x == INIT_BEACH) {
         PercentFullRock[x][y] = 0.0;
         PercentFullSand[x][y] = RandZeroToOne();
         AllRock[x][y] = 'n';
@@ -4111,10 +4106,10 @@ int initBlock(void) {
     }
   }
   for (n = 1; n <= NumBlocks; n++) { /* the regularly-spaced blocks */
-    for (x = InitRock; x >= InitRock - blockHeight; x--) {
-      for (y = Ymax / 2 + n * Ymax / (NumBlocks + 1);
-           y < Ymax / 2 + n * Ymax / (NumBlocks + 1) + blockWidth &&
-           y < 2 * Ymax;
+    for (x = INIT_ROCK; x >= INIT_ROCK - blockHeight; x--) {
+      for (y = Y_MAX / 2 + n * Y_MAX / (NumBlocks + 1);
+           y < Y_MAX / 2 + n * Y_MAX / (NumBlocks + 1) + blockWidth &&
+           y < 2 * Y_MAX;
            y++) { /* block starts @ upper left corner */
         PercentFullRock[x][y] = 1.0;
         PercentFullSand[x][y] = 0.0;
@@ -4126,8 +4121,8 @@ int initBlock(void) {
   }
   /* now here's space for ad hoc blocks */
   /* ad hoc block 1 */
-  for (x = InitRock; x >= InitRock - blockHeight; x--) {
-    for (y = Ymax / 2; y < Ymax / 2 + 10; y++) {
+  for (x = INIT_ROCK; x >= INIT_ROCK - blockHeight; x--) {
+    for (y = Y_MAX / 2; y < Y_MAX / 2 + 10; y++) {
       PercentFullRock[x][y] = 1.0;
       PercentFullSand[x][y] = 0.0;
       AllRock[x][y] = 'y';
@@ -4136,8 +4131,8 @@ int initBlock(void) {
     }
   }
   /* ad hoc block 2 */
-  for (x = InitRock; x >= InitRock - blockHeight; x--) {
-    for (y = 3 * Ymax / 2 - 90; y < 3 * Ymax / 2; y++) {
+  for (x = INIT_ROCK; x >= INIT_ROCK - blockHeight; x--) {
+    for (y = 3 * Y_MAX / 2 - 90; y < 3 * Y_MAX / 2; y++) {
       PercentFullRock[x][y] = 1.0;
       PercentFullSand[x][y] = 0.0;
       AllRock[x][y] = 'y';
@@ -4153,33 +4148,33 @@ int initBlock(void) {
 int InitWiggly(void) {
   int x, y, curve;
   int NumCurves = 4;
-  int RockLine[2 * Ymax];
+  int RockLine[2 * Y_MAX];
   int curveFactor =
       3; /* decrease fundamental wavelength/increase frequency (by a factor)
-            --make it 1 for wavelength = Ymax */
+            --make it 1 for wavelength = Y_MAX */
   float Amp,
       AmpMax =
-          InitRock /
-          6.0; /* InitRock/4.0; maximum amplitude of the component sin waves */
-  int Min = 0.10 * Xmax,
+          INIT_ROCK /
+          6.0; /* INIT_ROCK/4.0; maximum amplitude of the component sin waves */
+  int Min = 0.10 * X_MAX,
       Max = 0.95 *
-            Xmax; /* determines acceptable max amplitude of resulting curve */
+            X_MAX; /* determines acceptable max amplitude of resulting curve */
   printf("init wiggly\n");
 
-  for (y = 0; y < 2 * Ymax; y++) RockLine[y] = InitRock;
+  for (y = 0; y < 2 * Y_MAX; y++) RockLine[y] = INIT_ROCK;
 
   for (curve = 1; curve <= NumCurves; curve++) {
     Amp = RandZeroToOne() * AmpMax;
     printf("for curve %d, amplitude %f\n", curve, Amp);
-    for (y = 0; y < 2 * Ymax; y++) {
+    for (y = 0; y < 2 * Y_MAX; y++) {
       RockLine[y] =
-          RockLine[y] + Amp * sin(y * (curve * curveFactor) * 2.0 * pi / Ymax);
+          RockLine[y] + Amp * sin(y * (curve * curveFactor) * 2.0 * PI / Y_MAX);
       if (RockLine[y] < Min || RockLine[y] > Max) return -1;
     }
   }
 
-  for (x = 0; x < Xmax; x++)
-    for (y = 0; y < 2 * Ymax; y++) {
+  for (x = 0; x < X_MAX; x++)
+    for (y = 0; y < 2 * Y_MAX; y++) {
       if (x < RockLine[y]) {
         PercentFullRock[x][y] = 1.0;
         PercentFullSand[x][y] = 0.0;
@@ -4206,34 +4201,34 @@ int InitWiggly(void) {
 
 void InitConds(void) {
   current_time_step = 0;
-  if (InitCType == 0)
+  if (INITIAL_CONDITION_TYPE == 0)
     InitNormal();
-  else if (InitCType == 1)
+  else if (INITIAL_CONDITION_TYPE == 1)
     while (InitWiggly() == -1)
       printf("init: amplitude too great, trying again...\n");
-  else if (InitCType == 2)
+  else if (INITIAL_CONDITION_TYPE == 2)
     initBlock();
-  else if (InitCType == 3) /* All sand, all the time -- no rocks allowed */
+  else if (INITIAL_CONDITION_TYPE == 3) /* All sand, all the time -- no rocks allowed */
   {
     int x, y;
     printf("Condition Initial \n");
 
-    for (y = 0; y <= 2 * Ymax; y++)
-      for (x = 0; x <= Xmax; x++) {
+    for (y = 0; y <= 2 * Y_MAX; y++)
+      for (x = 0; x <= X_MAX; x++) {
         /* This is the only place where cell_depth is defined -- it needs to be
          updated through time
          for overwash functions (i think...), so perhaps there is something
          missing in this model version?? */
         cell_depth[x][y] =
-            InitialDepth + ((x - InitBeach) * CellWidth * ShelfSlope);
+            INITIAL_DEPTH + ((x - INIT_BEACH) * CELL_WIDTH * SHELF_SLOPE);
 
-        if (x < InitBeach) {
+        if (x < INIT_BEACH) {
           PercentFullSand[x][y] = 1;
           PercentFullRock[x][y] = 0;
           AllBeach[x][y] = 'y';
-          cell_depth[x][y] = -LandHeight;
-        } else if (x == InitBeach) {
-          if (InitialSmooth) {
+          cell_depth[x][y] = -LAND_HEIGHT;
+        } else if (x == INIT_BEACH) {
+          if (INITIAL_SMOOTH) {
             PercentFullSand[x][y] = 0.5;
             PercentFullRock[x][y] = 0;
 
@@ -4243,13 +4238,13 @@ void InitConds(void) {
             printf("x: %d  Y: %d  Per: %f\n", x, y, PercentFullSand[x][y]);
           }
           AllBeach[x][y] = 'n';
-          cell_depth[x][y] = -LandHeight;
-        } else if (x > InitBeach) {
+          cell_depth[x][y] = -LAND_HEIGHT;
+        } else if (x > INIT_BEACH) {
           PercentFullSand[x][y] = 0;
           PercentFullRock[x][y] = 0;
           AllBeach[x][y] = 'n';
-          if (cell_depth[x][y] < DepthShoreface) {
-            cell_depth[x][y] = DepthShoreface;
+          if (cell_depth[x][y] < DEPTH_SHOREFACE) {
+            cell_depth[x][y] = DEPTH_SHOREFACE;
           }
         } else {
           printf("ugh! x: %d  Y: %d  Per: %f\n", x, y, PercentFullSand[x][y]);
@@ -4259,7 +4254,7 @@ void InitConds(void) {
         Age[x][y] = 0;
       }
   } else
-    printf("have to pick an InitCType\n");
+    printf("have to pick an INITIAL_CONDITION_TYPE\n");
   return;
 }
 
@@ -4271,12 +4266,12 @@ void InitPert(void)
   int PHeight = 3;
   int PYstart = 25;
 
-  if (InitialPert == 1)
+  if (INITIAL_PERT == 1)
   /* Square perturbation */
   {
     /* Fill AllBeach areas */
 
-    for (x = InitBeach; x <= InitBeach + PHeight; x++) {
+    for (x = INIT_BEACH; x <= INIT_BEACH + PHeight; x++) {
       for (y = PYstart; y <= PYstart + PWidth; y++) {
         PercentFullSand[x][y] = 1.0;
         AllBeach[x][y] = 'y';
@@ -4286,42 +4281,42 @@ void InitPert(void)
     /* PercentFull Top */
 
     for (y = PYstart - 1; y <= PYstart + PWidth + 1; y++) {
-      PercentFullSand[InitBeach + PHeight + 1][y] = RandZeroToOne();
+      PercentFullSand[INIT_BEACH + PHeight + 1][y] = RandZeroToOne();
     }
 
     /* PercentFull Sides */
 
-    for (x = InitBeach; x <= InitBeach + PHeight; x++) {
+    for (x = INIT_BEACH; x <= INIT_BEACH + PHeight; x++) {
       PercentFullSand[x][PYstart - 1] = RandZeroToOne();
       PercentFullSand[x][PYstart + PWidth + 1] = RandZeroToOne();
     }
   }
 
-  else if (InitialPert == 2)
+  else if (INITIAL_PERT == 2)
   /* Another Perturbation  - steep point */
   {
-    x = InitBeach;
+    x = INIT_BEACH;
 
     PercentFullSand[x][17] = 0.8;
     PercentFullSand[x][18] = 1.0;
     AllBeach[x][18] = 'y';
     PercentFullSand[x][19] = 0.8;
 
-    x = InitBeach + 1;
+    x = INIT_BEACH + 1;
 
     PercentFullSand[x][17] = 0.6;
     PercentFullSand[x][18] = 1.0;
     AllBeach[x][18] = 'y';
     PercentFullSand[x][19] = 0.6;
 
-    x = InitBeach + 2;
+    x = INIT_BEACH + 2;
 
     PercentFullSand[x][17] = 0.2;
     PercentFullSand[x][18] = 1.0;
     AllBeach[x][18] = 'y';
     PercentFullSand[x][19] = 0.2;
 
-    x = InitBeach + 3;
+    x = INIT_BEACH + 3;
 
     PercentFullSand[x][18] = 0.3;
   }
@@ -4333,23 +4328,23 @@ void PeriodicBoundaryCopy(void)
 {
   int x, y;
 
-  for (y = Ymax; y < 3 * Ymax / 2; y++)
-    for (x = 0; x < Xmax; x++) {
-      AllBeach[x][y - Ymax] = AllBeach[x][y];
-      AllRock[x][y - Ymax] = AllRock[x][y];
-      /*LMV*/ TypeOfRock[x][y - Ymax] = TypeOfRock[x][y];
-      /*LMV*/ PercentFullSand[x][y - Ymax] = PercentFullSand[x][y];
-      PercentFullRock[x][y - Ymax] = PercentFullRock[x][y];
-      /*LMV*/ Age[x][y - Ymax] = Age[x][y];
+  for (y = Y_MAX; y < 3 * Y_MAX / 2; y++)
+    for (x = 0; x < X_MAX; x++) {
+      AllBeach[x][y - Y_MAX] = AllBeach[x][y];
+      AllRock[x][y - Y_MAX] = AllRock[x][y];
+      /*LMV*/ TypeOfRock[x][y - Y_MAX] = TypeOfRock[x][y];
+      /*LMV*/ PercentFullSand[x][y - Y_MAX] = PercentFullSand[x][y];
+      PercentFullRock[x][y - Y_MAX] = PercentFullRock[x][y];
+      /*LMV*/ Age[x][y - Y_MAX] = Age[x][y];
     }
-  for (y = Ymax / 2; y < Ymax; y++)
-    for (x = 0; x < Xmax; x++) {
-      AllBeach[x][y + Ymax] = AllBeach[x][y];
-      AllRock[x][y + Ymax] = AllRock[x][y];
-      /*LMV*/ TypeOfRock[x][y + Ymax] = TypeOfRock[x][y];
-      /*LMV*/ PercentFullSand[x][y + Ymax] = PercentFullSand[x][y];
-      PercentFullRock[x][y + Ymax] = PercentFullRock[x][y];
-      /*LMV*/ Age[x][y + Ymax] = Age[x][y];
+  for (y = Y_MAX / 2; y < Y_MAX; y++)
+    for (x = 0; x < X_MAX; x++) {
+      AllBeach[x][y + Y_MAX] = AllBeach[x][y];
+      AllRock[x][y + Y_MAX] = AllRock[x][y];
+      /*LMV*/ TypeOfRock[x][y + Y_MAX] = TypeOfRock[x][y];
+      /*LMV*/ PercentFullSand[x][y + Y_MAX] = PercentFullSand[x][y];
+      PercentFullRock[x][y + Y_MAX] = PercentFullRock[x][y];
+      /*LMV*/ Age[x][y + Y_MAX] = Age[x][y];
     }
 }
 
@@ -4386,12 +4381,12 @@ void ReadSandFromFile(void)
   ReadSandFile = fopen(readfilename, "r");
   printf("CHECK READ \n");
 
-  if (SaveFile != 2) { /*line file input */
-    for (y = Ymax / 2; y < 3 * Ymax / 2; y++)
-      for (x = 0; x < Xmax; x++) fscanf(ReadSandFile, " %c", &TypeOfRock[x][y]);
+  if (SAVE_FILE != 2) { /*line file input */
+    for (y = Y_MAX / 2; y < 3 * Y_MAX / 2; y++)
+      for (x = 0; x < X_MAX; x++) fscanf(ReadSandFile, " %c", &TypeOfRock[x][y]);
 
-    for (y = Ymax / 2; y < 3 * Ymax / 2; y++) {
-      for (x = 0; x < Xmax; x++) {
+    for (y = Y_MAX / 2; y < 3 * Y_MAX / 2; y++) {
+      for (x = 0; x < X_MAX; x++) {
         fscanf(ReadSandFile, " %lf", &PercentFullRock[x][y]);
 
         if (PercentFullRock[x][y] >= 1.0)
@@ -4401,8 +4396,8 @@ void ReadSandFromFile(void)
       }
     }
 
-    for (y = Ymax / 2; y < 3 * Ymax / 2; y++) {
-      for (x = 0; x < Xmax; x++) {
+    for (y = Y_MAX / 2; y < 3 * Y_MAX / 2; y++) {
+      for (x = 0; x < X_MAX; x++) {
         fscanf(ReadSandFile, " %lf", &PercentFullSand[x][y]);
 
         if ((PercentFullSand[x][y] + PercentFullRock[x][y]) >= 1.0)
@@ -4412,10 +4407,10 @@ void ReadSandFromFile(void)
       }
     }
 
-    if (SaveAge)
+    if (SAVE_AGE)
 
-      for (y = Ymax / 2; y < 3 * Ymax / 2; y++) {
-        for (x = 0; x < Xmax; x++) {
+      for (y = Y_MAX / 2; y < 3 * Y_MAX / 2; y++) {
+        for (x = 0; x < X_MAX; x++) {
           fscanf(ReadSandFile, " %d", &Age[x][y]);
         }
       }
@@ -4423,15 +4418,15 @@ void ReadSandFromFile(void)
 
   else { /*Array file input */
 
-    for (x = (Xmax - 1); x >= 0; x--) {
-      for (y = Ymax / 2; y < 3 * Ymax / 2; y++) {
+    for (x = (X_MAX - 1); x >= 0; x--) {
+      for (y = Y_MAX / 2; y < 3 * Y_MAX / 2; y++) {
         fscanf(ReadSandFile, " %c", &TypeOfRock[x][y]);
       }
       fscanf(ReadSandFile, "\n");
     }
 
-    for (x = (Xmax - 1); x >= 0; x--) {
-      for (y = Ymax / 2; y < 3 * Ymax / 2; y++) {
+    for (x = (X_MAX - 1); x >= 0; x--) {
+      for (y = Y_MAX / 2; y < 3 * Y_MAX / 2; y++) {
         fscanf(ReadSandFile, " %lf", &PercentFullRock[x][y]);
 
         if (PercentFullRock[x][y] >= 1.0)
@@ -4442,8 +4437,8 @@ void ReadSandFromFile(void)
       fscanf(ReadSandFile, "\n");
     }
 
-    for (x = (Xmax - 1); x >= 0; x--) {
-      for (y = Ymax / 2; y < 3 * Ymax / 2; y++) {
+    for (x = (X_MAX - 1); x >= 0; x--) {
+      for (y = Y_MAX / 2; y < 3 * Y_MAX / 2; y++) {
         fscanf(ReadSandFile, " %lf", &PercentFullSand[x][y]);
 
         if ((PercentFullSand[x][y] + PercentFullRock[x][y]) >= 1.0)
@@ -4454,9 +4449,9 @@ void ReadSandFromFile(void)
       fscanf(ReadSandFile, "\n");
     }
 
-    if (SaveAge) {
-      for (x = (Xmax - 1); x >= 0; x--) {
-        for (y = Ymax / 2; y < 3 * Ymax / 2; y++) {
+    if (SAVE_AGE) {
+      for (x = (X_MAX - 1); x >= 0; x--) {
+        for (y = Y_MAX / 2; y < 3 * Y_MAX / 2; y++) {
           fscanf(ReadSandFile, " %d", &Age[x][y]);
         }
         fscanf(ReadSandFile, "\n");
@@ -4493,27 +4488,27 @@ void SaveSandToFile(void)
     printf("problem opening output file\n");
     exit(1);
   }
-  if (SaveFile == 1) {
-    for (y = Ymax / 2; y < 3 * Ymax / 2; y++)
-      for (x = 0; x < Xmax; x++) fprintf(SaveSandFile, " %c", TypeOfRock[x][y]);
-    /*LMV*/ for (y = Ymax / 2; y < 3 * Ymax / 2; y++)
-      for (x = 0; x < Xmax; x++)
+  if (SAVE_FILE == 1) {
+    for (y = Y_MAX / 2; y < 3 * Y_MAX / 2; y++)
+      for (x = 0; x < X_MAX; x++) fprintf(SaveSandFile, " %c", TypeOfRock[x][y]);
+    /*LMV*/ for (y = Y_MAX / 2; y < 3 * Y_MAX / 2; y++)
+      for (x = 0; x < X_MAX; x++)
         fprintf(SaveSandFile, " %lf", PercentFullRock[x][y]);
-    /*LMV*/ for (y = Ymax / 2; y < 3 * Ymax / 2; y++)
-      for (x = 0; x < Xmax; x++)
+    /*LMV*/ for (y = Y_MAX / 2; y < 3 * Y_MAX / 2; y++)
+      for (x = 0; x < X_MAX; x++)
         fprintf(SaveSandFile, " %lf", PercentFullSand[x][y]);
 
-    if (SaveAge)
-      for (y = Ymax / 2; y < 3 * Ymax / 2; y++)
-        for (x = 0; x < Xmax; x++) fprintf(SaveSandFile, " %d", Age[x][y]);
+    if (SAVE_AGE)
+      for (y = Y_MAX / 2; y < 3 * Y_MAX / 2; y++)
+        for (x = 0; x < X_MAX; x++) fprintf(SaveSandFile, " %d", Age[x][y]);
   }
 
-  if (SaveFile == 2) {
+  if (SAVE_FILE == 2) {
     /* Array output */
 
-    /* for (x=0; x<Xmax; x++) */
-    for (x = (Xmax - 1); x >= 0; x--) {
-      for (y = Ymax / 2; y < 3 * Ymax / 2; y++) {
+    /* for (x=0; x<X_MAX; x++) */
+    for (x = (X_MAX - 1); x >= 0; x--) {
+      for (y = Y_MAX / 2; y < 3 * Y_MAX / 2; y++) {
         fprintf(SaveSandFile, " %c", TypeOfRock[x][y]);
         /*LMV*/
         /* if (TypeOfRock[x][y]=='f') fprintf(SaveSandFile, " 0"); */ /* Switch
@@ -4525,23 +4520,23 @@ void SaveSandToFile(void)
       fprintf(SaveSandFile, "\n");
     }
 
-    for (x = (Xmax - 1); x >= 0; x--) {
-      for (y = Ymax / 2; y < 3 * Ymax / 2; y++) {
+    for (x = (X_MAX - 1); x >= 0; x--) {
+      for (y = Y_MAX / 2; y < 3 * Y_MAX / 2; y++) {
         fprintf(SaveSandFile, " %lf", PercentFullRock[x][y]);
       /*LMV*/}
       fprintf(SaveSandFile, "\n");
     }
 
-    for (x = (Xmax - 1); x >= 0; x--) {
-      for (y = Ymax / 2; y < 3 * Ymax / 2; y++) {
+    for (x = (X_MAX - 1); x >= 0; x--) {
+      for (y = Y_MAX / 2; y < 3 * Y_MAX / 2; y++) {
         fprintf(SaveSandFile, " %lf", PercentFullSand[x][y]);
       }
       fprintf(SaveSandFile, "\n");
     }
 
-    if (SaveAge) {
-      for (x = (Xmax - 1); x >= 0; x--) {
-        for (y = Ymax / 2; y < 3 * Ymax / 2; y++) {
+    if (SAVE_AGE) {
+      for (x = (X_MAX - 1); x >= 0; x--) {
+        for (y = Y_MAX / 2; y < 3 * Y_MAX / 2; y++) {
           fprintf(SaveSandFile, " %d", Age[x][y]);
         }
         fprintf(SaveSandFile, "\n");
@@ -4568,7 +4563,7 @@ void SaveLineToFile(void)
 
   printf("\n saving \n ");
 
-  sprintf(savename, "ShorePos_%d.dat", current_time_step / SaveSpacing);
+  sprintf(savename, "ShorePos_%d.dat", current_time_step / SAVE_SPACING);
   printf("Saving as: %s                 ", savename);
 
   SaveSandFile = fopen(savename, "w");
@@ -4577,9 +4572,9 @@ void SaveLineToFile(void)
     exit(1);
   }
 
-  for (y = Ymax / 2; y < 3 * Ymax / 2; y++) {
-    x = Xmax - 1;
-    xtop = Xmax;
+  for (y = Y_MAX / 2; y < 3 * Y_MAX / 2; y++) {
+    x = X_MAX - 1;
+    xtop = X_MAX;
 
     /* step back to where we encounter allbeach */
     while (AllBeach[x][y] == 'n') {
@@ -4604,10 +4599,10 @@ void SaveLineToFile(void)
     }
 
     /* note this assumes average of beach locations should be 0.5 percentfull */
-    fprintf(SaveSandFile, " %f", xsave - InitBeach + 0.5);
+    fprintf(SaveSandFile, " %f", xsave - INIT_BEACH + 0.5);
 
     /*printf("y %d , xtop = %d xsave = %f \n",y,xtop,xsave);
-       if (xtop != Xmax)
+       if (xtop != X_MAX)
        PauseRun(x+1,y,-1);                  */
   }
 
@@ -4621,10 +4616,10 @@ void PauseRun(int x, int y, int in)
 {
   printf("\nPaused \n");
 
-  if (SaveLine) SaveLineToFile();
-  if (SaveFile) SaveSandToFile();
+  if (SAVE_LINE) SaveLineToFile();
+  if (SAVE_FILE) SaveSandToFile();
 
-  if (NoPauseRun) return;
+  if (NO_PAUSE_RUN) return;
 
   printf("\nend Pause\n");
 }
@@ -4634,10 +4629,10 @@ void AgeCells(void)
 {
   int x, y;
 
-  for (y = 0; y < 2 * Ymax; y++)
-    for (x = 0; x < Xmax; x++)
+  for (y = 0; y < 2 * Y_MAX; y++)
+    for (x = 0; x < X_MAX; x++)
       if (PercentFullSand[x][y] == 0) {
-        Age[x][y] = current_time_step % AgeMax;
+        Age[x][y] = current_time_step % AGE_MAX;
       }
 }
 
@@ -4716,7 +4711,7 @@ void WaveOutFile(void)
 {
   if (current_time_step == 0) WaveFileOutput = fopen(wavesavename, "w");
 
-  fprintf(WaveFileOutput, "%lf %lf %lf\n", (-WaveAngle * radtodeg), Period,
+  fprintf(WaveFileOutput, "%lf %lf %lf\n", (-WaveAngle * RAD_TO_DEG), Period,
           OffShoreWvHt);
 
   if (current_time_step == stop_after)
@@ -4760,8 +4755,8 @@ void ControlFile(void)
 
   if (time_step == -999) printf("***Initialisation file not read!***\n");
 
-  if (Metadata == 'y') {
-    printf("Outputting Initialisation Metadata \n");
+  if (METADATA == 'y') {
+    printf("Outputting Initialization Metadata \n");
 
     InitMetaFile = fopen(metasavename, "w");
     fprintf(InitMetaFile, "OffShoreWvHt = %lf\n", OffShoreWvHt);
@@ -4839,7 +4834,7 @@ void PrintLocalConds(int x, int y, int in)
 /* Prints Local Array Conditions aound x,y */
 {
   int i, j, k, isee;
-  float vol = CellWidth * CellWidth * DepthShoreface;
+  float vol = CELL_WIDTH * CELL_WIDTH * DEPTH_SHOREFACE;
 
   printf("\n x: %d  y: %d  z: %d\n\n", x, y, in);
 
@@ -4910,7 +4905,7 @@ void PrintLocalConds(int x, int y, int in)
     }
     printf("\n\n\n");
 
-    printf("Wave Angle:	%f\n\n", WaveAngle * radtodeg);
+    printf("Wave Angle:	%f\n\n", WaveAngle * RAD_TO_DEG);
     printf(
         "i		%d		%d		!%d		%d	"
         "	%d\n",
@@ -4928,9 +4923,9 @@ void PrintLocalConds(int x, int y, int in)
     printf(
         "Angle		%2.2f		%2.2f		%2.2f		%2.2f	"
         "	%2.2f\n",
-        ShorelineAngle[in - 2] * radtodeg, ShorelineAngle[in - 1] * radtodeg,
-        ShorelineAngle[in] * radtodeg, ShorelineAngle[in + 1] * radtodeg,
-        ShorelineAngle[in + 2] * radtodeg);
+        ShorelineAngle[in - 2] * RAD_TO_DEG, ShorelineAngle[in - 1] * RAD_TO_DEG,
+        ShorelineAngle[in] * RAD_TO_DEG, ShorelineAngle[in + 1] * RAD_TO_DEG,
+        ShorelineAngle[in + 2] * RAD_TO_DEG);
     printf(
         "Vol In 		%2.2f		%2.2f		%2.2f		"
         "%2.2f		%2.2f\n",
@@ -4991,7 +4986,7 @@ void CheckOverwashSweep(void)
     /* don't worry about shadow here, as overwash is not set to a time scale
      * with AST       */
 
-    if ((fabs(SurroundingAngle[ii]) < (OverwashLimit / radtodeg)) &&
+    if ((fabs(SurroundingAngle[ii]) < (OverwashLimit / RAD_TO_DEG)) &&
         (InShadow[ii] == 'n')) {
       CheckOverwash(ii);
     }
@@ -5072,7 +5067,7 @@ void CheckOverwash(int icheck)
   checkdistance = 0;
   AllBeachFlag = 0;
 
-  while ((checkdistance < CritBWidth) && (y > 0) && (y < 2 * Ymax) && (x > 1)) {
+  while ((checkdistance < CritBWidth) && (y > 0) && (y < 2 * Y_MAX) && (x > 1)) {
     NextXInt = ceil(x) - 1;
     if (ysign > 0) {
       NextYInt = floor(y) + 1;
@@ -5107,7 +5102,7 @@ void CheckOverwash(int icheck)
     }
 
     checkdistance =
-        Raise(((x - xin) * (x - xin) + (y - yin) * (y - yin)), .5) * CellWidth;
+        Raise(((x - xin) * (x - xin) + (y - yin) * (y - yin)), .5) * CELL_WIDTH;
 
     if (AllBeach[xtest][ytest] == 'y') AllBeachFlag = 1;
 
@@ -5137,7 +5132,7 @@ void CheckOverwash(int icheck)
         {
           measwidth = CritBWidth;
         } else {
-          measwidth = CellWidth * Raise((xint - xin) * (xint - xin) +
+          measwidth = CELL_WIDTH * Raise((xint - xin) * (xint - xin) +
                                             (yint - yin) * (yint - yin),
                                         0.5);
         }
@@ -5152,7 +5147,7 @@ void CheckOverwash(int icheck)
         {
           measwidth = CritBWidth;
         } else {
-          measwidth = CellWidth * Raise((xint - xin) * (xint - xin) +
+          measwidth = CELL_WIDTH * Raise((xint - xin) * (xint - xin) +
                                             (yint - yin) * (yint - yin),
                                         0.5);
         }
@@ -5167,7 +5162,7 @@ void CheckOverwash(int icheck)
         {
           measwidth = CritBWidth;
         } else {
-          measwidth = CellWidth * Raise((xint - xin) * (xint - xin) +
+          measwidth = CELL_WIDTH * Raise((xint - xin) * (xint - xin) +
                                             (yint - yin) * (yint - yin),
                                         0.5);
         }
@@ -5183,7 +5178,7 @@ void CheckOverwash(int icheck)
         {
           measwidth = CritBWidth;
         } else {
-          measwidth = CellWidth * Raise((xint - xin) * (xint - xin) +
+          measwidth = CELL_WIDTH * Raise((xint - xin) * (xint - xin) +
                                             (yint - yin) * (yint - yin),
                                         0.5);
         }
@@ -5194,7 +5189,7 @@ void CheckOverwash(int icheck)
         xint = x;
         yint = y;
 
-        measwidth = CellWidth * Raise((xint - xin) * (xint - xin) +
+        measwidth = CELL_WIDTH * Raise((xint - xin) * (xint - xin) +
                                           (yint - yin) * (yint - yin),
                                       0.5);
 
@@ -5202,21 +5197,21 @@ void CheckOverwash(int icheck)
             "-- Some Odd Over  xin: %2.2f  yin: %2.2f xt:%d yt: %d xint: %f "
             "yint: %f Meas: %3.2f Ang: %f Abs: %f\n",
             xin, yin, xtest, ytest, xint, yint, measwidth,
-            SurroundingAngle[icheck] * radtodeg,
-            fabs(SurroundingAngle[icheck]) * radtodeg);
+            SurroundingAngle[icheck] * RAD_TO_DEG,
+            fabs(SurroundingAngle[icheck]) * RAD_TO_DEG);
       } else
       /* empty cell - oughta fill er up  - fill max barrier width */
       {
         xint = x;
         yint = y;
-        measwidth = CritBWidth - CellWidth;
+        measwidth = CritBWidth - CELL_WIDTH;
 
         printf(
             "-- Empty Odd Over  xin: %2.2f  yin: %2.2f xt:%d yt: %d xint: %f "
             "yint: %f Meas: %3.2f Ang: %f Abs: %f\n",
             xin, yin, xtest, ytest, xint, yint, measwidth,
-            SurroundingAngle[icheck] * radtodeg,
-            fabs(SurroundingAngle[icheck]) * radtodeg);
+            SurroundingAngle[icheck] * RAD_TO_DEG,
+            fabs(SurroundingAngle[icheck]) * RAD_TO_DEG);
       }
 
       checkdistance = measwidth;
@@ -5252,22 +5247,22 @@ void DoOverwash(int xfrom, int yfrom, int xto, int yto, float xintto,
   /* calculated value of most that backbarrier can move given geometry (true,
    * non-iterative solution) */
 
-  if (DepthBB == DepthShoreface) {
+  if (DepthBB == DEPTH_SHOREFACE) {
     BBneed = MaxOver;
   } else {
     BBneed =
-        (CritBWidth - widthin) / CellWidth / (1 - (DepthBB / DepthShoreface));
+        (CritBWidth - widthin) / CELL_WIDTH / (1 - (DepthBB / DEPTH_SHOREFACE));
   }
 
   if (BBneed <= MaxOver)
   /* do all overwash */
   {
-    delShore = BBneed * DepthBB / DepthShoreface;
+    delShore = BBneed * DepthBB / DEPTH_SHOREFACE;
     delBB = BBneed;
   } else
   /* only do overwash to max change) */
   {
-    delShore = MaxOver * DepthBB / DepthShoreface;
+    delShore = MaxOver * DepthBB / DEPTH_SHOREFACE;
     delBB = MaxOver;
   }
 
@@ -5315,7 +5310,7 @@ float GetOverwashDepth(int xin, int yin, float xinfl, float yinfl, int ishore)
       xdepth--;
     }
 
-    if (Depth == DepthShoreface) {
+    if (Depth == DEPTH_SHOREFACE) {
       Depth = 6.0;
     }
 
@@ -5344,7 +5339,7 @@ float GetOverwashDepth(int xin, int yin, float xinfl, float yinfl, int ishore)
     else
       ysign = -1;
 
-    while ((!BackFlag) && (y > 0) && (y < 2 * Ymax) && (x > 1)) {
+    while ((!BackFlag) && (y > 0) && (y < 2 * Y_MAX) && (x > 1)) {
       NextXInt = ceil(x) - 1;
       if (ysign > 0)
         NextYInt = floor(y) + 1;
@@ -5399,7 +5394,7 @@ float GetOverwashDepth(int xin, int yin, float xinfl, float yinfl, int ishore)
        = depthshoreface    */
     /* Periodic B.C.'s should make this not so important */
     {
-      Depth = DepthShoreface;
+      Depth = DEPTH_SHOREFACE;
     } else {
       BBDistance = Raise(((xinfl - xtest - PercentFullSand[xtest][ytest]) *
                           (xinfl - xtest - PercentFullSand[xtest][ytest])) +
@@ -5410,7 +5405,7 @@ float GetOverwashDepth(int xin, int yin, float xinfl, float yinfl, int ishore)
       /* The backbarrier intersection isn't on the shoreline */
       /* Assume 1/2 of the length applies to this case */
       {
-        Depth = BBDistance / 2 * ShorefaceSlope * CellWidth;
+        Depth = BBDistance / 2 * SHOREFACE_SLOPE * CELL_WIDTH;
       } else
       /* Use the fancy geometry thing */
       {
@@ -5420,11 +5415,11 @@ float GetOverwashDepth(int xin, int yin, float xinfl, float yinfl, int ishore)
         }
         AngleUsed = AngleUsed / 5;
 
-        if (fabs(AngleUsed) > pi / 4.0) {
-          AngleUsed = pi / 4.0;
+        if (fabs(AngleUsed) > PI / 4.0) {
+          AngleUsed = PI / 4.0;
         }
 
-        AngleSin = sin(pi / 2.0 - fabs(SurroundingAngle[ishore] + AngleUsed));
+        AngleSin = sin(PI / 2.0 - fabs(SurroundingAngle[ishore] + AngleUsed));
 
         Depth = BBDistance * AngleSin / (1 + AngleSin);
       }
@@ -5432,15 +5427,15 @@ float GetOverwashDepth(int xin, int yin, float xinfl, float yinfl, int ishore)
 
     if (Depth < OWMinDepth) {
       Depth = OWMinDepth;
-    } else if (Depth > DepthShoreface) {
-      Depth = DepthShoreface;
+    } else if (Depth > DEPTH_SHOREFACE) {
+      Depth = DEPTH_SHOREFACE;
     }
     return Depth;
   }
 
   printf("OWDepth all broken");
   PauseRun(xin, yin, -1);
-  return DepthShoreface;
+  return DEPTH_SHOREFACE;
 }
 
 float ConvertAngle(float EvaluteAngle, int type)
@@ -5463,17 +5458,17 @@ float ConvertAngle(float EvaluteAngle, int type)
     /* Moving right and down along shoreline -- most common case, unless we have
      spits or cape
      tip overgrowth */
-    if (EvaluateAngle > (-90 * (pi / 180)) &&
-        EvaluateAngle < (0 * (pi / 180))) {
-      value = EvaluateAngle + (90 * (pi / 180));
+    if (EvaluateAngle > (-90 * (PI / 180)) &&
+        EvaluateAngle < (0 * (PI / 180))) {
+      value = EvaluateAngle + (90 * (PI / 180));
     }
 
     /* Moving right and up (or just right) along shoreline -- most common case,
      unless we have
      spits or cape tip overgrowth */
     else if (EvaluateAngle >
-             (0 * (pi / 180) && EvaluateAngle < (90 * (pi / 180)))) {
-      value = (360 * (pi / 180)) - EvaluateAngle;
+             (0 * (PI / 180) && EvaluateAngle < (90 * (PI / 180)))) {
+      value = (360 * (PI / 180)) - EvaluateAngle;
     }
 
     /* Moving right, stright shoreline (dx = 0) */
@@ -5482,18 +5477,18 @@ float ConvertAngle(float EvaluteAngle, int type)
     }
 
     /* Moving straight up or straight down along shoreline */
-    else if (EvaluateAngle == (-90 * (pi / 180)) ||
-             EvaluateAngle == (90 * (pi / 180))) {
-      if (EvaluateAngle == (-90 * (pi / 180))) {
-        value = (270 * (pi / 180));
-      } else if (EvaluateAngle == (90 * (pi / 180))) {
-        value = (90 * (pi / 180));
+    else if (EvaluateAngle == (-90 * (PI / 180)) ||
+             EvaluateAngle == (90 * (PI / 180))) {
+      if (EvaluateAngle == (-90 * (PI / 180))) {
+        value = (270 * (PI / 180));
+      } else if (EvaluateAngle == (90 * (PI / 180))) {
+        value = (90 * (PI / 180));
       }
     }
 
     /* Moving left (and up, down, or straight) along shoreline */
     else if (EvaluateAngle >
-             (-270 * (pi / 180) && EvaluateAngle < (-90 * (pi / 180)))) {
+             (-270 * (PI / 180) && EvaluateAngle < (-90 * (PI / 180)))) {
       value = fabs(EvaluateAngle);
     }
 
@@ -5518,11 +5513,11 @@ float ConvertAngle(float EvaluteAngle, int type)
   else {
     /* Wave going right to left */
     if (EvaluateAngle > 0 && EvaluateAngle < 90) {
-      return -EvaluateAngle * (pi / 180);
+      return -EvaluateAngle * (PI / 180);
     }
     /* Wave going left to right */
     else if (EvaluateAngle < 360 && EvaluateAngle > 270) {
-      return (360 - EvaluateAngle) * (pi / 180);
+      return (360 - EvaluateAngle) * (PI / 180);
     }
     /* Wave coming straight onshore */
     else if (EvaluateAngle == 0 || EvaluateAngle == 360) {
@@ -5613,7 +5608,7 @@ void ParseSWAN(int ShoreAngleLoc, float ShoreAngle) {
   /*while (!OopsImBroke)*/
   /* CAN DELETE FOR LOOP AND REPLACE WITH WHILE LOOP WHEN USING ANGLE-BASED
    * FUNCTION */
-  for (x = 0; x < Xmax; x++) {
+  for (x = 0; x < X_MAX; x++) {
     /* What cell am i in? */
     /*Xpos = Xpos + xdist;*/
     /*Ypos = Ypos + ydist;*/
@@ -5651,7 +5646,7 @@ void ParseSWAN(int ShoreAngleLoc, float ShoreAngle) {
 
         /* Wave broke! debug if necessary and then step back and take values
          * from previous cell */
-        /*LookOffshore = LookOffshore*(180/pi); Convert angle to degrees because
+        /*LookOffshore = LookOffshore*(180/PI); Convert angle to degrees because
          * SWAN is in degrees */
 
         /* Stepping back... */
