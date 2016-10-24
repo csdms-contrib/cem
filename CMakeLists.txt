@@ -32,3 +32,5 @@ install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/cem DESTINATION bin)
 install(FILES bmi.h bmi_cem.h DESTINATION include/cem)
 install(TARGETS bmi_cem DESTINATION lib)
 install(TARGETS bmi_cem-static DESTINATION lib)
+
+add_subdirectory(testing)
