@@ -221,7 +221,7 @@ static int get_grid_type(void *self, int grid_id, char *type) {
 static int get_var_grid(void *self, const char *name, int *grid_id) {
   if (strcmp(name, "sea_water__depth") == 0 ||
       strcmp(name, "land_surface__elevation") == 0) {
-    *grid_id = 0;
+    *grid_id = 2;
     return BMI_SUCCESS;
   } else {
     *grid_id = -1;
