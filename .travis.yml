@@ -11,7 +11,9 @@ install:
   - make all
   - make install
 script:
+- mkdir _testing
+- cd _testing
 - which cem
 - cem --help
 - cem --version
-- cem
+# - cem
