@@ -14,7 +14,8 @@ install:
 - make all
 - make install
 script:
-- gtester testing/test-*
+- ls $TRAVIS_BUILD_DIR/_build/testing
+- gtester $TRAVIS_BUILD_DIR/_build/testing/test-*
 - which cem
 - cem --help
 - cem --version
