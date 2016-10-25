@@ -3,15 +3,20 @@ os:
 - linux
 - osx
 sudo: false
+compiler:
+- clang
+- gcc
 install:
-  - echo "Build on $TRAVIS_OS_NAME"
-  - mkdir _build
-  - cd _build
-  - cmake .. -DCMAKE_INSTALL_PREFIX=$HOME -DCMAKE_BUILD_TYPE=Release
-  - make all
-  - make install
+- echo "Build on $TRAVIS_OS_NAME"
+- mkdir _build
+- cd _build
+- cmake .. -DCMAKE_INSTALL_PREFIX=$HOME -DCMAKE_BUILD_TYPE=Release
+- make all
+- make install
 script:
+- mkdir _testing
+- cd _testing
 - which cem
 - cem --help
 - cem --version
-- cem
+# - cem
