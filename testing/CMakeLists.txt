@@ -26,6 +26,16 @@ if (GLIB2_FOUND)
   add_executable(test-time ${test_time_srcs})
   target_link_libraries(test-time
     bmi_cem ${GLIB2_LIBRARIES} ${GTHREAD2_LIBRARIES})
+
+  set(test_value_srcs test_value.c)
+  add_executable(test-value ${test_value_srcs})
+  target_link_libraries(test-value
+    bmi_cem ${GLIB2_LIBRARIES} ${GTHREAD2_LIBRARIES})
+
+  set(test_grid_srcs test_grid.c)
+  add_executable(test-grid ${test_grid_srcs})
+  target_link_libraries(test-grid
+    bmi_cem ${GLIB2_LIBRARIES} ${GTHREAD2_LIBRARIES})
 else (GLIB2_FOUND)
   message(STATUS "No glib... SKIPPING tests.")
 endif (GLIB2_FOUND)
