@@ -93,7 +93,7 @@ static void test_bmi_var_nbytes(void) {
 int main(int argc, char* argv[]) {
   g_test_init(&argc, &argv, NULL);
   g_test_add_func("/bmi/var/grid", &test_bmi_var_grid);
-  g_test_add_func("/bmi/var/grid", &test_bmi_var_type);
+  g_test_add_func("/bmi/var/type", &test_bmi_var_type);
   g_test_add_func("/bmi/var/units", &test_bmi_var_units);
   g_test_add_func("/bmi/var/nbytes", &test_bmi_var_nbytes);
 
