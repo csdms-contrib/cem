@@ -27,6 +27,7 @@ install:
 - curl $MINICONDA_URL_BASE-$OS.sh > $HOME/minconda.sh
 - bash $HOME/minconda.sh -b -p $CONDA_PREFIX
 - export PATH="$CONDA_PREFIX/bin:$PATH"
+- conda config --set always_yes yes --set changeps1 no
 - conda install glib -c conda-forge
 - mkdir _build && cd _build
 - cmake .. -DCMAKE_INSTALL_PREFIX=$HOME -DCMAKE_BUILD_TYPE=Release
