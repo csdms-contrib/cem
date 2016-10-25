@@ -159,7 +159,7 @@ static int finalize(void *self) {
 }
 
 static int get_grid_rank(void *self, int grid_id, int *rank) {
-  if (grid_id == 0) {
+  if (grid_id == 2) {
     *rank = 2;
     return BMI_SUCCESS;
   } else {
@@ -169,7 +169,7 @@ static int get_grid_rank(void *self, int grid_id, int *rank) {
 }
 
 static int get_grid_size(void *self, int grid_id, int *size) {
-  if (grid_id == 0) {
+  if (grid_id == 2) {
     *size = X_MAX * Y_MAX;
     return BMI_SUCCESS;
   } else {
@@ -179,7 +179,7 @@ static int get_grid_size(void *self, int grid_id, int *size) {
 }
 
 static int get_grid_shape(void *self, int grid_id, int *shape) {
-  if (grid_id == 0) {
+  if (grid_id == 2) {
     shape[0] = X_MAX;
     shape[1] = Y_MAX;
     return BMI_SUCCESS;
@@ -189,7 +189,7 @@ static int get_grid_shape(void *self, int grid_id, int *shape) {
 }
 
 static int get_grid_spacing(void *self, int grid_id, double *spacing) {
-  if (grid_id == 0) {
+  if (grid_id == 2) {
     spacing[0] = CELL_WIDTH;
     spacing[1] = CELL_WIDTH;
     return BMI_SUCCESS;
@@ -199,7 +199,7 @@ static int get_grid_spacing(void *self, int grid_id, double *spacing) {
 }
 
 static int get_grid_origin(void *self, int grid_id, double *origin) {
-  if (grid_id == 0) {
+  if (grid_id == 2) {
     origin[0] = 0.;
     origin[1] = 0.;
     return BMI_SUCCESS;
@@ -209,7 +209,7 @@ static int get_grid_origin(void *self, int grid_id, double *origin) {
 }
 
 static int get_grid_type(void *self, int grid_id, char *type) {
-  if (grid_id == 0) {
+  if (grid_id == 2) {
     strncpy(type, "uniform_rectilinear", 2048);
     return BMI_SUCCESS;
   } else {
