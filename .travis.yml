@@ -5,7 +5,6 @@ os:
 env:
   global:
   - CONDA_PREFIX=$HOME/miniconda
-  - PKG_CONFIG_PATH=CONDA_PREFIX=$HOME/miniconda/lib/pkgconfig
   - MINICONDA_URL_BASE="http://repo.continuum.io/miniconda/Miniconda-latest"
 sudo: false
 before_install:
@@ -36,4 +35,4 @@ script:
 - which cem
 - cem --help
 - cem --version
-- cem
+# - cem

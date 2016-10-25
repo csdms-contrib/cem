@@ -5,7 +5,7 @@
 
 #include "bmi.h"
 #include "bmi_cem.h"
-#include "globals.h"
+#include "cem/globals.h"
 
 #define return_on_error(stmt)                 \
   {                                           \
