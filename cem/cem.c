@@ -3996,9 +3996,9 @@ void InitNormal(void)
 
       if (DIFFUSIVE_HUMP)
       { // shoreline is a cosine curve, diffusive LMV
-        initial_rock = (INIT_ROCK + (-Amp * cos((2 * PI * y) / Y_MAX)) -
+        initial_rock = (INIT_ROCK + (-amp * cos((2 * PI * y) / Y_MAX)) -
                         (INIT_BEACH - INIT_ROCK - 1));
-        initial_beach = (INIT_BEACH + (-Amp * cos((2 * PI * y) / Y_MAX)));
+        initial_beach = (INIT_BEACH + (-amp * cos((2 * PI * y) / Y_MAX)));
       }
 
       if (x < initial_rock)
