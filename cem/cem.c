@@ -469,7 +469,6 @@ int cem_finalize(void) {
   free(wave_dir);
 
   printf("Run Complete.  Output file: %s \n", savefilename);
-  getchar();
 
   return 0;
 }
