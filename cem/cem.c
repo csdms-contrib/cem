@@ -3619,6 +3619,13 @@ void FixBeach(void)
       else
         y = 2 * Y_MAX - i;
 
+      if (y <= 0) {
+        fprintf(stderr, "There is a chance for an underwrite (%d)\n", y);
+      }
+      if (y >= 2 * Y_MAX - 1) {
+        fprintf(stderr, "There is a chance for an overwrite (%d)\n", y);
+      }
+
       /*Take care of corner problem?
          if  (((AllBeach[x][y] == 'n') && (PercentFullRock[x][y] > 0.0)) &&
          (((AllBeach[x][y-1] == 'n') && (AllBeach[x-1][y] == 'n') &&
@@ -4060,11 +4067,16 @@ void InitNormal(void)
   for (x = 0; x < X_MAX; x++) {
     for (n = 0; n <= 2 * NUMBER_CHUNK; n++) {
       for (y = n * CHUNK_LENGTH; y < ((n + 2) * CHUNK_LENGTH); y++) {
+
+        if (y >= 2 * Y_MAX) {
+          fprintf(stderr, "y is too big. this needs fixing.\n");
+          continue;
+        }
+
         if (n % 3 == 0 && (!blocks || x > InitialRock - 3)) { /* if even */
           TypeOfRock[x][y] = 's';
           topography[x][y] = kCliffHeightSlow;
         }
-
         else { /*if odd */
           TypeOfRock[x][y] = 'f';
           topography[x][y] = kCliffHeightFast;
