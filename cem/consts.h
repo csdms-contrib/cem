@@ -97,21 +97,21 @@ extern "C" {
 // space between saved files
 #define SAVE_SPACING (365)
 
-#define savefilename "CEM"
-#define readfilename "CEM_3285.out"
+// char savefilename[2048] = "CEM";
+// char readfilename[2048] = "CEM_3285.out";
 // Input Wave Distribution file: no = 0, binned file = 1,
 // angle/period/height file = 2
 #define WAVE_IN (0)
-#define readwavename "In_WaveData.dat"
+// char readwavename[2048] = "In_WaveData.dat";
 // use a file to initialise run? Over rides setup data
 #define INITIALIZE_FILE ('n')
-#define readcontrolname "In_CEM_init.dat"
+// char readcontrolname[2048] = "In_CEM_init.dat";
 // Create a metadata file?
 #define METADATA ('n')
-#define metasavename "Metadata.out"
+// char metasavename[2048] = "Metadata.out";
 // Create a wavedata file?
 #define WAVE_DATA ('n')
-#define wavesavename "Wavedata.out"
+// char wavesavename[2048] = "Wavedata.out";
 
 // 1 = line output,
 // 2 = array output
