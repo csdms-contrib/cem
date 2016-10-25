@@ -2,14 +2,7 @@
 #include <glib.h>
 
 #include "bmi_cem.h"
-/*
-  model->get_var_nbytes = get_var_nbytes;
-  model->get_current_time = get_current_time;
-  model->get_start_time = get_start_time;
-  model->get_end_time = get_end_time;
-  model->get_time_units = get_time_units;
-  model->get_time_step = get_time_step;
-*/
+
 
 static BMI_Model* setup_model(void) {
   BMI_Model *model = (BMI_Model *)malloc(sizeof(BMI_Model));

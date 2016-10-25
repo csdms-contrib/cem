@@ -21,6 +21,11 @@ if (GLIB2_FOUND)
   add_executable(test-var ${test_var_srcs})
   target_link_libraries(test-var
     bmi_cem ${GLIB2_LIBRARIES} ${GTHREAD2_LIBRARIES})
+
+  set(test_time_srcs test_time.c)
+  add_executable(test-time ${test_time_srcs})
+  target_link_libraries(test-time
+    bmi_cem ${GLIB2_LIBRARIES} ${GTHREAD2_LIBRARIES})
 else (GLIB2_FOUND)
   message(STATUS "No glib... SKIPPING tests.")
 endif (GLIB2_FOUND)
