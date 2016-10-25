@@ -2,20 +2,36 @@ language: c
 os:
 - linux
 - osx
+env:
+  global:
+  - CONDA_PREFIX=$HOME/miniconda
+  - MINICONDA_URL_BASE="http://repo.continuum.io/miniconda/Miniconda-latest"
 sudo: false
-compiler:
-- clang
-- gcc
+before_install:
+- |
+  if [[ $TRAVIS_OS_NAME == "osx" ]]; then
+    brew remove --force $(brew list)
+    brew cleanup -s
+    rm -rf $(brew --cache)
+  fi
 install:
-- echo "Build on $TRAVIS_OS_NAME"
-- mkdir _build
-- cd _build
+- |
+  if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+    OS="MacOSX-x86_64"
+  else
+    OS="Linux-x86_64"
+  fi
+- curl $MINICONDA_URL_BASE-$OS.sh > $HOME/minconda.sh
+- bash $HOME/minconda.sh -b -p $CONDA_PREFIX
+- export PATH="$CONDA_PREFIX/bin:$PATH"
+- conda config --set always_yes yes --set changeps1 no
+- conda install pkg-config cmake glib -c conda-forge
+- mkdir _build && cd _build
 - cmake .. -DCMAKE_INSTALL_PREFIX=$HOME -DCMAKE_BUILD_TYPE=Release
 - make all
 - make install
 script:
-- mkdir _testing
-- cd _testing
+- gtester --keep-going --verbose $TRAVIS_BUILD_DIR/_build/testing/test-*
 - which cem
 - cem --help
 - cem --version

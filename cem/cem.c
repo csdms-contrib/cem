@@ -60,6 +60,22 @@ static FILE *ReadWaveFile;
 static FILE *ReadRealWaveFile;
 static FILE *ReadControlFile;
 
+static char savefilename[2048] = "CEM";
+static char readfilename[2048] = "CEM_3285.out";
+// Input Wave Distribution file: no = 0, binned file = 1,
+// angle/period/height file = 2
+// #define WAVE_IN (0)
+static char readwavename[2048] = "In_WaveData.dat";
+// use a file to initialise run? Over rides setup data
+// #define INITIALIZE_FILE ('n')
+static char readcontrolname[2048] = "In_CEM_init.dat";
+// Create a metadata file?
+// #define METADATA ('n')
+static char metasavename[2048] = "Metadata.out";
+// Create a wavedata file?
+// #define WAVE_DATA ('n')
+static char wavesavename[2048] = "Wavedata.out";
+
 // Computational Arrays (determined for each time step)  -- will eventually be
 // in a structure for BMI
 
@@ -3071,7 +3087,7 @@ void AdjustShore(int i)
   if (debug7a)
     printf(
         "\n Depth %f  Distance %f XIntercept %f  DepthEffective %f "
-        "DepthShoreFace %d",
+        "DepthShoreFace %f",
         Depth, Distance, Xintercept, DepthEffective, DEPTH_SHOREFACE);
 
   if (DepthEffective < DEPTH_SHOREFACE) DepthEffective = DEPTH_SHOREFACE;
@@ -4048,7 +4064,6 @@ void InitNormal(void)
           TypeOfRock[x][y] = 's';
           topography[x][y] = kCliffHeightSlow;
         }
-
         else { /*if odd */
           TypeOfRock[x][y] = 'f';
           topography[x][y] = kCliffHeightFast;
