@@ -29,7 +29,7 @@ install:
 - bash $HOME/minconda.sh -b -p $CONDA_PREFIX
 - export PATH="$CONDA_PREFIX/bin:$PATH"
 - conda config --set always_yes yes --set changeps1 no
-- conda install cmake glib -c conda-forge
+- conda install pkgconfig cmake glib -c conda-forge
 - mkdir _build && cd _build
 - cmake .. -DCMAKE_INSTALL_PREFIX=$HOME -DCMAKE_BUILD_TYPE=Release
 - make all
