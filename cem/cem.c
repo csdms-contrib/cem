@@ -3956,48 +3956,44 @@ float RandZeroToOne(void)
   return ((float)(AB_rand));
 }
 
-void InitNormal(void)
-/* Creates initial beach conditions */
-/* Flat beach with zone of AllBeach = 'y' separated by AllBeach = 'n' */
-/* Block of rock parallel to beach begins at INIT_ROCK LMV */
-/* LMV Assume that AllBeach = 'Y' for AllRock cells (and All Full cells)
-   */
-/* Bounding layer set to random fraction of fullness */
-{
-  int x, y, n; /* y1 */
-  int InitialBeach;
-  int InitialRock;
-  int Amp; /*Amplitude of cos curve */
-  int blocks =
-      1; /* have hard stuff just as blocks near the beach, or columns? */
-  printf("Condition Initial \n");
 
-  Amp = 10;
+// Creates initial beach conditions
+// Flat beach with zone of AllBeach = 'y' separated by AllBeach = 'n'
+// Block of rock parallel to beach begins at INIT_ROCK LMV
+// LMV Assume that AllBeach = 'Y' for AllRock cells (and All Full cells)
+// Bounding layer set to random fraction of fullness
+void InitNormal(void)
+{
+  int x, y, n;
+  int initial_beach;
+  int initial_rock;
+  const double amp = 10.; // Amplitude of cos curve */
+  // have hard stuff just as blocks near the beach, or columns?
+  const int blocks = 1;
+
+  printf("Condition Initial \n");
 
   for (y = 0; y < 2 * Y_MAX; y++)
     for (x = 0; x < X_MAX; x++) {
-      InitialBeach = INIT_BEACH;
-      InitialRock = INIT_ROCK;
+      initial_beach = INIT_BEACH;
+      initial_rock = INIT_ROCK;
 
       if (DIFFUSIVE_HUMP)
-      /* shoreline is a cosine curve, diffusive LMV */
-      {
-        InitialRock = (INIT_ROCK + (-Amp * cos((2 * PI * y) / Y_MAX)) -
-                       (INIT_BEACH - INIT_ROCK - 1));
-        InitialBeach = (INIT_BEACH + (-Amp * cos((2 * PI * y) / Y_MAX)));
+      { // shoreline is a cosine curve, diffusive LMV
+        initial_rock = (INIT_ROCK + (-Amp * cos((2 * PI * y) / Y_MAX)) -
+                        (INIT_BEACH - INIT_ROCK - 1));
+        initial_beach = (INIT_BEACH + (-Amp * cos((2 * PI * y) / Y_MAX)));
       }
 
-      if (x < InitialRock)
-      /*LMV*/ {
+      if (x < initial_rock)
+      { // LMV
         PercentFullRock[x][y] = 1.0;
         PercentFullSand[x][y] = 0.0;
         AllRock[x][y] = 'y';
         AllBeach[x][y] = 'n';
         topography[x][y] = kCliffHeightSlow;
-      }
-
-      else if (x == InitialRock)
-      /*LMV*/ {
+      } else if (x == initial_rock)
+      { // LMV
         if (INITIAL_SMOOTH_ROCK) {
           PercentFullRock[x][y] = 0.20;
           PercentFullSand[x][y] = 0.80;
@@ -4008,17 +4004,15 @@ void InitNormal(void)
         AllRock[x][y] = 'n';
         AllBeach[x][y] = 'y';
         topography[x][y] = kCliffHeightSlow;
-      }
-
-      else if ((x > InitialRock) && (x < InitialBeach))
-      /*LMV*/ {
+      } else if ((x > initial_rock) && (x < initial_beach))
+      { // LMV
         PercentFullRock[x][y] = 0.0;
         PercentFullSand[x][y] = 1.0;
         AllRock[x][y] = 'n';
         AllBeach[x][y] = 'y';
         topography[x][y] = 0;
 
-      } else if (x == InitialBeach) {
+      } else if (x == initial_beach) {
         if (INITIAL_SMOOTH) {
           PercentFullSand[x][y] = 0.5;
         } else {
@@ -4028,9 +4022,7 @@ void InitNormal(void)
         AllBeach[x][y] = 'n';
         topography[x][y] = 0;
 
-      }
-
-      else if (x > InitialBeach) {
+      } else if (x > initial_beach) {
         PercentFullSand[x][y] = 0;
         AllRock[x][y] = 'n';
         AllBeach[x][y] = 'n';
@@ -4041,24 +4033,26 @@ void InitNormal(void)
     }
 
   // LMV Assign fast and slow weathering portions
-  for (x = 0; x < X_MAX; x++) {
-    for (n = 0; n <= 2 * NUMBER_CHUNK; n++) {
-      for (y = n * CHUNK_LENGTH; y < ((n + 2) * CHUNK_LENGTH); y++) {
-        if (n % 3 == 0 && (!blocks || x > InitialRock - 3)) { /* if even */
-          TypeOfRock[x][y] = 's';
-          topography[x][y] = kCliffHeightSlow;
-        }
+  {
+    const int chunk_length = Y_MAX / (1 + NUMBER_CHUNK);
 
-        else { /*if odd */
-          TypeOfRock[x][y] = 'f';
-          topography[x][y] = kCliffHeightFast;
+    for (x = 0; x < X_MAX; x++) {
+      for (n = 0; n <= 2 * NUMBER_CHUNK; n++) {
+        for (y = n * chunk_length; y < ((n + 2) * chunk_length); y++) {
+          if (n % 2 == 0 && (!blocks || x > initial_rock - 3)) { // if even
+            TypeOfRock[x][y] = 's';
+            topography[x][y] = kCliffHeightSlow;
+          } else { // if odd
+            TypeOfRock[x][y] = 'f';
+            topography[x][y] = kCliffHeightFast;
+          }
         }
       }
     }
-    /*for (y=0;y<=Y_MAX;y++)
-       printf("x %d, y %d, Type %c\n", x, y, TypeOfRock[x][y]); */
   }
+
 }
+
 
 int initBlock(void) {
   int x, y, n, blockHeight = 4, blockWidth = 60,
