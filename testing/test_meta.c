@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <glib.h>
 
-#include "bmi_cem.h"
+#include "bmi/bmi_cem.h"
 
 
 static BMI_Model* setup_model(void) {
