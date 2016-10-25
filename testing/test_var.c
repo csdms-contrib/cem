@@ -82,11 +82,11 @@ static void test_bmi_var_nbytes(void) {
 
   status = model->get_var_nbytes(model->self, "land_surface__elevation", &nbytes);
   g_assert_cmpint(status, ==, BMI_SUCCESS);
-  g_assert_cmpint(nbytes, ==, 200);
+  g_assert_cmpint(nbytes, ==, 80000);
 
   status = model->get_var_nbytes(model->self, "sea_water__depth", &nbytes);
   g_assert_cmpint(status, ==, BMI_SUCCESS);
-  g_assert_cmpint(nbytes, ==, 400);
+  g_assert_cmpint(nbytes, ==, 80000);
 }
 
 
