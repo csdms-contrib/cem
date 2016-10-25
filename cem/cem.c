@@ -3620,10 +3620,12 @@ void FixBeach(void)
         y = 2 * Y_MAX - i;
 
       if (y <= 0) {
-        fprintf(stderr, "There is a chance for an underwrite (%d)\n", y);
+        // fprintf(stderr, "There is a chance for an underwrite (%d)\n", y);
+        continue;
       }
       if (y >= 2 * Y_MAX - 1) {
-        fprintf(stderr, "There is a chance for an overwrite (%d)\n", y);
+        // fprintf(stderr, "There is a chance for an overwrite (%d)\n", y);
+        continue;
       }
 
       /*Take care of corner problem?
@@ -4069,7 +4071,7 @@ void InitNormal(void)
       for (y = n * CHUNK_LENGTH; y < ((n + 2) * CHUNK_LENGTH); y++) {
 
         if (y >= 2 * Y_MAX) {
-          fprintf(stderr, "y is too big. this needs fixing.\n");
+          // fprintf(stderr, "y is too big. this needs fixing (%d).\n", y);
           continue;
         }
 
