@@ -2,6 +2,10 @@ language: c
 os:
 - linux
 - osx
+env:
+  global:
+  - CONDA_PREFIX=$HOME/miniconda
+  - MINICONDA_URL_BASE="http://repo.continuum.io/miniconda/Miniconda-latest"
 sudo: false
 compiler:
 - gcc
