@@ -221,7 +221,7 @@ void OopsImEmpty(int x, int y);
 void OopsImFull(int x, int y);
 void ParseSWAN(int ShoreAngleLoc, float ShoreAngle);
 void PauseRun(int x, int y, int in);
-void PeriodicBoundaryCopy(void);
+void periodic_boundary_copy(void);
 float Raise(float b, float e);
 float RandZeroToOne(void);
 void ReadSandFromFile(void);
@@ -312,7 +312,7 @@ int cem_initialize(void) {
   }
 
   /* Set Periodic Boundary Conditions */
-  PeriodicBoundaryCopy();
+  periodic_boundary_copy();
 
   /* Count Initial Mass */
   MassInitial = MassCount();
@@ -358,7 +358,7 @@ int cem_update(void) {
                current_time_step);
       }
 
-      PeriodicBoundaryCopy(); /* Copy visible data to external model - creates
+      periodic_boundary_copy(); /* Copy visible data to external model - creates
                                  boundaries */
 
       ZeroVars();
@@ -4299,31 +4299,23 @@ void InitPert(void)
   }
 }
 
-void PeriodicBoundaryCopy(void)
-/* Simulates periodic boundary conditions by copying middle section to front and
-   end of arrays */
-{
-  int x, y;
 
-  for (y = Y_MAX; y < 3 * Y_MAX / 2; y++)
-    for (x = 0; x < X_MAX; x++) {
-      AllBeach[x][y - Y_MAX] = AllBeach[x][y];
-      AllRock[x][y - Y_MAX] = AllRock[x][y];
-      /*LMV*/ type_of_rock[x][y - Y_MAX] = type_of_rock[x][y];
-      /*LMV*/ PercentFullSand[x][y - Y_MAX] = PercentFullSand[x][y];
-      PercentFullRock[x][y - Y_MAX] = PercentFullRock[x][y];
-      /*LMV*/ Age[x][y - Y_MAX] = Age[x][y];
-    }
-  for (y = Y_MAX / 2; y < Y_MAX; y++)
-    for (x = 0; x < X_MAX; x++) {
-      AllBeach[x][y + Y_MAX] = AllBeach[x][y];
-      AllRock[x][y + Y_MAX] = AllRock[x][y];
-      /*LMV*/ type_of_rock[x][y + Y_MAX] = type_of_rock[x][y];
-      /*LMV*/ PercentFullSand[x][y + Y_MAX] = PercentFullSand[x][y];
-      PercentFullRock[x][y + Y_MAX] = PercentFullRock[x][y];
-      /*LMV*/ Age[x][y + Y_MAX] = Age[x][y];
-    }
+// Apply periodic boundary conditions to CEM arrays.
+void periodic_boundary_copy(void)
+{
+  const int buff_len = 2 * Y_MAX;
+  int row;
+
+  for (row=0; row < X_MAX; row++) {
+    apply_periodic_boundary(AllBeach[row], sizeof(char), buff_len);
+    apply_periodic_boundary(AllRock[row], sizeof(char),  buff_len);
+    apply_periodic_boundary(type_of_rock[row], sizeof(char), buff_len);
+    apply_periodic_boundary(PercentFullSand[row], sizeof(double), buff_len);
+    apply_periodic_boundary(PercentFullRock[row], sizeof(double),buff_len);
+    apply_periodic_boundary(Age[row], sizeof(int), buff_len);
+  }
 }
+
 
 void ZeroVars(void)
 /* Resets all arrays recalculated at each time step to 'zero' conditions */
@@ -4440,7 +4432,7 @@ void ReadSandFromFile(void)
   fclose(ReadSandFile);
   printf("file read!");
 
-  PeriodicBoundaryCopy();
+  periodic_boundary_copy();
 }
 
 void SaveSandToFile(void)
@@ -4524,7 +4516,7 @@ void SaveSandToFile(void)
   fclose(SaveSandFile);
   printf("file saved!\n");
 
-  PeriodicBoundaryCopy();
+  periodic_boundary_copy();
 }
 
 void SaveLineToFile(void)
