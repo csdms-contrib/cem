@@ -3,7 +3,7 @@
 
 #include "utils.h"
 
-
+// Allocate memory for a 2D matrix as a continuous block.
 void **malloc2d(size_t n_rows, size_t n_cols, size_t itemsize)
 {
   size_t i;
@@ -15,7 +15,7 @@ void **malloc2d(size_t n_rows, size_t n_cols, size_t itemsize)
   return matrix;
 }
 
-
+// Free memory allocated with malloc2d.
 void free2d(void **mem)
 {
   free(mem[0]);
@@ -23,17 +23,20 @@ void free2d(void **mem)
 }
 
 
+// Apply periodic boundary conditions to a CEM array.
+//
+// In CEM preiodic boundary conditions are implemented by using an array
+// that is twice as large as the domain on which equations are being
+// solved. The first/last quarters of the larger buffer are simply
+// copies of the second/first halves of the solution domain.
 void apply_periodic_boundary(void *array, const int itemsize, const int nitems)
 {
-  const int width_items = nitems / 2;
-  const int left_items = (nitems - width_items) / 2;
-  const int right_items = nitems - (width_items + left_items);
   const int nbytes = nitems * itemsize;
-  const int width_nbytes = width_items * itemsize;
-  const int left_nbytes = left_items * itemsize;
-  const int right_nbytes = right_items * itemsize;
+  const int middle_nbytes = (nitems / 2) * itemsize;
+  const int left_nbytes = (nitems - nitems / 2) / 2 * itemsize;
+  const int right_nbytes = nbytes - (middle_nbytes + left_nbytes);
 
-  memcpy(array, array + width_nbytes, left_nbytes);
+  memcpy(array, array + middle_nbytes, left_nbytes);
   memcpy(array + nbytes - right_nbytes, array + left_nbytes, right_nbytes);
 }
 
