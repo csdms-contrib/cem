@@ -30,10 +30,28 @@ static void test_bmi_update(void) {
 }
 
 
+static void test_bmi_finalize(void) {
+  BMI_Model *model = (BMI_Model *)malloc(sizeof(BMI_Model));
+  int status;
+
+  register_bmi_cem(model);
+
+  status = model->initialize(NULL, &(model->self));
+  g_assert_cmpint(status, ==, BMI_SUCCESS);
+
+  status = model->update(&(model->self));
+  g_assert_cmpint(status, ==, BMI_SUCCESS);
+
+  status = model->finalize(&(model->self));
+  g_assert_cmpint(status, ==, BMI_SUCCESS);
+}
+
+
 int main(int argc, char* argv[]) {
   g_test_init(&argc, &argv, NULL);
   g_test_add_func("/bmi/initialize", &test_bmi_initialize);
   g_test_add_func("/bmi/update", &test_bmi_update);
+  g_test_add_func("/bmi/finalize", &test_bmi_finalize);
 
   return g_test_run();
 }

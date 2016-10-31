@@ -145,7 +145,7 @@ extern "C" {
 #define INITIAL_SMOOTH_ROCK (1)
 // Alongshore length of a chunk of fast or slow weathering rock LMV
 // (used to be Y_MAX/NumberChunk)
-#define CHUNK_LENGTH (100)
+// #define CHUNK_LENGTH (100)
 
 /* De-bugging Parameters */
 

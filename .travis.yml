@@ -35,4 +35,4 @@ script:
 - which cem
 - cem --help
 - cem --version
-# - cem
+- cem

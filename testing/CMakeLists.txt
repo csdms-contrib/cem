@@ -36,6 +36,16 @@ if (GLIB2_FOUND)
   add_executable(test-grid ${test_grid_srcs})
   target_link_libraries(test-grid
     bmi_cem ${GLIB2_LIBRARIES} ${GTHREAD2_LIBRARIES})
+
+  set(test_rocks_srcs test_rocks.c)
+  add_executable(test-rocks ${test_rocks_srcs})
+  target_link_libraries(test-rocks
+    bmi_cem ${GLIB2_LIBRARIES} ${GTHREAD2_LIBRARIES})
+
+  set(test_utils_srcs test_utils.c)
+  add_executable(test-utils ${test_utils_srcs})
+  target_link_libraries(test-utils
+    bmi_cem ${GLIB2_LIBRARIES} ${GTHREAD2_LIBRARIES})
 else (GLIB2_FOUND)
   message(STATUS "No glib... SKIPPING tests.")
 endif (GLIB2_FOUND)

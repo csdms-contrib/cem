@@ -3,9 +3,13 @@
 #include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
+#include <string.h>
 
 #include "consts.h"
 #include "globals.h"
+#include "rocks.h"
+#include "utils.h"
+
 
 // Global variables to be share with other files.
 
@@ -29,9 +33,9 @@ static const double kAngleFactor = 1.;
 // Depth array
 static double cell_depth[X_MAX][2 * Y_MAX];
 // Cliff height above sea level for slow weathering rock PWL
-static const double kCliffHeightSlow = 30;
+const double kCliffHeightSlow = 30;
 // Cliff height above sea level for fast weathering rock PWL
-static const double kCliffHeightFast = 0;
+const double kCliffHeightFast = 0;
 
 // Overall Shoreface Configuration Arrays - Data file information
 
@@ -44,7 +48,7 @@ static double PercentFullSand[X_MAX][2 * Y_MAX];
 // Fractional amount of a cell full of rock LMV
 static double PercentFullRock[X_MAX][2 * Y_MAX];
 // Array to control weathering rates of rock along the beach LMV
-static char TypeOfRock[X_MAX][2 * Y_MAX];
+static char **type_of_rock = NULL;
 // Age since cell was deposited
 static int Age[X_MAX][2 * Y_MAX];
 
@@ -217,7 +221,7 @@ void OopsImEmpty(int x, int y);
 void OopsImFull(int x, int y);
 void ParseSWAN(int ShoreAngleLoc, float ShoreAngle);
 void PauseRun(int x, int y, int in);
-void PeriodicBoundaryCopy(void);
+void periodic_boundary_copy(void);
 float Raise(float b, float e);
 float RandZeroToOne(void);
 void ReadSandFromFile(void);
@@ -259,25 +263,15 @@ int cem_initialize(void) {
   else
     srand(SEED);
 
-  { /* Allocate memory for arrays. */
-    int i;
+  { // Allocate memory for arrays.
     const int n_rows = X_MAX;
     const int n_cols = 2 * Y_MAX;
 
-    topography = (double **)malloc(sizeof(double *) * n_rows);
-    topography[0] = (double *)malloc(sizeof(double) * n_rows * n_cols);
-    shelf_depth = (double **)malloc(sizeof(double *) * n_rows);
-    shelf_depth[0] = (double *)malloc(sizeof(double) * n_rows * n_cols);
-    wave_h_sig = (double **)malloc(sizeof(double *) * n_rows);
-    wave_h_sig[0] = (double *)malloc(sizeof(double) * n_rows * n_cols);
-    wave_dir = (double **)malloc(sizeof(double *) * n_rows);
-    wave_dir[0] = (double *)malloc(sizeof(double) * n_rows * n_cols);
-    for (i = 1; i < n_rows; i++) {
-      topography[i] = topography[i - 1] + n_cols;
-      shelf_depth[i] = shelf_depth[i - 1] + n_cols;
-      wave_h_sig[i] = wave_h_sig[i - 1] + n_cols;
-      wave_dir[i] = wave_dir[i - 1] + n_cols;
-    }
+    topography = (double**)malloc2d(n_rows, n_cols, sizeof(double));
+    shelf_depth = (double**)malloc2d(n_rows, n_cols, sizeof(double));
+    wave_h_sig = (double**)malloc2d(n_rows, n_cols, sizeof(double));
+    wave_dir = (double**)malloc2d(n_rows, n_cols, sizeof(double));
+    type_of_rock = (char**)malloc2d(n_rows, n_cols, sizeof(char));
   }
 
   /* Start from file or not? */
@@ -318,7 +312,7 @@ int cem_initialize(void) {
   }
 
   /* Set Periodic Boundary Conditions */
-  PeriodicBoundaryCopy();
+  periodic_boundary_copy();
 
   /* Count Initial Mass */
   MassInitial = MassCount();
@@ -364,7 +358,7 @@ int cem_update(void) {
                current_time_step);
       }
 
-      PeriodicBoundaryCopy(); /* Copy visible data to external model - creates
+      periodic_boundary_copy(); /* Copy visible data to external model - creates
                                  boundaries */
 
       ZeroVars();
@@ -459,17 +453,13 @@ int cem_update(void) {
 }
 
 int cem_finalize(void) {
-  free(topography[0]);
-  free(topography);
-  free(shelf_depth[0]);
-  free(shelf_depth);
-  free(wave_h_sig[0]);
-  free(wave_h_sig);
-  free(wave_dir[0]);
-  free(wave_dir);
+  free2d((void**)topography);
+  free2d((void**)shelf_depth);
+  free2d((void**)wave_h_sig);
+  free2d((void**)wave_dir);
+  free2d((void**)type_of_rock);
 
   printf("Run Complete.  Output file: %s \n", savefilename);
-  getchar();
 
   return 0;
 }
@@ -1826,7 +1816,7 @@ void WeatherRock(int j)
    */
 /* Weathering rate changes along the shore, 'f' = fast weather, 's' = slow
    weathering			*/
-/* Function uses (but does not change) TypeOfRock[][] to determine rate
+/* Function uses (but does not change) type_of_rock[][] to determine rate
    */
 {
   double WeatheringRatePerYear, CurrentWeatherCoeff, mslope, wscale,
@@ -1834,13 +1824,13 @@ void WeatherRock(int j)
 
   /* Assign maximum weathering rate depending on rock type  */
   CurrentWeatherCoeff =
-      (TypeOfRock[XRock[j]][YRock[j]] == 'f' ? FastWeatherCoeff
+      (type_of_rock[XRock[j]][YRock[j]] == 'f' ? FastWeatherCoeff
                                              : SlowWeatherCoeff);
 
   if (CurrentWeatherCoeff != FastWeatherCoeff &&
       CurrentWeatherCoeff != SlowWeatherCoeff) {
     CurrentWeatherCoeff =
-        (TypeOfRock[XRockBehind[j]][YRockBehind[j]] == 'f' ? FastWeatherCoeff
+        (type_of_rock[XRockBehind[j]][YRockBehind[j]] == 'f' ? FastWeatherCoeff
                                                            : SlowWeatherCoeff);
   }
   if (CurrentWeatherCoeff != FastWeatherCoeff &&
@@ -1850,12 +1840,12 @@ void WeatherRock(int j)
 
   /* Assign proportion of fines lost PWL */
   CurrentPercentFine =
-      (TypeOfRock[XRock[j]][YRock[j]] == 'f' ? PercentFineFast
+      (type_of_rock[XRock[j]][YRock[j]] == 'f' ? PercentFineFast
                                              : PercentFineSlow);
   if (CurrentPercentFine != PercentFineFast &&
       CurrentPercentFine != PercentFineSlow)
     CurrentPercentFine =
-        (TypeOfRock[XRockBehind[j]][YRockBehind[j]] == 'f' ? PercentFineFast
+        (type_of_rock[XRockBehind[j]][YRockBehind[j]] == 'f' ? PercentFineFast
                                                            : PercentFineSlow);
   /* Flip current percent fines to make calculations below easier PWL */
   CurrentPercentFine = 1 - CurrentPercentFine;
@@ -1908,7 +1898,7 @@ void WeatherRock(int j)
     printf(
         "for %d (%d,%d) rock %c, angfactor %f, weathercoeff %f, mindist %f, "
         "rate %f m/yr, frac weathered %f\n",
-        j, XRock[j], YRock[j], TypeOfRock[XRock[j]][YRock[j]], kAngleFactor,
+        j, XRock[j], YRock[j], type_of_rock[XRock[j]][YRock[j]], kAngleFactor,
         CurrentWeatherCoeff, MinDistToBeach[j], WeatheringRatePerYear,
         AmountWeathered[j]);
 
@@ -3972,48 +3962,42 @@ float RandZeroToOne(void)
   return ((float)(AB_rand));
 }
 
-void InitNormal(void)
-/* Creates initial beach conditions */
-/* Flat beach with zone of AllBeach = 'y' separated by AllBeach = 'n' */
-/* Block of rock parallel to beach begins at INIT_ROCK LMV */
-/* LMV Assume that AllBeach = 'Y' for AllRock cells (and All Full cells)
-   */
-/* Bounding layer set to random fraction of fullness */
-{
-  int x, y, n; /* y1 */
-  int InitialBeach;
-  int InitialRock;
-  int Amp; /*Amplitude of cos curve */
-  int blocks =
-      1; /* have hard stuff just as blocks near the beach, or columns? */
-  printf("Condition Initial \n");
 
-  Amp = 10;
+// Creates initial beach conditions
+// Flat beach with zone of AllBeach = 'y' separated by AllBeach = 'n'
+// Block of rock parallel to beach begins at INIT_ROCK LMV
+// LMV Assume that AllBeach = 'Y' for AllRock cells (and All Full cells)
+// Bounding layer set to random fraction of fullness
+void InitNormal(void)
+{
+  int x, y;
+  int initial_beach;
+  int initial_rock;
+  const double amp = 10.; // Amplitude of cos curve */
+
+  printf("Condition Initial \n");
 
   for (y = 0; y < 2 * Y_MAX; y++)
     for (x = 0; x < X_MAX; x++) {
-      InitialBeach = INIT_BEACH;
-      InitialRock = INIT_ROCK;
+      initial_beach = INIT_BEACH;
+      initial_rock = INIT_ROCK;
 
       if (DIFFUSIVE_HUMP)
-      /* shoreline is a cosine curve, diffusive LMV */
-      {
-        InitialRock = (INIT_ROCK + (-Amp * cos((2 * PI * y) / Y_MAX)) -
-                       (INIT_BEACH - INIT_ROCK - 1));
-        InitialBeach = (INIT_BEACH + (-Amp * cos((2 * PI * y) / Y_MAX)));
+      { // shoreline is a cosine curve, diffusive LMV
+        initial_rock = (INIT_ROCK + (-amp * cos((2 * PI * y) / Y_MAX)) -
+                        (INIT_BEACH - INIT_ROCK - 1));
+        initial_beach = (INIT_BEACH + (-amp * cos((2 * PI * y) / Y_MAX)));
       }
 
-      if (x < InitialRock)
-      /*LMV*/ {
+      if (x < initial_rock)
+      { // LMV
         PercentFullRock[x][y] = 1.0;
         PercentFullSand[x][y] = 0.0;
         AllRock[x][y] = 'y';
         AllBeach[x][y] = 'n';
         topography[x][y] = kCliffHeightSlow;
-      }
-
-      else if (x == InitialRock)
-      /*LMV*/ {
+      } else if (x == initial_rock)
+      { // LMV
         if (INITIAL_SMOOTH_ROCK) {
           PercentFullRock[x][y] = 0.20;
           PercentFullSand[x][y] = 0.80;
@@ -4024,17 +4008,15 @@ void InitNormal(void)
         AllRock[x][y] = 'n';
         AllBeach[x][y] = 'y';
         topography[x][y] = kCliffHeightSlow;
-      }
-
-      else if ((x > InitialRock) && (x < InitialBeach))
-      /*LMV*/ {
+      } else if ((x > initial_rock) && (x < initial_beach))
+      { // LMV
         PercentFullRock[x][y] = 0.0;
         PercentFullSand[x][y] = 1.0;
         AllRock[x][y] = 'n';
         AllBeach[x][y] = 'y';
         topography[x][y] = 0;
 
-      } else if (x == InitialBeach) {
+      } else if (x == initial_beach) {
         if (INITIAL_SMOOTH) {
           PercentFullSand[x][y] = 0.5;
         } else {
@@ -4044,9 +4026,7 @@ void InitNormal(void)
         AllBeach[x][y] = 'n';
         topography[x][y] = 0;
 
-      }
-
-      else if (x > InitialBeach) {
+      } else if (x > initial_beach) {
         PercentFullSand[x][y] = 0;
         AllRock[x][y] = 'n';
         AllBeach[x][y] = 'n';
@@ -4056,24 +4036,17 @@ void InitNormal(void)
       Age[x][y] = 0;
     }
 
-  // LMV Assign fast and slow weathering portions
-  for (x = 0; x < X_MAX; x++) {
-    for (n = 0; n <= 2 * NUMBER_CHUNK; n++) {
-      for (y = n * CHUNK_LENGTH; y < ((n + 2) * CHUNK_LENGTH); y++) {
-        if (n % 3 == 0 && (!blocks || x > InitialRock - 3)) { /* if even */
-          TypeOfRock[x][y] = 's';
-          topography[x][y] = kCliffHeightSlow;
-        }
-        else { /*if odd */
-          TypeOfRock[x][y] = 'f';
-          topography[x][y] = kCliffHeightFast;
-        }
-      }
+  for (x = 0; x < initial_rock - 3; x++) {
+    for (y = 0; y < 2 * Y_MAX; y++) {
+        type_of_rock[x][y] = 'f';
+        topography[x][y] = kCliffHeightFast;
     }
-    /*for (y=0;y<=Y_MAX;y++)
-       printf("x %d, y %d, Type %c\n", x, y, TypeOfRock[x][y]); */
   }
+  set_rock_blocks(type_of_rock + initial_rock - 3,
+                  topography + initial_rock - 3,
+                  X_MAX - (initial_rock - 3), 2 * Y_MAX, NUMBER_CHUNK);
 }
+
 
 int initBlock(void) {
   int x, y, n, blockHeight = 4, blockWidth = 60,
@@ -4086,7 +4059,7 @@ int initBlock(void) {
         PercentFullRock[x][y] = 1.0;
         PercentFullSand[x][y] = 0.0;
         AllRock[x][y] = 'y';
-        TypeOfRock[x][y] = 'f';
+        type_of_rock[x][y] = 'f';
         AllBeach[x][y] = 'y';
       } else if (x < INIT_BEACH) {
         PercentFullRock[x][y] = 0.0;
@@ -4116,7 +4089,7 @@ int initBlock(void) {
         PercentFullRock[x][y] = 1.0;
         PercentFullSand[x][y] = 0.0;
         AllRock[x][y] = 'y';
-        TypeOfRock[x][y] = 's';
+        type_of_rock[x][y] = 's';
         AllBeach[x][y] = 'y';
       }
     }
@@ -4128,7 +4101,7 @@ int initBlock(void) {
       PercentFullRock[x][y] = 1.0;
       PercentFullSand[x][y] = 0.0;
       AllRock[x][y] = 'y';
-      TypeOfRock[x][y] = 's';
+      type_of_rock[x][y] = 's';
       AllBeach[x][y] = 'y';
     }
   }
@@ -4138,7 +4111,7 @@ int initBlock(void) {
       PercentFullRock[x][y] = 1.0;
       PercentFullSand[x][y] = 0.0;
       AllRock[x][y] = 'y';
-      TypeOfRock[x][y] = 's';
+      type_of_rock[x][y] = 's';
       AllBeach[x][y] = 'y';
     }
   }
@@ -4181,7 +4154,7 @@ int InitWiggly(void) {
         PercentFullRock[x][y] = 1.0;
         PercentFullSand[x][y] = 0.0;
         AllRock[x][y] = 'y';
-        TypeOfRock[x][y] = 's';
+        type_of_rock[x][y] = 's';
         AllBeach[x][y] = 'y';
       } else if (x == RockLine[y]) {
         PercentFullRock[x][y] = 0.0;
@@ -4326,31 +4299,23 @@ void InitPert(void)
   }
 }
 
-void PeriodicBoundaryCopy(void)
-/* Simulates periodic boundary conditions by copying middle section to front and
-   end of arrays */
-{
-  int x, y;
 
-  for (y = Y_MAX; y < 3 * Y_MAX / 2; y++)
-    for (x = 0; x < X_MAX; x++) {
-      AllBeach[x][y - Y_MAX] = AllBeach[x][y];
-      AllRock[x][y - Y_MAX] = AllRock[x][y];
-      /*LMV*/ TypeOfRock[x][y - Y_MAX] = TypeOfRock[x][y];
-      /*LMV*/ PercentFullSand[x][y - Y_MAX] = PercentFullSand[x][y];
-      PercentFullRock[x][y - Y_MAX] = PercentFullRock[x][y];
-      /*LMV*/ Age[x][y - Y_MAX] = Age[x][y];
-    }
-  for (y = Y_MAX / 2; y < Y_MAX; y++)
-    for (x = 0; x < X_MAX; x++) {
-      AllBeach[x][y + Y_MAX] = AllBeach[x][y];
-      AllRock[x][y + Y_MAX] = AllRock[x][y];
-      /*LMV*/ TypeOfRock[x][y + Y_MAX] = TypeOfRock[x][y];
-      /*LMV*/ PercentFullSand[x][y + Y_MAX] = PercentFullSand[x][y];
-      PercentFullRock[x][y + Y_MAX] = PercentFullRock[x][y];
-      /*LMV*/ Age[x][y + Y_MAX] = Age[x][y];
-    }
+// Apply periodic boundary conditions to CEM arrays.
+void periodic_boundary_copy(void)
+{
+  const int buff_len = 2 * Y_MAX;
+  int row;
+
+  for (row=0; row < X_MAX; row++) {
+    apply_periodic_boundary(AllBeach[row], sizeof(char), buff_len);
+    apply_periodic_boundary(AllRock[row], sizeof(char),  buff_len);
+    apply_periodic_boundary(type_of_rock[row], sizeof(char), buff_len);
+    apply_periodic_boundary(PercentFullSand[row], sizeof(double), buff_len);
+    apply_periodic_boundary(PercentFullRock[row], sizeof(double),buff_len);
+    apply_periodic_boundary(Age[row], sizeof(int), buff_len);
+  }
 }
+
 
 void ZeroVars(void)
 /* Resets all arrays recalculated at each time step to 'zero' conditions */
@@ -4378,7 +4343,7 @@ void ZeroVars(void)
 void ReadSandFromFile(void)
 /*  Reads saved output file, AllBeach[][] & PercentFullSand[][]	 */
 /*  LMV - Also reads saved output file, AllRock[][], PercentFullRock[][],
-   TypeOfRock[][]  */
+   type_of_rock[][]  */
 {
   int x, y;
 
@@ -4387,7 +4352,7 @@ void ReadSandFromFile(void)
 
   if (SAVE_FILE != 2) { /*line file input */
     for (y = Y_MAX / 2; y < 3 * Y_MAX / 2; y++)
-      for (x = 0; x < X_MAX; x++) fscanf(ReadSandFile, " %c", &TypeOfRock[x][y]);
+      for (x = 0; x < X_MAX; x++) fscanf(ReadSandFile, " %c", &type_of_rock[x][y]);
 
     for (y = Y_MAX / 2; y < 3 * Y_MAX / 2; y++) {
       for (x = 0; x < X_MAX; x++) {
@@ -4424,7 +4389,7 @@ void ReadSandFromFile(void)
 
     for (x = (X_MAX - 1); x >= 0; x--) {
       for (y = Y_MAX / 2; y < 3 * Y_MAX / 2; y++) {
-        fscanf(ReadSandFile, " %c", &TypeOfRock[x][y]);
+        fscanf(ReadSandFile, " %c", &type_of_rock[x][y]);
       }
       fscanf(ReadSandFile, "\n");
     }
@@ -4467,7 +4432,7 @@ void ReadSandFromFile(void)
   fclose(ReadSandFile);
   printf("file read!");
 
-  PeriodicBoundaryCopy();
+  periodic_boundary_copy();
 }
 
 void SaveSandToFile(void)
@@ -4475,7 +4440,7 @@ void SaveSandToFile(void)
    */
 /*  Save file name will add extension '.' and the current_time_step
    */
-/*  LMV - Save AllRock[][], PercentFullRock[][], TypeOfRock[][]
+/*  LMV - Save AllRock[][], PercentFullRock[][], type_of_rock[][]
    */
 {
   int x, y;
@@ -4494,7 +4459,7 @@ void SaveSandToFile(void)
   }
   if (SAVE_FILE == 1) {
     for (y = Y_MAX / 2; y < 3 * Y_MAX / 2; y++)
-      for (x = 0; x < X_MAX; x++) fprintf(SaveSandFile, " %c", TypeOfRock[x][y]);
+      for (x = 0; x < X_MAX; x++) fprintf(SaveSandFile, " %c", type_of_rock[x][y]);
     /*LMV*/ for (y = Y_MAX / 2; y < 3 * Y_MAX / 2; y++)
       for (x = 0; x < X_MAX; x++)
         fprintf(SaveSandFile, " %lf", PercentFullRock[x][y]);
@@ -4513,9 +4478,9 @@ void SaveSandToFile(void)
     /* for (x=0; x<X_MAX; x++) */
     for (x = (X_MAX - 1); x >= 0; x--) {
       for (y = Y_MAX / 2; y < 3 * Y_MAX / 2; y++) {
-        fprintf(SaveSandFile, " %c", TypeOfRock[x][y]);
+        fprintf(SaveSandFile, " %c", type_of_rock[x][y]);
         /*LMV*/
-        /* if (TypeOfRock[x][y]=='f') fprintf(SaveSandFile, " 0"); */ /* Switch
+        /* if (type_of_rock[x][y]=='f') fprintf(SaveSandFile, " 0"); */ /* Switch
                                                                          on if
                                                                          numbers
                                                                          required*/
@@ -4551,7 +4516,7 @@ void SaveSandToFile(void)
   fclose(SaveSandFile);
   printf("file saved!\n");
 
-  PeriodicBoundaryCopy();
+  periodic_boundary_copy();
 }
 
 void SaveLineToFile(void)
