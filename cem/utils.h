@@ -8,7 +8,7 @@ extern "C" {
 #include <stdlib.h>
 
 
-void **malloc2d(size_t n_rows, size_t n_cols, size_t itemsize);
+void **malloc2d(size_t n_rows, size_t n_cols);
 void free2d(void **mem);
 void apply_periodic_boundary(void *array, const int itemsize,
     const int nitems);

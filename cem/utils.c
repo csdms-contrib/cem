@@ -4,13 +4,13 @@
 #include "utils.h"
 
 // Allocate memory for a 2D matrix as a continuous block.
-void **malloc2d(size_t n_rows, size_t n_cols, size_t itemsize)
+void **malloc2d(size_t n_rows, size_t n_cols)
 {
   size_t i;
-  void **matrix = malloc(sizeof(void*) * n_rows);
-  matrix[0] = malloc(itemsize * n_rows * n_cols);
+  double **matrix = malloc(sizeof(double*) * n_rows);
+  matrix[0] = malloc(sizeof(double) * n_rows * n_cols);
   for (i = 1; i < n_rows ; i++)
-    matrix[i] = matrix[i - 1] + n_cols * itemsize;
+    matrix[i] = matrix[i - 1] + n_cols * sizeof(double);
 
   return matrix;
 }
