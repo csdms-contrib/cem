@@ -273,12 +273,11 @@ int cem_initialize(void)
   const int n_rows = X_MAX;
   const int n_cols = 2 * Y_MAX;
 
-  topography = (double**)malloc2d(n_rows, n_cols);
-  shelf_depth = (double**)malloc2d(n_rows, n_cols);
-  wave_h_sig = (double**)malloc2d(n_rows, n_cols);
-  wave_dir = (double**)malloc2d(n_rows, n_cols);
-  /* TODO: fix this */
-  type_of_rock = (char**)malloc2d(n_rows, n_cols);
+  topography = (double**)malloc2d(n_rows, n_cols, sizeof(double), sizeof(double*));
+  shelf_depth = (double**)malloc2d(n_rows, n_cols, sizeof(double), sizeof(double*));
+  wave_h_sig = (double**)malloc2d(n_rows, n_cols, sizeof(double), sizeof(double*));
+  wave_dir = (double**)malloc2d(n_rows, n_cols, sizeof(double), sizeof(double*));
+  type_of_rock = (char**)malloc2d(n_rows, n_cols, sizeof(char), sizeof(char*));
 
   /*  Start from file or not? */
   if (PROMPT_START)
@@ -529,6 +528,7 @@ double FindWaveAngle(void)
         Angle = -1.0 * Angle;
       }
       // printf("WaveAngle: %f degrees\n",Angle*RAD_TO_DEG);
+      break;
     
     /* Method using input binned wave distribution variables WaveProb[], WaveMax[], 
     previously input from file using ReadWaveIn()*/
@@ -548,7 +548,8 @@ double FindWaveAngle(void)
 
       Angle = -(RandAngle * (WaveMax[i] - WaveMax[i - 1]) + WaveMax[i - 1]) * PI / 180;
       // printf("i = %d WaveMAx[i] = %f WaveMax[i-1] = %f WaveProb[i] = %f Angle= %f\n", i,WaveMax[i],WaveMax[i-1],WaveProb[i], Angle*180/PI);
- 
+      break;
+
     /*Read real data (angle/period/height) */
     case 2:
       RealWaveIn();
@@ -568,6 +569,7 @@ double FindWaveAngle(void)
         OffShoreWvHt = 1e-10; /*if waves were to come from behind coast set to inf small */
       }
       Angle /= RAD_TO_DEG;
+      break;
   }
 
   return Angle;
@@ -754,6 +756,7 @@ void FindNextCell(int x, int y, int z)
   /* came from left */
   if ((X[z - 1] == X[z]) && (Y[z - 1] == Y[z] - 1))
   {
+    printf("check");
     if ((PercentFullSand[x + 1][y] + PercentFullRock[x + 1][y]) > 0.0)
     {
       if (debug1b)
@@ -4709,7 +4712,9 @@ void InitNormal(void)
         topography[x][y] = 0; /* No cliffs in the ocean... PWL */
       }
       Age[x][y] = 0;
+      printf("%d ", PercentFullSand[x][y]);
     }
+    printf("\n");
   }
 
   for (x = 0; x < initial_rock - 3; x++)

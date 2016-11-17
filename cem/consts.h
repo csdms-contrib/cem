@@ -20,7 +20,7 @@ extern "C" {
 #define SHOREFACE_SLOPE (0.01)      // for now, linear slope of shoreface
 #define DEPTH_SHOREFACE (10.)       // minimum depth of shoreface due to wave action (meters)
 #define INIT_BEACH (20)             // cell where intial conditions changes from beach to ocean
-#define INIT_ROCK (5)               // cell where initial conditions change from beach to rock LMV
+#define INIT_ROCK (0)               // cell where initial conditions change from beach to rock LMV
 #define INITIAL_DEPTH (10.)         // theoretical depth in meters of continental shelf at x = INIT_BEACH
 #define LAND_HEIGHT (1.)
 
