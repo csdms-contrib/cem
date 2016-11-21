@@ -219,7 +219,7 @@ void ParseSWAN(int ShoreAngleLoc, double ShoreAngle);
 void PauseRun(int x, int y, int in);
 void periodic_boundary_copy(void);
 double Raise(double b, double e);
-double RandZeroToOne(void);
+float RandZeroToOne(void);
 void ReadSandFromFile(void);
 void ReadWaveIn(void);
 void RealWaveIn(void);
@@ -4618,12 +4618,11 @@ double Raise(double b, double e)
  * PARAMETERS: none
  * RETURN: double of the rnadom number
  */
-double RandZeroToOne(void)
+float RandZeroToOne(void)
 {
   /* return random()/(Raise(2,31)-1); */
-  double AB_rand = rand() % 1000;
-  AB_rand = (AB_rand + 1) / 1000;
-  return ((double)(AB_rand));
+  // float AB_rand = rand() % 1000;
+  return (float)rand()/RAND_MAX;
 }
 
 /**
@@ -4712,7 +4711,7 @@ void InitNormal(void)
         topography[x][y] = 0; /* No cliffs in the ocean... PWL */
       }
       Age[x][y] = 0;
-      printf("%d ", PercentFullSand[x][y]);
+      printf("%f ", PercentFullSand[x][y]);
     }
     printf("\n");
   }
