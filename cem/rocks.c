@@ -21,7 +21,7 @@ void set_rock_blocks(char **rock_type, double **topography, const int n_rows,
     for (col=0; col < n_fast; col++) stripe[col] = 'f';
     for (col=0; col < n_slow; col++) stripe[col + n_fast] = 's';
     stripe_cem_matrix((void**)rock_type, n_rows, n_cols, sizeof(char),
-        stripe, n_fast + n_slow);
+        stripe, n_fast + n_slow);   
     free(stripe);
   }
 

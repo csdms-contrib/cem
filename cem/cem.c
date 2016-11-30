@@ -4704,18 +4704,15 @@ void InitNormal(void)
 
       }
       else if (x > initial_beach)
-      {
+      {       
         PercentFullSand[x][y] = 0;
         AllRock[x][y] = FALSE;
         AllBeach[x][y] = FALSE;
         topography[x][y] = 0; /* No cliffs in the ocean... PWL */
       }
       Age[x][y] = 0;
-      printf("%f ", PercentFullSand[x][y]);
     }
-    printf("\n");
   }
-
   for (x = 0; x < initial_rock - 3; x++)
   {
     for (y = 0; y < 2 * Y_MAX; y++)

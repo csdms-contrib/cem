@@ -57,7 +57,7 @@ void repeat_mem(void *dst, const int len, void *block, int block_len) {
 // Run vertical stripes down a CEM matrix, making certain to obey the
 // periodic boundary conditions.
 void stripe_cem_matrix(void **matrix, int n_rows, int n_cols, int itemsize,
-    void *stripe, int nitems)
+  void *stripe, int nitems)
 {
   const int offset_to_left = (n_cols / 4) * itemsize;
   const int width = (n_cols / 2) * itemsize;
@@ -67,7 +67,9 @@ void stripe_cem_matrix(void **matrix, int n_rows, int n_cols, int itemsize,
   repeat_mem((char *)row + offset_to_left, width, stripe, nitems * itemsize);
   apply_periodic_boundary(row, itemsize, n_cols);
   for (i = 0; i < n_rows; i++)
-    memcpy(matrix[i], row, itemsize * n_cols);
+  {
+    memcpy((char *)matrix + (i * itemsize * n_cols), row, itemsize * n_cols);
+  }
 
   free(row);
 }
