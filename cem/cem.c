@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include <unistd.h>
 #include <string.h>
 
 #include "consts.h"
@@ -267,11 +266,11 @@ int cem_initialize(void) {
     const int n_rows = X_MAX;
     const int n_cols = 2 * Y_MAX;
 
-    topography = (double**)malloc2d(n_rows, n_cols, sizeof(double));
-    shelf_depth = (double**)malloc2d(n_rows, n_cols, sizeof(double));
-    wave_h_sig = (double**)malloc2d(n_rows, n_cols, sizeof(double));
-    wave_dir = (double**)malloc2d(n_rows, n_cols, sizeof(double));
-    type_of_rock = (char**)malloc2d(n_rows, n_cols, sizeof(char));
+    topography = (double**)malloc2d(n_rows, n_cols, sizeof(double), sizeof(double*));
+    shelf_depth = (double**)malloc2d(n_rows, n_cols, sizeof(double), sizeof(double*));
+    wave_h_sig = (double**)malloc2d(n_rows, n_cols, sizeof(double), sizeof(double*));
+    wave_dir = (double**)malloc2d(n_rows, n_cols, sizeof(double), sizeof(double*));
+    type_of_rock = (char**)malloc2d(n_rows, n_cols, sizeof(char), sizeof(char*));
   }
 
   /* Start from file or not? */
@@ -4036,15 +4035,19 @@ void InitNormal(void)
       Age[x][y] = 0;
     }
 
-  for (x = 0; x < initial_rock - 3; x++) {
-    for (y = 0; y < 2 * Y_MAX; y++) {
-        type_of_rock[x][y] = 'f';
-        topography[x][y] = kCliffHeightFast;
-    }
-  }
-  set_rock_blocks(type_of_rock + initial_rock - 3,
-                  topography + initial_rock - 3,
-                  X_MAX - (initial_rock - 3), 2 * Y_MAX, NUMBER_CHUNK);
+  /* TODO: fix this section
+   * initial_rock is always = to that last value, even though it changes in the above loop?
+   * set_rock_blocks fails for initial_rock < 3 */
+   
+  // for (x = 0; x < initial_rock - 3; x++) {
+  //   for (y = 0; y < 2 * Y_MAX; y++) {
+  //       type_of_rock[x][y] = 'f';
+  //       topography[x][y] = kCliffHeightFast;
+  //   }
+  // }
+  // set_rock_blocks(type_of_rock + initial_rock - 3,
+  //                 topography + initial_rock - 3,
+  //                 X_MAX - (initial_rock - 3), 2 * Y_MAX, NUMBER_CHUNK);
 }
 
 

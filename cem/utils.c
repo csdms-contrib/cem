@@ -4,13 +4,13 @@
 #include "utils.h"
 
 // Allocate memory for a 2D matrix as a continuous block.
-void **malloc2d(size_t n_rows, size_t n_cols, size_t itemsize)
+void **malloc2d(size_t n_rows, size_t n_cols, size_t itemsize, size_t pointersize)
 {
   size_t i;
-  void **matrix = malloc(sizeof(void*) * n_rows);
+  void **matrix = malloc(pointersize * n_rows);
   matrix[0] = malloc(itemsize * n_rows * n_cols);
   for (i = 1; i < n_rows ; i++)
-    matrix[i] = matrix[i - 1] + n_cols * itemsize;
+    matrix[i] = (char *)*matrix + (i - 1)*pointersize + n_cols * itemsize;
 
   return matrix;
 }
@@ -36,8 +36,8 @@ void apply_periodic_boundary(void *array, const int itemsize, const int nitems)
   const int left_nbytes = (nitems - nitems / 2) / 2 * itemsize;
   const int right_nbytes = nbytes - (middle_nbytes + left_nbytes);
 
-  memcpy(array, array + middle_nbytes, left_nbytes);
-  memcpy(array + nbytes - right_nbytes, array + left_nbytes, right_nbytes);
+  memcpy(array, (char *)array + middle_nbytes, left_nbytes);
+  memcpy((char *)array + nbytes - right_nbytes, (char *)array + left_nbytes, right_nbytes);
 }
 
 
@@ -48,26 +48,28 @@ void repeat_mem(void *dst, const int len, void *block, int block_len) {
   int offset;
 
   for (offset=0; offset < len; offset += block_len) {
-    memcpy(dst + offset, block, block_len);
+    memcpy((char *)dst + offset, block, block_len);
   }
-  memcpy(dst + len - last_block_len, block, last_block_len);
+  memcpy((char *)dst + len - last_block_len, block, last_block_len);
 }
 
 
 // Run vertical stripes down a CEM matrix, making certain to obey the
 // periodic boundary conditions.
 void stripe_cem_matrix(void **matrix, int n_rows, int n_cols, int itemsize,
-    void *stripe, int nitems)
+  void *stripe, int nitems)
 {
   const int offset_to_left = (n_cols / 4) * itemsize;
   const int width = (n_cols / 2) * itemsize;
   void *row = malloc(itemsize * n_cols);
   int i;
 
-  repeat_mem(row + offset_to_left, width, stripe, nitems * itemsize);
+  repeat_mem((char *)row + offset_to_left, width, stripe, nitems * itemsize);
   apply_periodic_boundary(row, itemsize, n_cols);
   for (i = 0; i < n_rows; i++)
-    memcpy(matrix[i], row, itemsize * n_cols);
+  {
+    memcpy((char *)matrix + (i * itemsize * n_cols), row, itemsize * n_cols);
+  }
 
   free(row);
 }
