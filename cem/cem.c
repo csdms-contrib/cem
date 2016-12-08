@@ -266,11 +266,11 @@ int cem_initialize(void) {
     const int n_rows = X_MAX;
     const int n_cols = 2 * Y_MAX;
 
-    topography = (double**)malloc2d(n_rows, n_cols, sizeof(double), sizeof(double*));
-    shelf_depth = (double**)malloc2d(n_rows, n_cols, sizeof(double), sizeof(double*));
-    wave_h_sig = (double**)malloc2d(n_rows, n_cols, sizeof(double), sizeof(double*));
-    wave_dir = (double**)malloc2d(n_rows, n_cols, sizeof(double), sizeof(double*));
-    type_of_rock = (char**)malloc2d(n_rows, n_cols, sizeof(char), sizeof(char*));
+    topography = (double**)malloc2d(n_rows, n_cols, sizeof(double));
+    shelf_depth = (double**)malloc2d(n_rows, n_cols, sizeof(double));
+    wave_h_sig = (double**)malloc2d(n_rows, n_cols, sizeof(double));
+    wave_dir = (double**)malloc2d(n_rows, n_cols, sizeof(double));
+    type_of_rock = (char**)malloc2d(n_rows, n_cols, sizeof(char));
   }
 
   /* Start from file or not? */

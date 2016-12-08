@@ -4,13 +4,13 @@
 #include "utils.h"
 
 // Allocate memory for a 2D matrix as a continuous block.
-void **malloc2d(size_t n_rows, size_t n_cols, size_t itemsize, size_t pointersize)
+void **malloc2d(size_t n_rows, size_t n_cols, size_t itemsize)
 {
   size_t i;
-  void **matrix = malloc(pointersize * n_rows);
+  void **matrix = malloc(sizeof(char*) * n_rows);
   matrix[0] = malloc(itemsize * n_rows * n_cols);
   for (i = 1; i < n_rows ; i++)
-    matrix[i] = (char *)*matrix + (i - 1)*pointersize + n_cols * itemsize;
+    matrix[i] = (char *)*matrix + (i - 1)*sizeof(char*) + n_cols * itemsize;
 
   return matrix;
 }
@@ -68,7 +68,7 @@ void stripe_cem_matrix(void **matrix, int n_rows, int n_cols, int itemsize,
   apply_periodic_boundary(row, itemsize, n_cols);
   for (i = 0; i < n_rows; i++)
   {
-    memcpy((char *)matrix + (i * itemsize * n_cols), row, itemsize * n_cols);
+    memcpy((char **)matrix[i], row, itemsize * n_cols);
   }
 
   free(row);
