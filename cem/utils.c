@@ -73,3 +73,13 @@ void stripe_cem_matrix(void **matrix, int n_rows, int n_cols, int itemsize,
 
   free(row);
 }
+
+/**
+ * Generates a random number equally distributed between zero and one
+ * PARAMETERS: none
+ * RETURN: random float between zero and one
+ */
+float RandZeroToOne(void)
+{
+  return (float)rand()/RAND_MAX;
+}

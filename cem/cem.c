@@ -8,6 +8,7 @@
 #include "globals.h"
 #include "rocks.h"
 #include "utils.h"
+#include "conditions.h"
 
 
 // Global variables to be share with other files.
@@ -213,8 +214,6 @@ void FixBeach(void);
 void FixFlow(void);
 void FlowInCell(void);
 int getIndex(int x, int y, char interface);
-void InitConds(void);
-void InitPert(void);
 float MassCount(void);
 void OopsImEmpty(int x, int y);
 void OopsImFull(int x, int y);
@@ -244,9 +243,6 @@ void CheckOverwash(int icheck);
 void DoOverwash(int xfrom, int yfrom, int xto, int yto, float xintto,
                 float yintto, float widthin, int ishore);
 
-void InitNormal(void);
-int initBlock(void);
-int InitWiggly(void);
 void Delay(void);
 void PrintLocalConds(int x, int y, int in);
 
@@ -292,9 +288,6 @@ int cem_initialize(void) {
       printf("Saving Filename? \n");
       scanf("%s", savefilename);
       InitConds();
-      if (INITIAL_PERT) {
-        InitPert();
-      }
       printf("InitConds OK \n");
     }
   }
@@ -305,9 +298,6 @@ int cem_initialize(void) {
 
   else {
     InitConds();
-    if (INITIAL_PERT) {
-      InitPert();
-    }
   }
 
   /* Set Periodic Boundary Conditions */
@@ -3948,360 +3938,6 @@ float Raise(float b, float e)
     return 0;
   }
 }
-
-float RandZeroToOne(void)
-
-/* function will return a random number equally distributed between zero and one
-   */
-/* currently this function has no SEED */
-{
-  /* return random()/(Raise(2,31)-1); */
-  double AB_rand = rand() % 1000;
-  AB_rand = (AB_rand + 1) / 1000;
-  return ((float)(AB_rand));
-}
-
-
-// Creates initial beach conditions
-// Flat beach with zone of AllBeach = 'y' separated by AllBeach = 'n'
-// Block of rock parallel to beach begins at INIT_ROCK LMV
-// LMV Assume that AllBeach = 'Y' for AllRock cells (and All Full cells)
-// Bounding layer set to random fraction of fullness
-void InitNormal(void)
-{
-  int x, y;
-  int initial_beach;
-  int initial_rock;
-  const double amp = 10.; // Amplitude of cos curve */
-
-  printf("Condition Initial \n");
-
-  for (y = 0; y < 2 * Y_MAX; y++)
-    for (x = 0; x < X_MAX; x++) {
-      initial_beach = INIT_BEACH;
-      initial_rock = INIT_ROCK;
-
-      if (DIFFUSIVE_HUMP)
-      { // shoreline is a cosine curve, diffusive LMV
-        initial_rock = (INIT_ROCK + (-amp * cos((2 * PI * y) / Y_MAX)) -
-                        (INIT_BEACH - INIT_ROCK - 1));
-        initial_beach = (INIT_BEACH + (-amp * cos((2 * PI * y) / Y_MAX)));
-      }
-
-      if (x < initial_rock)
-      { // LMV
-        PercentFullRock[x][y] = 1.0;
-        PercentFullSand[x][y] = 0.0;
-        AllRock[x][y] = 'y';
-        AllBeach[x][y] = 'n';
-        topography[x][y] = kCliffHeightSlow;
-      } else if (x == initial_rock)
-      { // LMV
-        if (INITIAL_SMOOTH_ROCK) {
-          PercentFullRock[x][y] = 0.20;
-          PercentFullSand[x][y] = 0.80;
-        } else {
-          PercentFullRock[x][y] = RandZeroToOne();
-          PercentFullSand[x][y] = 1 - PercentFullRock[x][y];
-        }
-        AllRock[x][y] = 'n';
-        AllBeach[x][y] = 'y';
-        topography[x][y] = kCliffHeightSlow;
-      } else if ((x > initial_rock) && (x < initial_beach))
-      { // LMV
-        PercentFullRock[x][y] = 0.0;
-        PercentFullSand[x][y] = 1.0;
-        AllRock[x][y] = 'n';
-        AllBeach[x][y] = 'y';
-        topography[x][y] = 0;
-
-      } else if (x == initial_beach) {
-        if (INITIAL_SMOOTH) {
-          PercentFullSand[x][y] = 0.5;
-        } else {
-          PercentFullSand[x][y] = RandZeroToOne();
-        }
-        AllRock[x][y] = 'n';
-        AllBeach[x][y] = 'n';
-        topography[x][y] = 0;
-
-      } else if (x > initial_beach) {
-        PercentFullSand[x][y] = 0;
-        AllRock[x][y] = 'n';
-        AllBeach[x][y] = 'n';
-        topography[x][y] = 0; /* No cliffs in the ocean... PWL */
-      }
-
-      Age[x][y] = 0;
-    }
-
-  /* TODO: fix this section
-   * initial_rock is always = to that last value, even though it changes in the above loop?
-   * set_rock_blocks fails for initial_rock < 3 */
-   
-  // for (x = 0; x < initial_rock - 3; x++) {
-  //   for (y = 0; y < 2 * Y_MAX; y++) {
-  //       type_of_rock[x][y] = 'f';
-  //       topography[x][y] = kCliffHeightFast;
-  //   }
-  // }
-  // set_rock_blocks(type_of_rock + initial_rock - 3,
-  //                 topography + initial_rock - 3,
-  //                 X_MAX - (initial_rock - 3), 2 * Y_MAX, NUMBER_CHUNK);
-}
-
-
-int initBlock(void) {
-  int x, y, n, blockHeight = 4, blockWidth = 60,
-               NumBlocks = 0; /* makes NumBlocks evenly spaced blocks */
-  printf("init block\n");
-
-  for (x = 0; x < X_MAX; x++) {
-    for (y = Y_MAX / 2; y < 3 * Y_MAX / 2; y++) {
-      if (x < INIT_ROCK) {
-        PercentFullRock[x][y] = 1.0;
-        PercentFullSand[x][y] = 0.0;
-        AllRock[x][y] = 'y';
-        type_of_rock[x][y] = 'f';
-        AllBeach[x][y] = 'y';
-      } else if (x < INIT_BEACH) {
-        PercentFullRock[x][y] = 0.0;
-        PercentFullSand[x][y] = 1.0;
-        AllRock[x][y] = 'n';
-        AllBeach[x][y] = 'y';
-      } else if (x == INIT_BEACH) {
-        PercentFullRock[x][y] = 0.0;
-        PercentFullSand[x][y] = RandZeroToOne();
-        AllRock[x][y] = 'n';
-        AllBeach[x][y] = 'n';
-      } else {
-        PercentFullRock[x][y] = 0.0;
-        PercentFullSand[x][y] = 0.0;
-        AllRock[x][y] = 'n';
-        AllBeach[x][y] = 'n';
-      }
-      Age[x][y] = 0;
-    }
-  }
-  for (n = 1; n <= NumBlocks; n++) { /* the regularly-spaced blocks */
-    for (x = INIT_ROCK; x >= INIT_ROCK - blockHeight; x--) {
-      for (y = Y_MAX / 2 + n * Y_MAX / (NumBlocks + 1);
-           y < Y_MAX / 2 + n * Y_MAX / (NumBlocks + 1) + blockWidth &&
-           y < 2 * Y_MAX;
-           y++) { /* block starts @ upper left corner */
-        PercentFullRock[x][y] = 1.0;
-        PercentFullSand[x][y] = 0.0;
-        AllRock[x][y] = 'y';
-        type_of_rock[x][y] = 's';
-        AllBeach[x][y] = 'y';
-      }
-    }
-  }
-  /* now here's space for ad hoc blocks */
-  /* ad hoc block 1 */
-  for (x = INIT_ROCK; x >= INIT_ROCK - blockHeight; x--) {
-    for (y = Y_MAX / 2; y < Y_MAX / 2 + 10; y++) {
-      PercentFullRock[x][y] = 1.0;
-      PercentFullSand[x][y] = 0.0;
-      AllRock[x][y] = 'y';
-      type_of_rock[x][y] = 's';
-      AllBeach[x][y] = 'y';
-    }
-  }
-  /* ad hoc block 2 */
-  for (x = INIT_ROCK; x >= INIT_ROCK - blockHeight; x--) {
-    for (y = 3 * Y_MAX / 2 - 90; y < 3 * Y_MAX / 2; y++) {
-      PercentFullRock[x][y] = 1.0;
-      PercentFullSand[x][y] = 0.0;
-      AllRock[x][y] = 'y';
-      type_of_rock[x][y] = 's';
-      AllBeach[x][y] = 'y';
-    }
-  }
-
-  printf("done block init\n");
-  return 0;
-}
-
-int InitWiggly(void) {
-  int x, y, curve;
-  int NumCurves = 4;
-  int RockLine[2 * Y_MAX];
-  int curveFactor =
-      3; /* decrease fundamental wavelength/increase frequency (by a factor)
-            --make it 1 for wavelength = Y_MAX */
-  float Amp,
-      AmpMax =
-          INIT_ROCK /
-          6.0; /* INIT_ROCK/4.0; maximum amplitude of the component sin waves */
-  int Min = 0.10 * X_MAX,
-      Max = 0.95 *
-            X_MAX; /* determines acceptable max amplitude of resulting curve */
-  printf("init wiggly\n");
-
-  for (y = 0; y < 2 * Y_MAX; y++) RockLine[y] = INIT_ROCK;
-
-  for (curve = 1; curve <= NumCurves; curve++) {
-    Amp = RandZeroToOne() * AmpMax;
-    printf("for curve %d, amplitude %f\n", curve, Amp);
-    for (y = 0; y < 2 * Y_MAX; y++) {
-      RockLine[y] =
-          RockLine[y] + Amp * sin(y * (curve * curveFactor) * 2.0 * PI / Y_MAX);
-      if (RockLine[y] < Min || RockLine[y] > Max) return -1;
-    }
-  }
-
-  for (x = 0; x < X_MAX; x++)
-    for (y = 0; y < 2 * Y_MAX; y++) {
-      if (x < RockLine[y]) {
-        PercentFullRock[x][y] = 1.0;
-        PercentFullSand[x][y] = 0.0;
-        AllRock[x][y] = 'y';
-        type_of_rock[x][y] = 's';
-        AllBeach[x][y] = 'y';
-      } else if (x == RockLine[y]) {
-        PercentFullRock[x][y] = 0.0;
-        PercentFullSand[x][y] = 0.5;
-        AllRock[x][y] = 'n';
-        AllBeach[x][y] = 'n';
-      } else {
-        PercentFullRock[x][y] = 0.0;
-        PercentFullSand[x][y] = 0.0;
-        AllRock[x][y] = 'n';
-        AllBeach[x][y] = 'n';
-      }
-      Age[x][y] = 0;
-    }
-
-  printf("done wiggly init\n");
-  return 0;
-}
-
-void InitConds(void) {
-  current_time_step = 0;
-  current_time = 0.;
-
-  if (INITIAL_CONDITION_TYPE == 0)
-    InitNormal();
-  else if (INITIAL_CONDITION_TYPE == 1)
-    while (InitWiggly() == -1)
-      printf("init: amplitude too great, trying again...\n");
-  else if (INITIAL_CONDITION_TYPE == 2)
-    initBlock();
-  else if (INITIAL_CONDITION_TYPE == 3) /* All sand, all the time -- no rocks allowed */
-  {
-    int x, y;
-    printf("Condition Initial \n");
-
-    for (y = 0; y < 2 * Y_MAX; y++)
-      for (x = 0; x < X_MAX; x++) {
-        /* This is the only place where cell_depth is defined -- it needs to be
-         updated through time
-         for overwash functions (i think...), so perhaps there is something
-         missing in this model version?? */
-        cell_depth[x][y] =
-            INITIAL_DEPTH + ((x - INIT_BEACH) * CELL_WIDTH * SHELF_SLOPE);
-
-        if (x < INIT_BEACH) {
-          PercentFullSand[x][y] = 1;
-          PercentFullRock[x][y] = 0;
-          AllBeach[x][y] = 'y';
-          cell_depth[x][y] = -LAND_HEIGHT;
-        } else if (x == INIT_BEACH) {
-          if (INITIAL_SMOOTH) {
-            PercentFullSand[x][y] = 0.5;
-            PercentFullRock[x][y] = 0;
-
-          } else {
-            PercentFullSand[x][y] = RandZeroToOne();
-            PercentFullRock[x][y] = 0;
-            printf("x: %d  Y: %d  Per: %f\n", x, y, PercentFullSand[x][y]);
-          }
-          AllBeach[x][y] = 'n';
-          cell_depth[x][y] = -LAND_HEIGHT;
-        } else if (x > INIT_BEACH) {
-          PercentFullSand[x][y] = 0;
-          PercentFullRock[x][y] = 0;
-          AllBeach[x][y] = 'n';
-          if (cell_depth[x][y] < DEPTH_SHOREFACE) {
-            cell_depth[x][y] = DEPTH_SHOREFACE;
-          }
-        } else {
-          printf("ugh! x: %d  Y: %d  Per: %f\n", x, y, PercentFullSand[x][y]);
-          PauseRun(x, y, -1);
-        }
-
-        Age[x][y] = 0;
-      }
-  } else
-    printf("have to pick an INITIAL_CONDITION_TYPE\n");
-  return;
-}
-
-void InitPert(void)
-/* Andrew's initial bump */
-{
-  int x, y;
-  int PWidth = 5;
-  int PHeight = 3;
-  int PYstart = 25;
-
-  if (INITIAL_PERT == 1)
-  /* Square perturbation */
-  {
-    /* Fill AllBeach areas */
-
-    for (x = INIT_BEACH; x <= INIT_BEACH + PHeight; x++) {
-      for (y = PYstart; y <= PYstart + PWidth; y++) {
-        PercentFullSand[x][y] = 1.0;
-        AllBeach[x][y] = 'y';
-      }
-    }
-
-    /* PercentFull Top */
-
-    for (y = PYstart - 1; y <= PYstart + PWidth + 1; y++) {
-      PercentFullSand[INIT_BEACH + PHeight + 1][y] = RandZeroToOne();
-    }
-
-    /* PercentFull Sides */
-
-    for (x = INIT_BEACH; x <= INIT_BEACH + PHeight; x++) {
-      PercentFullSand[x][PYstart - 1] = RandZeroToOne();
-      PercentFullSand[x][PYstart + PWidth + 1] = RandZeroToOne();
-    }
-  }
-
-  else if (INITIAL_PERT == 2)
-  /* Another Perturbation  - steep point */
-  {
-    x = INIT_BEACH;
-
-    PercentFullSand[x][17] = 0.8;
-    PercentFullSand[x][18] = 1.0;
-    AllBeach[x][18] = 'y';
-    PercentFullSand[x][19] = 0.8;
-
-    x = INIT_BEACH + 1;
-
-    PercentFullSand[x][17] = 0.6;
-    PercentFullSand[x][18] = 1.0;
-    AllBeach[x][18] = 'y';
-    PercentFullSand[x][19] = 0.6;
-
-    x = INIT_BEACH + 2;
-
-    PercentFullSand[x][17] = 0.2;
-    PercentFullSand[x][18] = 1.0;
-    AllBeach[x][18] = 'y';
-    PercentFullSand[x][19] = 0.2;
-
-    x = INIT_BEACH + 3;
-
-    PercentFullSand[x][18] = 0.3;
-  }
-}
-
 
 // Apply periodic boundary conditions to CEM arrays.
 void periodic_boundary_copy(void)

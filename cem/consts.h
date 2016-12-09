@@ -29,6 +29,8 @@ extern "C" {
 #define INIT_BEACH (20)
 // cell where initial conditions change from beach to rock LMV
 #define INIT_ROCK (5)
+// Initial pattern of rock types
+#define INITIAL_ROCK_TYPE (1)
 // theoretical depth in meters of continental shelf at x = INIT_BEACH
 #define INITIAL_DEPTH (10.)
 #define LAND_HEIGHT (1.)
@@ -85,10 +87,12 @@ extern "C" {
 // How much to maximize weathering rate above bare-rock rate at Wcrit? PWL
 #define N (4.)
 
-// 0: normal (columns/blocks),
-// 1: wiggly,
-// 2: one block,
-// 3: all sand, no  rock
+
+// NORMAL = 0,
+// DIFFUSIVE = 1,
+// WIGGLY = 2,
+// SQUARE_PERTURBATION = 3,
+// POINTED_PERTURBATION = 4;
 #define INITIAL_CONDITION_TYPE (0)
 // random seed:  control value = 1 completely random = -999
 #define SEED (1973)
@@ -135,10 +139,6 @@ extern "C" {
 #define NO_WEATHERING (5.0)
 // Disbale PauseRun subroutine
 #define NO_PAUSE_RUN (1)
-// Start with a bump? if =1-->square pert, if =2-->pointy pert
-#define INITIAL_PERT (0)
-// Shoreline is sinusoidal LMV
-#define DIFFUSIVE_HUMP (0)
 // Smooth starting conditions
 #define INITIAL_SMOOTH (0)
 // Smooth rock interface starting conditions LMV
