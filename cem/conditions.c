@@ -383,7 +383,20 @@ void InitRockBlocks(void)
  */
 void InitRockStripes()
 {
-
+    if(INIT_ROCK > 3)
+    {
+        int y;
+        for (y = 0; y < 2 *Y_MAX; y++)
+        {
+            int x;
+            for (x = 0; x < INIT_ROCK - 3; x++)
+            {
+                type_of_rock[x][y] = 'f';
+                topography[x][y] = kCliffHeightFast;
+            }
+        }
+        set_rock_blocks(type_of_rock + INIT_ROCK - 3, topography + INIT_ROCK - 3, X_MAX - (INIT_ROCK - 3), 2 * Y_MAX, NUMBER_CHUNK);
+    }
 }
 
 /**

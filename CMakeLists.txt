@@ -12,7 +12,7 @@ set (BUILD_SHARED_LIBS ON)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
-set(bmicem_sources cem/cem.c cem/rocks.c cem/utils.c bmi/bmi_cem.c)
+set(bmicem_sources cem/cem.c cem/rocks.c cem/conditions.c cem/utils.c bmi/bmi_cem.c)
 
 add_library(bmi_cem ${bmicem_sources})
 add_library(bmi_cem-static STATIC ${bmicem_sources})

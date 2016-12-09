@@ -40,15 +40,15 @@ const double kCliffHeightFast = 0;
 // Overall Shoreface Configuration Arrays - Data file information
 
 // Flag indicating of cell is entirely beach
-static char AllBeach[X_MAX][2 * Y_MAX];
+char AllBeach[X_MAX][2 * Y_MAX];
 // Flag indicating if cell is entirely rock LMV
-static char AllRock[X_MAX][2 * Y_MAX];
+char AllRock[X_MAX][2 * Y_MAX];
 // Fractional amount of cell full of sediment LMV
-static double PercentFullSand[X_MAX][2 * Y_MAX];
+double PercentFullSand[X_MAX][2 * Y_MAX];
 // Fractional amount of a cell full of rock LMV
-static double PercentFullRock[X_MAX][2 * Y_MAX];
+double PercentFullRock[X_MAX][2 * Y_MAX];
 // Array to control weathering rates of rock along the beach LMV
-static char **type_of_rock = NULL;
+char **type_of_rock = NULL;
 // Age since cell was deposited
 static int Age[X_MAX][2 * Y_MAX];
 
