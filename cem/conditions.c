@@ -194,7 +194,7 @@ int InitWiggly(void)
         for (y = start; y < end; y++)
         {
             rock_line[y] = rock_line[y] + Amp * sin(y * (curve * curveFactor) * 2.0 * PI / Y_MAX);
-            sand_line[y] = rock_line[y];
+            beach_line[y] = rock_line[y];
             if (rock_line[y] < Min || rock_line[y] > Max) return -1;
         }
     }
