@@ -168,6 +168,7 @@ void InitDiffusive(void)
     }
 }
 
+// TODO
 /**
  * Initialize sinusoidal coastline
  */
@@ -193,6 +194,7 @@ int InitWiggly(void)
         for (y = start; y < end; y++)
         {
             rock_line[y] = rock_line[y] + Amp * sin(y * (curve * curveFactor) * 2.0 * PI / Y_MAX);
+            sand_line[y] = rock_line[y];
             if (rock_line[y] < Min || rock_line[y] > Max) return -1;
         }
     }
@@ -209,24 +211,15 @@ void InitPert(int pert_type)
     int PHeight = 3;
     int PYstart = 25;
 
+    int yPeak = 18;
+
     switch(pert_type)
     {
         /* Square perturbation */
         case 1 :
-            /* Fill AllBeach areas */
-            for (x = INIT_BEACH; x <= INIT_BEACH + PHeight; x++)
+            for (y = PYstart; y <= PYstart + PWidth; y++)
             {
-                for (y = PYstart; y <= PYstart + PWidth; y++)
-                {
-                    PercentFullSand[x][y] = 1.0;
-                    AllBeach[x][y] = 'y';
-                }
-            }
-
-            /* PercentFull Top */
-            for (y = PYstart - 1; y <= PYstart + PWidth + 1; y++)
-            {
-                PercentFullSand[INIT_BEACH + PHeight + 1][y] = INITIAL_SMOOTH ? 0.5 : RandZeroToOne();
+                beach_line[y] = INIT_BEACH + PHeight;
             }
 
             /* PercentFull Sides */
@@ -236,32 +229,33 @@ void InitPert(int pert_type)
                 PercentFullSand[x][PYstart + PWidth + 1] =  INITIAL_SMOOTH ? 0.5 : RandZeroToOne();
             }
             break;
+
         /* Another Perturbation  - steep point */
         case 2 :
             x = INIT_BEACH;
 
-            PercentFullSand[x][17] = 0.8;
-            PercentFullSand[x][18] = 1.0;
-            AllBeach[x][18] = 'y';
-            PercentFullSand[x][19] = 0.8;
+            PercentFullSand[x][yPeak-1] = 0.8;
+            PercentFullSand[x][yPeak] = 1.0;
+            AllBeach[x][yPeak] = 'y';
+            PercentFullSand[x][yPeak+1] = 0.8;
 
-            x = INIT_BEACH + 1;
+            x++;
 
-            PercentFullSand[x][17] = 0.6;
-            PercentFullSand[x][18] = 1.0;
-            AllBeach[x][18] = 'y';
-            PercentFullSand[x][19] = 0.6;
+            PercentFullSand[x][yPeak - 1] = 0.6;
+            PercentFullSand[x][yPeak] = 1.0;
+            AllBeach[x][yPeak] = 'y';
+            PercentFullSand[x][yPeak + 1] = 0.6;
 
-            x = INIT_BEACH + 2;
+            x++;;
 
-            PercentFullSand[x][17] = 0.2;
-            PercentFullSand[x][18] = 1.0;
-            AllBeach[x][18] = 'y';
-            PercentFullSand[x][19] = 0.2;
+            PercentFullSand[x][yPeak - 1] = 0.2;
+            PercentFullSand[x][yPeak] = 1.0;
+            AllBeach[x][yPeak] = 'y';
+            PercentFullSand[x][yPeak + 1] = 0.2;
 
-            x = INIT_BEACH + 3;
+            x++;;
 
-            PercentFullSand[x][18] = 0.3;
+            PercentFullSand[x][yPeak] = 0.3;
             break;
     }
 }
@@ -378,6 +372,7 @@ void InitRockBlocks(void)
     printf("done block init\n");
 }
 
+// TODO
 /**
  * Initialize stiped rock pattern
  */
