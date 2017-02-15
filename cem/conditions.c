@@ -5,19 +5,8 @@
 #include "consts.h"
 #include "utils.h"
 
-extern double** cell_depth;
-extern char** AllBeach;
-extern char** AllRock;
-extern double** PercentFullSand;
-extern double** PercentFullRock;
-extern char** type_of_rock;
-extern double** topography;
-
-extern double kCliffHeightSlow;
-extern double kCliffHeightFast;
-
-static int* rock_line;
-static int* beach_line;
+static int *rock_line;
+static int *beach_line;
 
 enum ConditionType
 {
@@ -35,17 +24,18 @@ enum RockPattern
     BLOCK = 2
 };
 
-void InitBeach(void);
+void InitBeach(double **percent_full_sand, double **percent_full_rock, char **all_beach, char **all_rock, double **topography);
 void InitDiffusive(void);
 int InitWiggly(void);
-void InitPert(int pert_type);
-void InitRockBlocks(void);
-void InitRockStripes(void);
-void ApplySpecialConditions(void);
-void CopyRow(int start_row, int stop_row);
+void InitPert(int pert_type, double **percent_full_sand, char **all_beach);
+void InitRockBlocks(char **type_of_rock);
+void InitRockStripes(char **type_of_rock, double **topography);
+void ApplySpecialConditions(double **percent_full_sand, double **percent_full_rock, char **all_beach, char **all_rock, double **topography);
+void CopyData(int start_row, int stop_row, double **percent_full_sand, double **percent_full_rock, char **all_beach, char **all_rock, double **topography);
 
-void InitConds (void) 
+void InitConds (double **cell_depth, char **all_beach, char **all_rock, double **percent_full_sand, double **percent_full_rock, char **type_of_rock, double **topography)
 {
+
     int start = Y_MAX / 2;
     int end = Y_MAX + start;
 
@@ -53,7 +43,7 @@ void InitConds (void)
     beach_line = malloc(sizeof(int) * (end-start));
 
     /* Base beach conditions */
-    InitBeach();
+    InitBeach(percent_full_sand, percent_full_rock, all_beach, all_rock, topography);
     /* Add special characteristics */
     switch (INITIAL_CONDITION_TYPE)
     {
@@ -65,23 +55,23 @@ void InitConds (void)
                 printf("init: amplitude too great, trying again...\n");
             break;
         case SQUARE_PERTURBATION :
-            InitPert(1);
+            InitPert(1, percent_full_sand, all_beach);
             break;
         case POINTED_PERTURBATION :
-            InitPert(2);
+            InitPert(2, percent_full_sand, all_beach);
             break;
     }
 
-    ApplySpecialConditions();
+    ApplySpecialConditions(percent_full_sand, percent_full_rock, all_beach, all_rock, topography);
 
     /* apply rock type patterns */
     switch (INITIAL_ROCK_TYPE)
     {
         case STRIPE :
-            InitRockStripes();
+            InitRockStripes(type_of_rock, topography);
             break;
         case BLOCK :
-            InitRockBlocks();
+            InitRockBlocks(type_of_rock);
             break;
     }
 
@@ -92,7 +82,7 @@ void InitConds (void)
 /**
  * Fills in a flat beach with in
  */
-void InitBeach(void)
+void InitBeach(double **percent_full_sand, double **percent_full_rock, char **all_beach, char **all_rock, double **topography)
 {
     int col;
     int start = Y_MAX / 2;
@@ -106,49 +96,49 @@ void InitBeach(void)
 
         if( INIT_ROCK > 0){
             /* Fill in first row of rock */
-            PercentFullRock[0][col] = 1.0;
-            PercentFullSand[0][col] = 0.0;
-            AllRock[0][col] = 'y';
-            AllBeach[0][col] = 'y';
+            percent_full_rock[0][col] = 1.0;
+            percent_full_sand[0][col] = 0.0;
+            all_rock[0][col] = 'y';
+            all_beach[0][col] = 'y';
             topography[0][col] = kCliffHeightSlow;
             /* Fill in rock/sand interface row */
             float percent_rock = INITIAL_SMOOTH_ROCK ? 0.2 : RandZeroToOne();
-            PercentFullRock[INIT_ROCK][col] = percent_rock;
-            PercentFullSand[INIT_ROCK][col] = 1 - percent_rock;
-            AllRock[INIT_ROCK][col] = 'n';
-            AllBeach[INIT_ROCK][col] = 'y';
+            percent_full_rock[INIT_ROCK][col] = percent_rock;
+            percent_full_sand[INIT_ROCK][col] = 1 - percent_rock;
+            all_rock[INIT_ROCK][col] = 'n';
+            all_beach[INIT_ROCK][col] = 'y';
             topography[INIT_ROCK][col] = kCliffHeightSlow;
         }
         
         int beach_start = INIT_ROCK+1;
         /* Fill in first row of sand */
-        PercentFullRock[beach_start][col] = 0.0;
-        PercentFullSand[beach_start][col] = 1.0;
-        AllRock[beach_start][col] = 'n';
-        AllBeach[beach_start][col] = 'y';
+        percent_full_rock[beach_start][col] = 0.0;
+        percent_full_sand[beach_start][col] = 1.0;
+        all_rock[beach_start][col] = 'n';
+        all_beach[beach_start][col] = 'y';
         topography[beach_start][col] = 0;
         /* Fill in sand/ocean interface row */
-        PercentFullRock[beach_start][col] = 0.0;
-        PercentFullSand[INIT_BEACH][col] = INITIAL_SMOOTH ? 0.5 : RandZeroToOne();
-        AllRock[INIT_BEACH][col] = 'n';
-        AllBeach[INIT_BEACH][col] = 'n';
+        percent_full_rock[beach_start][col] = 0.0;
+        percent_full_sand[INIT_BEACH][col] = INITIAL_SMOOTH ? 0.5 : RandZeroToOne();
+        all_rock[INIT_BEACH][col] = 'n';
+        all_beach[INIT_BEACH][col] = 'n';
         topography[INIT_BEACH][col] = 0;
         
         int ocean_start = INIT_BEACH + 1;
         /* Fill in first row of ocean */
-        PercentFullRock[beach_start][col] = 0.0;
-        PercentFullSand[ocean_start][col] = 0.0;
-        AllRock[ocean_start][col] = 'n';
-        AllBeach[ocean_start][col] = 'n';
+        percent_full_rock[beach_start][col] = 0.0;
+        percent_full_sand[ocean_start][col] = 0.0;
+        all_rock[ocean_start][col] = 'n';
+        all_beach[ocean_start][col] = 'n';
         topography[ocean_start][col] = 0;
     }
 
     /* Copy rock into all rows in between 0 and INIT_ROCK*/
-    CopyRow(0, INIT_ROCK);
+    CopyData(0, INIT_ROCK, percent_full_sand, percent_full_rock, all_beach, all_rock, topography);
     /* Copy sand into all rows in between INIT_ROCK and INIT_BEACH*/
-    CopyRow(INIT_ROCK + 1, INIT_BEACH);
+    CopyData(INIT_ROCK + 1, INIT_BEACH, percent_full_sand, percent_full_rock, all_beach, all_rock, topography);
     /* Copy ocean into all remaining rows */
-    CopyRow(INIT_BEACH + 1, X_MAX);
+    CopyData(INIT_BEACH + 1, X_MAX, percent_full_sand, percent_full_rock, all_beach, all_rock, topography);
 }
 
 /**
@@ -204,7 +194,7 @@ int InitWiggly(void)
 }
 
 /* Andrew's initial bump */
-void InitPert(int pert_type)
+void InitPert(int pert_type, double **percent_full_sand, char **all_beach)
 {
     int x, y;
     int PWidth = 5;
@@ -225,8 +215,8 @@ void InitPert(int pert_type)
             /* PercentFull Sides */
             for (x = INIT_BEACH; x <= INIT_BEACH + PHeight; x++)
             {
-                PercentFullSand[x][PYstart - 1] =  INITIAL_SMOOTH ? 0.5 : RandZeroToOne();
-                PercentFullSand[x][PYstart + PWidth + 1] =  INITIAL_SMOOTH ? 0.5 : RandZeroToOne();
+                percent_full_sand[x][PYstart - 1] =  INITIAL_SMOOTH ? 0.5 : RandZeroToOne();
+                percent_full_sand[x][PYstart + PWidth + 1] =  INITIAL_SMOOTH ? 0.5 : RandZeroToOne();
             }
             break;
 
@@ -234,28 +224,28 @@ void InitPert(int pert_type)
         case 2 :
             x = INIT_BEACH;
 
-            PercentFullSand[x][yPeak-1] = 0.8;
-            PercentFullSand[x][yPeak] = 1.0;
-            AllBeach[x][yPeak] = 'y';
-            PercentFullSand[x][yPeak+1] = 0.8;
+            percent_full_sand[x][yPeak-1] = 0.8;
+            percent_full_sand[x][yPeak] = 1.0;
+            all_beach[x][yPeak] = 'y';
+            percent_full_sand[x][yPeak+1] = 0.8;
 
             x++;
 
-            PercentFullSand[x][yPeak - 1] = 0.6;
-            PercentFullSand[x][yPeak] = 1.0;
-            AllBeach[x][yPeak] = 'y';
-            PercentFullSand[x][yPeak + 1] = 0.6;
+            percent_full_sand[x][yPeak - 1] = 0.6;
+            percent_full_sand[x][yPeak] = 1.0;
+            all_beach[x][yPeak] = 'y';
+            percent_full_sand[x][yPeak + 1] = 0.6;
 
             x++;;
 
-            PercentFullSand[x][yPeak - 1] = 0.2;
-            PercentFullSand[x][yPeak] = 1.0;
-            AllBeach[x][yPeak] = 'y';
-            PercentFullSand[x][yPeak + 1] = 0.2;
+            percent_full_sand[x][yPeak - 1] = 0.2;
+            percent_full_sand[x][yPeak] = 1.0;
+            all_beach[x][yPeak] = 'y';
+            percent_full_sand[x][yPeak + 1] = 0.2;
 
             x++;;
 
-            PercentFullSand[x][yPeak] = 0.3;
+            percent_full_sand[x][yPeak] = 0.3;
             break;
     }
 }
@@ -263,7 +253,7 @@ void InitPert(int pert_type)
 /**
  * Shift rock and beach lines if necessary
  */
-void ApplySpecialConditions()
+void ApplySpecialConditions(double **percent_full_sand, double **percent_full_rock, char **all_beach, char **all_rock, double **topography)
 {
     int col;
     int start = Y_MAX / 2;
@@ -277,20 +267,20 @@ void ApplySpecialConditions()
         if (rockline != INIT_ROCK)
         {
             /* adjust rock line */
-            PercentFullRock[rockline][col] = INITIAL_SMOOTH_ROCK ? 0.2 : RandZeroToOne();
-            AllRock[rockline][col] = 'n';
+            percent_full_rock[rockline][col] = INITIAL_SMOOTH_ROCK ? 0.2 : RandZeroToOne();
+            all_rock[rockline][col] = 'n';
 
             for(row = rockline + 1; row <= INIT_ROCK; row ++)
             {
-                PercentFullRock[row][col] = 0.0;
-                AllRock[row][col] = 'n';
+                percent_full_rock[row][col] = 0.0;
+                all_rock[row][col] = 'n';
                 topography[row][col] = 0;
             }
 
             for(row = INIT_ROCK; row < rockline; row ++)
             {
-                PercentFullRock[row][col] = 1.0;
-                AllRock[row][col] = 'y';
+                percent_full_rock[row][col] = 1.0;
+                all_rock[row][col] = 'y';
                 topography[row][col] = kCliffHeightSlow;
             }
         }
@@ -299,19 +289,19 @@ void ApplySpecialConditions()
         if(sandline != INIT_BEACH)
         {
             /* adjust sand line */
-            PercentFullSand[sandline][col] = INITIAL_SMOOTH ? 0.5 : RandZeroToOne();
-            AllBeach[sandline][col] = 'n';
+            percent_full_sand[sandline][col] = INITIAL_SMOOTH ? 0.5 : RandZeroToOne();
+            all_beach[sandline][col] = 'n';
 
             for(row = sandline + 1; row <= INIT_BEACH; row ++)
             {
-                PercentFullSand[row][col] = 0.0;
-                AllBeach[row][col] = 'n';
+                percent_full_sand[row][col] = 0.0;
+                all_beach[row][col] = 'n';
             }
 
             for(row = INIT_BEACH; row < sandline; row ++)
             {
-                PercentFullSand[row][col] = 1.0;
-                AllBeach[row][col] = 'y';
+                percent_full_sand[row][col] = 1.0;
+                all_beach[row][col] = 'y';
             }
         }
     }
@@ -320,7 +310,7 @@ void ApplySpecialConditions()
 /**
  * Initialize blocky rock pattern
  */
-void InitRockBlocks(void)
+void InitRockBlocks(char **type_of_rock)
 {
     int start = Y_MAX / 2;
     int end = Y_MAX + start;
@@ -376,7 +366,7 @@ void InitRockBlocks(void)
 /**
  * Initialize stiped rock pattern
  */
-void InitRockStripes()
+void InitRockStripes(char **type_of_rock, double **topography)
 {
     if(INIT_ROCK > 3)
     {
@@ -395,18 +385,18 @@ void InitRockStripes()
 }
 
 /**
- * Copy one row to a block of rows
+ * Copy one row pf beach data to a block of rows
  */
-void CopyRow(int start_row, int stop_row)
+void CopyData(int start_row, int stop_row, double **percent_full_sand, double **percent_full_rock, char **all_beach, char **all_rock, double **topography)
 {
     int start = Y_MAX / 2;
     int row;
     for(row = start_row + 1; row < stop_row; row++)
     {
-        memcpy(PercentFullRock[row] + start, PercentFullRock[start_row] + start, Y_MAX*sizeof(double));
-        memcpy(PercentFullSand[row] + start, PercentFullSand[start_row] + start, Y_MAX*sizeof(double));
-        memcpy(AllRock[row] + start, AllRock[start_row] + start, Y_MAX*sizeof(char));
-        memcpy(AllBeach[row] + start, AllBeach[start_row] + start, Y_MAX*sizeof(char));
+        memcpy(percent_full_rock[row] + start, percent_full_rock[start_row] + start, Y_MAX*sizeof(double));
+        memcpy(percent_full_sand[row] + start, percent_full_sand[start_row] + start, Y_MAX*sizeof(double));
+        memcpy(all_rock[row] + start, all_rock[start_row] + start, Y_MAX*sizeof(char));
+        memcpy(all_beach[row] + start, all_beach[start_row] + start, Y_MAX*sizeof(char));
         memcpy(topography[row] + start, topography[start_row] + start, Y_MAX*sizeof(double));
     }
 }

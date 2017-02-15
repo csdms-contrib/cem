@@ -143,6 +143,10 @@ extern "C" {
 #define INITIAL_SMOOTH (0)
 // Smooth rock interface starting conditions LMV
 #define INITIAL_SMOOTH_ROCK (1)
+// Height for fast weather rock
+#define kCliffHeightFast (30.0)
+// Height for slow weathering rock
+#define kCliffHeightSlow (0.0)
 // Alongshore length of a chunk of fast or slow weathering rock LMV
 // (used to be Y_MAX/NumberChunk)
 // #define CHUNK_LENGTH (100)

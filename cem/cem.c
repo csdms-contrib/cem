@@ -31,22 +31,18 @@ double time_step = 1; // days; reflects rate of sediment transport per time step
 static const double kAngleFactor = 1.;
 
 // Depth array
-static double cell_depth[X_MAX][2 * Y_MAX];
-// Cliff height above sea level for slow weathering rock PWL
-const double kCliffHeightSlow = 30;
-// Cliff height above sea level for fast weathering rock PWL
-const double kCliffHeightFast = 0;
+double **cell_depth;
 
 // Overall Shoreface Configuration Arrays - Data file information
 
 // Flag indicating of cell is entirely beach
-char AllBeach[X_MAX][2 * Y_MAX];
+char **AllBeach;
 // Flag indicating if cell is entirely rock LMV
-char AllRock[X_MAX][2 * Y_MAX];
+char **AllRock = NULL;
 // Fractional amount of cell full of sediment LMV
-double PercentFullSand[X_MAX][2 * Y_MAX];
+double **PercentFullSand = NULL;
 // Fractional amount of a cell full of rock LMV
-double PercentFullRock[X_MAX][2 * Y_MAX];
+double **PercentFullRock = NULL;
 // Array to control weathering rates of rock along the beach LMV
 char **type_of_rock = NULL;
 // Age since cell was deposited
@@ -263,6 +259,11 @@ int cem_initialize(void) {
     const int n_cols = 2 * Y_MAX;
 
     topography = (double**)malloc2d(n_rows, n_cols, sizeof(double));
+    AllBeach = (char**)malloc2d(n_rows, n_cols, sizeof(char));
+    AllRock = (char**)malloc2d(n_rows, n_cols, sizeof(char));
+    PercentFullSand = (double**)malloc2d(n_rows, n_cols, sizeof(double));
+    PercentFullRock = (double**)malloc2d(n_rows, n_cols, sizeof(double));
+    cell_depth = (double**)malloc2d(n_rows, n_cols, sizeof(double));
     shelf_depth = (double**)malloc2d(n_rows, n_cols, sizeof(double));
     wave_h_sig = (double**)malloc2d(n_rows, n_cols, sizeof(double));
     wave_dir = (double**)malloc2d(n_rows, n_cols, sizeof(double));
@@ -287,7 +288,7 @@ int cem_initialize(void) {
     if (StartFromFile == 'n') {
       printf("Saving Filename? \n");
       scanf("%s", savefilename);
-      InitConds();
+      InitConds(cell_depth, AllBeach, AllRock, PercentFullSand,  PercentFullRock, type_of_rock, topography);
       printf("InitConds OK \n");
     }
   }
@@ -297,7 +298,7 @@ int cem_initialize(void) {
   }
 
   else {
-    InitConds();
+    InitConds(cell_depth, AllBeach, AllRock, PercentFullSand,  PercentFullRock, type_of_rock, topography);
   }
 
   /* Set Periodic Boundary Conditions */
@@ -536,6 +537,7 @@ float FindWaveAngle(void)
   return Angle;
 }
 
+
 void FindBeachCells(int YStart)
 /* Determines locations of beach cells moving from left to right direction
    */
@@ -715,6 +717,10 @@ void FindNextCell(int x, int y, int z)
    and Y[] */
 /* New thinking...5/04 LMV */
 {
+	if (x == X_MAX - 1 || y == 2 * Y_MAX - 1)
+	{
+		return;
+	}
   if ((X[z - 1] == X[z]) && (Y[z - 1] == Y[z] - 1))
   /* came from left */
   {
