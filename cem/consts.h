@@ -28,7 +28,7 @@ extern "C" {
 // cell where intial conditions changes from beach to ocean
 #define INIT_BEACH (20)
 // cell where initial conditions change from beach to rock LMV
-#define INIT_ROCK (5)
+#define INIT_ROCK (0)
 // Initial pattern of rock types
 #define INITIAL_ROCK_TYPE (1)
 // theoretical depth in meters of continental shelf at x = INIT_BEACH

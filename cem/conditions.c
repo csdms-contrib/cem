@@ -31,7 +31,7 @@ void InitPert(int pert_type, double **percent_full_sand, char **all_beach);
 void InitRockBlocks(char **type_of_rock);
 void InitRockStripes(char **type_of_rock, double **topography);
 void ApplySpecialConditions(double **percent_full_sand, double **percent_full_rock, char **all_beach, char **all_rock, double **topography);
-void CopyData(int start_row, int stop_row, double **percent_full_sand, double **percent_full_rock, char **all_beach, char **all_rock, double **topography);
+void CopyRow(int start_row, int stop_row, double **percent_full_sand, double **percent_full_rock, char **all_beach, char **all_rock, double **topography);
 
 void InitConds (double **cell_depth, char **all_beach, char **all_rock, double **percent_full_sand, double **percent_full_rock, char **type_of_rock, double **topography)
 {
@@ -87,6 +87,7 @@ void InitBeach(double **percent_full_sand, double **percent_full_rock, char **al
     int col;
     int start = Y_MAX / 2;
     int end = Y_MAX + start;
+	int beach_start = 0;
 
     /* Fill in conditions on transition rows */
     for(col = start; col < end; col ++)
@@ -108,9 +109,10 @@ void InitBeach(double **percent_full_sand, double **percent_full_rock, char **al
             all_rock[INIT_ROCK][col] = 'n';
             all_beach[INIT_ROCK][col] = 'y';
             topography[INIT_ROCK][col] = kCliffHeightSlow;
+            
+            int beach_start = INIT_ROCK+1;
         }
         
-        int beach_start = INIT_ROCK+1;
         /* Fill in first row of sand */
         percent_full_rock[beach_start][col] = 0.0;
         percent_full_sand[beach_start][col] = 1.0;
@@ -134,11 +136,11 @@ void InitBeach(double **percent_full_sand, double **percent_full_rock, char **al
     }
 
     /* Copy rock into all rows in between 0 and INIT_ROCK*/
-    CopyData(0, INIT_ROCK, percent_full_sand, percent_full_rock, all_beach, all_rock, topography);
+    CopyRow(0, beach_start, percent_full_sand, percent_full_rock, all_beach, all_rock, topography);
     /* Copy sand into all rows in between INIT_ROCK and INIT_BEACH*/
-    CopyData(INIT_ROCK + 1, INIT_BEACH, percent_full_sand, percent_full_rock, all_beach, all_rock, topography);
+    CopyRow(beach_start, INIT_BEACH, percent_full_sand, percent_full_rock, all_beach, all_rock, topography);
     /* Copy ocean into all remaining rows */
-    CopyData(INIT_BEACH + 1, X_MAX, percent_full_sand, percent_full_rock, all_beach, all_rock, topography);
+    CopyRow(INIT_BEACH + 1, X_MAX, percent_full_sand, percent_full_rock, all_beach, all_rock, topography);
 }
 
 /**
@@ -387,7 +389,7 @@ void InitRockStripes(char **type_of_rock, double **topography)
 /**
  * Copy one row pf beach data to a block of rows
  */
-void CopyData(int start_row, int stop_row, double **percent_full_sand, double **percent_full_rock, char **all_beach, char **all_rock, double **topography)
+void CopyRow(int start_row, int stop_row, double **percent_full_sand, double **percent_full_rock, char **all_beach, char **all_rock, double **topography)
 {
     int start = Y_MAX / 2;
     int row;
