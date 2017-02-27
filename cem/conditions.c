@@ -87,7 +87,7 @@ void InitBeach(double **percent_full_sand, double **percent_full_rock, char **al
     int col;
     int start = Y_MAX / 2;
     int end = Y_MAX + start;
-	int beach_start = 0;
+	int beach_start = INIT_ROCK > 0 ? INIT_ROCK+1 : 0;
 
     /* Fill in conditions on transition rows */
     for(col = start; col < end; col ++)
@@ -109,8 +109,6 @@ void InitBeach(double **percent_full_sand, double **percent_full_rock, char **al
             all_rock[INIT_ROCK][col] = 'n';
             all_beach[INIT_ROCK][col] = 'y';
             topography[INIT_ROCK][col] = kCliffHeightSlow;
-            
-            int beach_start = INIT_ROCK+1;
         }
         
         /* Fill in first row of sand */
@@ -120,8 +118,8 @@ void InitBeach(double **percent_full_sand, double **percent_full_rock, char **al
         all_beach[beach_start][col] = 'y';
         topography[beach_start][col] = 0;
         /* Fill in sand/ocean interface row */
-        percent_full_rock[beach_start][col] = 0.0;
-        percent_full_sand[INIT_BEACH][col] = INITIAL_SMOOTH ? 0.5 : RandZeroToOne();
+        percent_full_rock[INIT_BEACH][col] = 0.0;
+		percent_full_sand[INIT_BEACH][col] = INITIAL_SMOOTH ? 0.5 : RandZeroToOne();
         all_rock[INIT_BEACH][col] = 'n';
         all_beach[INIT_BEACH][col] = 'n';
         topography[INIT_BEACH][col] = 0;

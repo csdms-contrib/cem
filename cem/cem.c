@@ -381,33 +381,36 @@ int cem_update(void) {
       }
 
       /* LMV */
-      while (FellOffRockArray == 'y') {
-        FindRockCells(FindRockStart);
-        /*printf("FoundRockCells: %d GetO = %c \n",
-         * FindRockStart,FellOffRockArray); */
-        FindRockStart += FindCellError;
-        if (FellOffRockArray == 'y') {
-          /*printf("NOODLE  !!!!!FoundRockCells: %d GetO = %c \n",
-           * FindRockStart,FellOffRockArray); */
-          /*PauseRun(1,1,-1); */
-        }
+	  if (INIT_ROCK > 0)
+	  {
+		  while (FellOffRockArray == 'y') {
+			  FindRockCells(FindRockStart);
+			  /*printf("FoundRockCells: %d GetO = %c \n",
+			   * FindRockStart,FellOffRockArray); */
+			  FindRockStart += FindCellError;
+			  if (FellOffRockArray == 'y') {
+				  /*printf("NOODLE  !!!!!FoundRockCells: %d GetO = %c \n",
+				   * FindRockStart,FellOffRockArray); */
+				   /*PauseRun(1,1,-1); */
+			  }
 
-        if (FindRockStart > Y_MAX / 2 + 1) {
-          printf("Stopped Finding Rock - done %d %d", FindRockStart,
-                 Y_MAX / 2 - 5);
-          if (SAVE_FILE) SaveSandToFile();
-          return 1;
-        }
-      }
+			  if (FindRockStart > Y_MAX / 2 + 1) {
+				  printf("Stopped Finding Rock - done %d %d", FindRockStart,
+					  Y_MAX / 2 - 5);
+				  if (SAVE_FILE) SaveSandToFile();
+				  return 1;
+			  }
+		  }
 
-      if (debug0) {
-        printf("going to pause after finding beach, rock\n");
-        PauseRun(58, 269, -1);
-      }
+		  if (debug0) {
+			  printf("going to pause after finding beach, rock\n");
+			  PauseRun(58, 269, -1);
+		  }
 
-      if (INITIAL_CONDITION_TYPE != 3) {
-        RockCalculations();
-      }
+		  if (INITIAL_CONDITION_TYPE != 3) {
+			  RockCalculations();
+		  }
+	  }
       /*LMV*/ ShadowSweep();
 
       DetermineAngles();
@@ -448,6 +451,11 @@ int cem_finalize(void) {
   free2d((void**)wave_h_sig);
   free2d((void**)wave_dir);
   free2d((void**)type_of_rock);
+  free2d((void**)AllBeach);
+  free2d((void**)AllRock);
+  free2d((void**)PercentFullSand);
+  free2d((void**)PercentFullRock);
+  free2d((void**)cell_depth);
 
   printf("Run Complete.  Output file: %s \n", savefilename);
 
@@ -628,6 +636,10 @@ void FindRockCells(int YStart)
 /* This will define TotalRockCells for this time step
    */
 {
+	if (INIT_ROCK == 0)
+	{
+		return;
+	}
   int y, z, xstart; /* local iterators */
 
   /* Starting at left end, find the x - value for first cell that is 'allbeach'
@@ -3595,10 +3607,9 @@ void FixBeach(void)
   else
     sweepsign = 0;
 
-  for (x = 1; x < ShadowXMax - 1; x++) {
+  for (x = 1; x < ShadowXMax - 1; x++) {	
     for (i = 1; i < 2 * Y_MAX - 1;
-         i++) { /* RCL: changing loops to ignore border */
-
+         i++) { /* RCL: changing loops to ignore border */		
       if (sweepsign == 1)
         y = i;
       else
@@ -3769,60 +3780,64 @@ void FixBeach(void)
                        y + 1, PercentFullSand[x][y + 1]);
             }
 
-          } else {
-            /* if (debug9) */
-            printf("Complete fixbeach breakdown x: %d  y: %d\n", x, y);
-            /*if (debug9) PauseRun(x,y,-1); */
+		  }
+		  else {
+			  if (debug9) 
+			  printf("Complete fixbeach breakdown x: %d  y: %d\n", x, y);
+			  /*if (debug9) PauseRun(x,y,-1); */
 
-            xstart = X_MAX - 1;
-            while (AllBeach[xstart][y] == 'n') {
-              xstart -= 1;
-            }
-            xstart += 1;
+			  xstart = X_MAX - 1;
+			  while (AllBeach[xstart][y] == 'n') {
+				  xstart -= 1;
+			  }
+			  xstart += 1;
 
-            /* printf("Moving random sand from X: %d, Y: %d, to X: %d, Y: %d\n",
-               x, y, xstart, y);
-               printf("moving this much: %f\n", PercentFullSand[x][y]);
-               printf("PFS Before move: %f\n", PercentFullSand[xstart][y]); */
+			  /* printf("Moving random sand from X: %d, Y: %d, to X: %d, Y: %d\n",
+				 x, y, xstart, y);
+				 printf("moving this much: %f\n", PercentFullSand[x][y]);
+				 printf("PFS Before move: %f\n", PercentFullSand[xstart][y]); */
 
-            PercentFullSand[xstart][y] += PercentFullSand[x][y];
-            PercentFullSand[x][y] = 0.0;
-            AllBeach[x][y] = 'n';
+			  PercentFullSand[xstart][y] += PercentFullSand[x][y];
+			  PercentFullSand[x][y] = 0.0;
+			  AllBeach[x][y] = 'n';
 
-            printf("PFS After move: %f \n", PercentFullSand[xstart][y]);
+			  // printf("PFS After move: %f \n", PercentFullSand[xstart][y]);
 
-            xstart = X_MAX - 1;
-            while (AllRock[xstart][y] == 'n') {
-              xstart -= 1;
-            }
-            xstart += 1;
+			  if (INIT_ROCK > 0)
+			  {
+				  xstart = X_MAX - 1;
+				  while (AllRock[xstart][y] == 'n') {
+					  xstart -= 1;
+				  }
+				  xstart += 1;
 
-            printf("Moving bit of rock from X: %d, Y: %d, to X: %d, Y: %d\n", x,
-                   y, xstart, y);
-            printf("moving this much: %f\n", PercentFullRock[x][y]);
-            printf("PFR of receiving cell before move: %f\n",
-                   PercentFullRock[xstart][y]);
+				  printf("Moving bit of rock from X: %d, Y: %d, to X: %d, Y: %d\n", x,
+					  y, xstart, y);
+				  printf("moving this much: %f\n", PercentFullRock[x][y]);
+				  printf("PFR of receiving cell before move: %f\n",
+					  PercentFullRock[xstart][y]);
 
-            PercentFullRock[xstart][y] += PercentFullRock[x][y];
-            PercentFullRock[x][y] = 0.0;
-            AllRock[x][y] = 'n';
-            printf("PFR After move: %f \n", PercentFullRock[xstart][y]);
-            if (PercentFullRock[xstart][y] >= 1.0) {
-              AllRock[xstart][y] = 'y';
-              PercentFullRock[xstart + 1][y] +=
-                  (PercentFullRock[xstart][y] - 1.0);
-              PercentFullRock[xstart][y] = 1.0;
-              if (PercentFullRock[xstart + 1][y] >= 1.0)
-                printf("rock spilled over\n");
-              printf("after second move PFR = %f ", PercentFullRock[xstart][y]);
-              printf("and above cell PFR = %f \n",
-                     PercentFullRock[xstart + 1][y]);
-            }
-          }
-          PercentFullSand[x][y] = 0.0;
-          AllBeach[x][y] = 'n';
+				  PercentFullRock[xstart][y] += PercentFullRock[x][y];
+				  PercentFullRock[x][y] = 0.0;
+				  AllRock[x][y] = 'n';
+				  printf("PFR After move: %f \n", PercentFullRock[xstart][y]);
+				  if (PercentFullRock[xstart][y] >= 1.0) {
+					  AllRock[xstart][y] = 'y';
+					  PercentFullRock[xstart + 1][y] +=
+						  (PercentFullRock[xstart][y] - 1.0);
+					  PercentFullRock[xstart][y] = 1.0;
+					  if (PercentFullRock[xstart + 1][y] >= 1.0)
+						  printf("rock spilled over\n");
+					  printf("after second move PFR = %f ", PercentFullRock[xstart][y]);
+					  printf("and above cell PFR = %f \n",
+						  PercentFullRock[xstart + 1][y]);
+				  }
+			  }
+			  PercentFullSand[x][y] = 0.0;
+			  AllBeach[x][y] = 'n';
 
-          if (debug9) printf("\n");
+			  if (debug9) printf("\n");
+		  }
 
           /* If we have overfilled any of the cells in this loop, need to
            * OopsImFull() */

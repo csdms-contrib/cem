@@ -10,7 +10,7 @@ void **malloc2d(size_t n_rows, size_t n_cols, size_t itemsize)
   void **matrix = malloc(sizeof(char*) * n_rows);
   matrix[0] = malloc(itemsize * n_rows * n_cols);
   for (i = 1; i < n_rows ; i++)
-    matrix[i] = (char *)*matrix + (i - 1)*sizeof(char*) + n_cols * itemsize;
+    matrix[i] = (char *)*matrix + i*n_cols * itemsize;
 
   return matrix;
 }
@@ -81,5 +81,5 @@ void stripe_cem_matrix(void **matrix, int n_rows, int n_cols, int itemsize,
  */
 float RandZeroToOne(void)
 {
-  return (float)rand()/RAND_MAX;
+	return (float)rand() / RAND_MAX;
 }
