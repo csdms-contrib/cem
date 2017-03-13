@@ -15,6 +15,7 @@ void apply_periodic_boundary(void *array, const int itemsize,
 void repeat_mem(void *dst, const int len, void *block, int block_len);
 void stripe_cem_matrix(void **matrix, int n_rows, int n_cols, int itemsize,
     void *stripe, int nitems);
+float RandZeroToOne(void);
 
 
 #if defined(__cplusplus)

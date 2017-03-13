@@ -1,10 +1,6 @@
 #include "utils.h"
 #include "rocks.h"
-
-
-extern double kCliffHeightSlow;
-extern double kCliffHeightFast;
-
+#include "consts.h"
 
 // LMV Assign fast and slow weathering portions
 // Divide rows of rocks into fast and slow rock types.
