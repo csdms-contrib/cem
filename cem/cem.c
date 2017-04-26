@@ -574,17 +574,15 @@ void FindBeachCells(int YStart)
   if (debug1) printf("FirstX: %3d  FirstY: %3d  z: 0 \n", X[0], Y[0]);
 
   z = 0;
-  X[z - 1] = X[z];
-  Y[z - 1] = Y[z] - 1;
 
   while ((Y[z] < 2 * Y_MAX - 1) && (z < MaxBeachLength - 1)) {
-    z++;
     NextX = -2;
     NextY = -2;
     BehindX = -2;
     BehindY = -2;
 
-    FindNextCell(X[z - 1], Y[z - 1], z - 1);
+    FindNextCell(X[z], Y[z], z);
+    z++;
     X[z] = NextX;
     Y[z] = NextY;
     XBehind[z] = BehindX;
@@ -733,7 +731,7 @@ void FindNextCell(int x, int y, int z)
 	{
 		return;
 	}
-  if ((X[z - 1] == X[z]) && (Y[z - 1] == Y[z] - 1))
+  if (z == 0 ||(X[z - 1] == X[z]) && (Y[z - 1] == Y[z] - 1))
   /* came from left */
   {
     if ((PercentFullSand[x + 1][y] + PercentFullRock[x + 1][y]) > 0.0) {

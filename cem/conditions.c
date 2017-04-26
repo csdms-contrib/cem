@@ -126,7 +126,7 @@ void InitBeach(double **percent_full_sand, double **percent_full_rock, char **al
         
         int ocean_start = INIT_BEACH + 1;
         /* Fill in first row of ocean */
-        percent_full_rock[beach_start][col] = 0.0;
+        percent_full_rock[ocean_start][col] = 0.0;
         percent_full_sand[ocean_start][col] = 0.0;
         all_rock[ocean_start][col] = 'n';
         all_beach[ocean_start][col] = 'n';
