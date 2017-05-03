@@ -637,5 +637,7 @@ register_bmi_cem(BMI_Model *model)
     model->get_grid_y = NULL;
     model->get_grid_z = NULL;
 
+    model->get_grid_face_count = NULL;
+
     return model;
 }
