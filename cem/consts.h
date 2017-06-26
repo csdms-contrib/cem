@@ -12,9 +12,9 @@ extern "C" {
 // size of cells (meters)
 #define CELL_WIDTH (100.)
 // number of cells in x (cross-shore) direction
-#define X_MAX (50)
+#define X_MAX (5)
 // number of cells in y (longshore) direction
-#define Y_MAX (200)
+#define Y_MAX (10)
 
 // maximum length of arrays that contain beach data at each time step
 #define MaxBeachLength (8 * Y_MAX)
@@ -26,7 +26,7 @@ extern "C" {
 // minimum depth of shoreface due to wave action (meters)
 #define DEPTH_SHOREFACE (10.)
 // cell where intial conditions changes from beach to ocean
-#define INIT_BEACH (20)
+#define INIT_BEACH (10)
 // cell where initial conditions change from beach to rock LMV
 #define INIT_ROCK (0)
 // Initial pattern of rock types
@@ -99,7 +99,7 @@ extern "C" {
 // time step to begin saving files
 #define START_SAVING_AT (0)
 // space between saved files
-#define SAVE_SPACING (365)
+#define SAVE_SPACING (1)
 
 // char savefilename[2048] = "CEM";
 // char readfilename[2048] = "CEM_3285.out";
@@ -121,7 +121,7 @@ extern "C" {
 // 2 = array output
 #define SAVE_FILE (2)
 // Save/update age of cells?
-#define SAVE_AGE (1)
+#define SAVE_AGE (0)
 // Save line instead of whole array?
 #define SAVE_LINE (1)
 // ask prompts for file names, etc?

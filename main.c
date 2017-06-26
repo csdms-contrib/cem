@@ -38,7 +38,7 @@ int main(int argc, char *argv[]) {
 
   {
     int i;
-    const int n_steps = 10;
+    const int n_steps = 1;
     double time;
 
     for (i = 0; i < n_steps; i++) {
@@ -54,10 +54,10 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
-    fprintf(stdout, "Running until t = %f... ", 1000.5);
-    if (cem->update_until(cem->self, 1000.5) == 0 &&
+    fprintf(stdout, "Running until t = %f... ", 3.);
+    if (cem->update_until(cem->self, 3) == 0 &&
         cem->get_current_time(cem->self, &time) == 0) {
-      if (fabs(time - 1000.5) < 1e-6)
+      if (fabs(time - 3) < 1e-6)
         fprintf(stdout, "PASS\n");
       else {
         fprintf(stdout, "%f\n", time);

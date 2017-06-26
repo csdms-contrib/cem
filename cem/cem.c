@@ -23,7 +23,7 @@ double **wave_dir = NULL;  // SWAN wave angles.
 
 int current_time_step = 0;  // Time step of current calculation
 double current_time = 0.;  // Current model time
-double stop_after = 36500; // Stop after what number of time steps
+double stop_after = 10; // Stop after what number of time steps
 double time_step = 1; // days; reflects rate of sediment transport per time step
 
 
@@ -60,8 +60,8 @@ static FILE *ReadWaveFile;
 static FILE *ReadRealWaveFile;
 static FILE *ReadControlFile;
 
-static char savefilename[2048] = "CEM";
-static char readfilename[2048] = "CEM_3285.out";
+static char savefilename[2048] = "../output/CEM";
+static char readfilename[2048] = "../input/benchmark_config.txt";
 // Input Wave Distribution file: no = 0, binned file = 1,
 // angle/period/height file = 2
 // #define WAVE_IN (0)
@@ -152,7 +152,7 @@ static double WaveAngleIn;
 static double WaveHeightIn;
 static double WavePeriodIn;
 
-static char StartFromFile = 'n'; // start from saved file?
+static char StartFromFile = 'y'; // start from saved file?
 
 static double Period = 10.0; // seconds
 static double OffShoreWvHt = 2.0; // meters
@@ -332,7 +332,7 @@ int cem_update(void) {
     /*  Time Step iteration - compute same wave angle for Duration time steps */
 
     /*  Calculate Wave Angle */
-    WaveAngle = FindWaveAngle();
+	  WaveAngle = PI / 4;  // FindWaveAngle();
 
     /* output wave data */
     if (WAVE_DATA == 'y') WaveOutFile();
@@ -437,6 +437,8 @@ int cem_update(void) {
         if (SAVE_LINE) SaveLineToFile();
         if (SAVE_FILE) SaveSandToFile();
       }
+
+	  SaveSandToFile();
 
       current_time_step++;
       current_time += time_step;
@@ -2838,7 +2840,7 @@ void FixFlow(void)
     if (FlowThroughCell[i] == 'R') { /*Flow from a Right cell (to a Right cell
                                         or a Convergent cell) */
 
-      if (AllBeach[XBehind[i]][YBehind[i]] == 'y') {
+      if (XBehind[i] > -1 && YBehind[i] > -1 && AllBeach[XBehind[i]][YBehind[i]] == 'y') {
         if (PercentFullRock[X[i]][Y[i]] == 0.0) {
           AmountSand = (PercentFullSand[X[i]][Y[i]] +
                         PercentFullSand[XBehind[i]][YBehind[i]]) *
@@ -3026,7 +3028,7 @@ void TransportSedimentSweep(void)
       PauseRun(-1, -1, ii);
     }
     if (INITIAL_CONDITION_TYPE != 3) { /* Don't erode the beach if there are no rocks... */
-      ErodeTheBeach(ii);
+      //ErodeTheBeach(ii);
     }
     if (PercentFullSand[X[ii]][Y[ii]] < -0.000001) { /* RCL */
       OopsImEmpty(X[ii], Y[ii]);
@@ -4066,7 +4068,7 @@ void ReadSandFromFile(void)
       fscanf(ReadSandFile, "\n");
     }
 
-    for (x = (X_MAX - 1); x >= 0; x--) {
+    for (x = 0; x < X_MAX; x++) {
       for (y = Y_MAX / 2; y < 3 * Y_MAX / 2; y++) {
         fscanf(ReadSandFile, " %lf", &PercentFullSand[x][y]);
 
@@ -4117,12 +4119,15 @@ void SaveSandToFile(void)
     printf("problem opening output file\n");
     exit(1);
   }
+
+  fprintf(SaveSandFile, "%d %d \n", X_MAX, Y_MAX);
+
   if (SAVE_FILE == 1) {
-    for (y = Y_MAX / 2; y < 3 * Y_MAX / 2; y++)
-      for (x = 0; x < X_MAX; x++) fprintf(SaveSandFile, " %c", type_of_rock[x][y]);
-    /*LMV*/ for (y = Y_MAX / 2; y < 3 * Y_MAX / 2; y++)
-      for (x = 0; x < X_MAX; x++)
-        fprintf(SaveSandFile, " %lf", PercentFullRock[x][y]);
+    //for (y = Y_MAX / 2; y < 3 * Y_MAX / 2; y++)
+    //  for (x = 0; x < X_MAX; x++) fprintf(SaveSandFile, " %c", type_of_rock[x][y]);
+    ///*LMV*/ for (y = Y_MAX / 2; y < 3 * Y_MAX / 2; y++)
+    //  for (x = 0; x < X_MAX; x++)
+    //    fprintf(SaveSandFile, " %lf", PercentFullRock[x][y]);
     /*LMV*/ for (y = Y_MAX / 2; y < 3 * Y_MAX / 2; y++)
       for (x = 0; x < X_MAX; x++)
         fprintf(SaveSandFile, " %lf", PercentFullSand[x][y]);
@@ -4135,26 +4140,26 @@ void SaveSandToFile(void)
   if (SAVE_FILE == 2) {
     /* Array output */
 
-    /* for (x=0; x<X_MAX; x++) */
-    for (x = (X_MAX - 1); x >= 0; x--) {
-      for (y = Y_MAX / 2; y < 3 * Y_MAX / 2; y++) {
-        fprintf(SaveSandFile, " %c", type_of_rock[x][y]);
-        /*LMV*/
-        /* if (type_of_rock[x][y]=='f') fprintf(SaveSandFile, " 0"); */ /* Switch
-                                                                         on if
-                                                                         numbers
-                                                                         required*/
-        /* else fprintf(SaveSandFile, " 1"); */
-      }
-      fprintf(SaveSandFile, "\n");
-    }
+    ///* for (x=0; x<X_MAX; x++) */
+    //for (x = (X_MAX - 1); x >= 0; x--) {
+    //  for (y = Y_MAX / 2; y < 3 * Y_MAX / 2; y++) {
+    //    fprintf(SaveSandFile, " %c", type_of_rock[x][y]);
+    //    /*LMV*/
+    //    /* if (type_of_rock[x][y]=='f') fprintf(SaveSandFile, " 0"); */ /* Switch
+    //                                                                     on if
+    //                                                                     numbers
+    //                                                                     required*/
+    //    /* else fprintf(SaveSandFile, " 1"); */
+    //  }
+    //  fprintf(SaveSandFile, "\n");
+    //}
 
-    for (x = (X_MAX - 1); x >= 0; x--) {
-      for (y = Y_MAX / 2; y < 3 * Y_MAX / 2; y++) {
-        fprintf(SaveSandFile, " %lf", PercentFullRock[x][y]);
-      /*LMV*/}
-      fprintf(SaveSandFile, "\n");
-    }
+    //for (x = (X_MAX - 1); x >= 0; x--) {
+    //  for (y = Y_MAX / 2; y < 3 * Y_MAX / 2; y++) {
+    //    fprintf(SaveSandFile, " %lf", PercentFullRock[x][y]);
+    //  /*LMV*/}
+    //  fprintf(SaveSandFile, "\n");
+    //}
 
     for (x = (X_MAX - 1); x >= 0; x--) {
       for (y = Y_MAX / 2; y < 3 * Y_MAX / 2; y++) {
@@ -4206,7 +4211,7 @@ void SaveLineToFile(void)
     xtop = X_MAX;
 
     /* step back to where we encounter allbeach */
-    while (AllBeach[x][y] == 'n') {
+    while (x > 0 && AllBeach[x][y] == 'n') {
       x -= 1;
     }
 

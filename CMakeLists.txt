@@ -4,7 +4,7 @@ project (cem)
 
 set (CEM_VERSION 0.1)
 
-set (CMAKE_C_FLAGS "-Wall -Wundef -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -O2")
+set (CMAKE_C_FLAGS " -O2")
 
 ########### CEM BMI library ###############
 
@@ -18,13 +18,13 @@ add_library(bmi_cem ${bmicem_sources})
 add_library(bmi_cem-static STATIC ${bmicem_sources})
 set_target_properties(bmi_cem-static PROPERTIES OUTPUT_NAME bmi_cem)
 
-target_link_libraries(bmi_cem m)
+target_link_libraries(bmi_cem)
 
 ########### CEM main ###############
 
 set (cem_sources main.c)
 add_executable (cem ${cem_sources})
-target_link_libraries(cem bmi_cem-static m)
+target_link_libraries(cem bmi_cem-static)
 
 ########### Install files ###############
 

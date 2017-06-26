@@ -1,3 +1,6 @@
 # ignore _build folder
 
 /_build/
+
+# ignore output folder
+/output/
