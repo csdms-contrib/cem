@@ -4,7 +4,7 @@ project (cem)
 
 set (CEM_VERSION 0.1)
 
-set (CMAKE_C_FLAGS " -O2")
+set (CMAKE_C_FLAGS " -Od")
 
 ########### CEM BMI library ###############
 

@@ -30,6 +30,8 @@ double time_step = 1; // days; reflects rate of sediment transport per time step
 // Global variables to be used only within this file.
 static const double kAngleFactor = 1.;
 
+const int DebugGrid = FALSE;
+
 // Depth array
 double **cell_depth;
 
@@ -241,6 +243,7 @@ void DoOverwash(int xfrom, int yfrom, int xto, int yto, float xintto,
 
 void Delay(void);
 void PrintLocalConds(int x, int y, int in);
+void print2d(int i);
 
 int cem_initialize(void);
 int cem_update(void);
@@ -2212,10 +2215,10 @@ void DetermineAngles(void)
     /* function revised 1-04 - asusme if goin right, on regular shore */
     /*  'regular' beach */
     {
-      ShorelineAngle[i] = atan(
+      ShorelineAngle[i] = atan2(
           (X[i + 1] + (PercentFullSand[X[i + 1]][Y[i + 1]] +
                        PercentFullRock[X[i + 1]][Y[i + 1]])) -
-          (X[i] + (PercentFullSand[X[i]][Y[i]] + PercentFullRock[X[i]][Y[i]])));
+          (X[i] + (PercentFullSand[X[i]][Y[i]] + PercentFullRock[X[i]][Y[i]])), Y[i+1] - Y[i]);
 
       if (debug3)
         printf(
@@ -3041,6 +3044,11 @@ void TransportSedimentSweep(void)
           PercentFullSand[58][269]);
       PauseRun(-1, -1, ii);
     }
+
+	if (DebugGrid)
+	{
+		print2d(i);
+	}
   }
 }
 
@@ -3781,6 +3789,7 @@ void FixBeach(void)
                 printf("PFS went >1 in FixBeach...Bummer x: %d y+1:%d %f \n", x,
                        y + 1, PercentFullSand[x][y + 1]);
             }
+			PercentFullSand[x][y] = 0.0;
 
 		  }
 		  else {
@@ -3880,6 +3889,10 @@ void FixBeach(void)
       } else if (debug9)
         printf("Corner cell, no fixbeach please PFR: %f x: %d, y: %d\n",
                PercentFullRock[x][y], x, y);
+	  if (DebugGrid)
+	  {
+		  print2d(i);
+	  }
     }
   }
   /* now make sure there aren't any overfull or underfull cells */
@@ -5327,7 +5340,25 @@ void ParseSWAN(int ShoreAngleLoc, float ShoreAngle) {
   }
   /*}*/
 
+
   /* We're done here, muchacho. Return some values to the parent function --
    currently the
    values to be returned are global, so no further action needed... */
+}
+
+/**
+* Print a PercentFullSand for debuggin puposes
+*/
+void print2d(int i)
+{
+	printf("\n\ni = %d\n", i);
+	int x, y;
+	for (x = 0; x < X_MAX; x++)
+	{
+		for (y = Y_MAX / 2; y < 3 * Y_MAX / 2; y++)
+		{
+			printf("%.2f | ", PercentFullSand[x][y]);
+		}
+		printf("\n");
+	}
 }
