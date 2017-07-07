@@ -63,7 +63,7 @@ static FILE *ReadRealWaveFile;
 static FILE *ReadControlFile;
 
 static char savefilename[2048] = "../output/CEM";
-static char readfilename[2048] = "../input/benchmark_config.txt";
+static char readfilename[2048] = "../input/rodanthe.txt";
 // Input Wave Distribution file: no = 0, binned file = 1,
 // angle/period/height file = 2
 // #define WAVE_IN (0)
@@ -160,10 +160,10 @@ static double Period = 10.0; // seconds
 static double OffShoreWvHt = 2.0; // meters
 
 // Fractional portion of waves coming from positive (left) direction
-static double Asym = 0.70;
+static double Asym = 0.20;
 // .5 = even dist, < .5 high angle domination. NOTE Highness actually
 // determines lowness!
-static double Highness = 0.35;
+static double Highness = 0.20;
 // Number of time steps calculations loop at same wave angle
 static double Duration = 1.;
 
@@ -335,7 +335,7 @@ int cem_update(void) {
     /*  Time Step iteration - compute same wave angle for Duration time steps */
 
     /*  Calculate Wave Angle */
-	  WaveAngle = PI / 4;  // FindWaveAngle();
+	  WaveAngle = FindWaveAngle();
 
     /* output wave data */
     if (WAVE_DATA == 'y') WaveOutFile();
@@ -437,7 +437,7 @@ int cem_update(void) {
       /* SAVE FILE ? */
       if ((current_time_step % SAVE_SPACING == 0 &&
            current_time_step > START_SAVING_AT)) {
-        if (SAVE_LINE) SaveLineToFile();
+        //if (SAVE_LINE) SaveLineToFile();
         if (SAVE_FILE) SaveSandToFile();
       }
 
@@ -4229,7 +4229,7 @@ void SaveLineToFile(void)
     }
 
     /* if on side of shape, need to average */
-    if (PercentFullSand[x + 2][y] > 0) {
+    if (x < (X_MAX -2) && PercentFullSand[x + 2][y] > 0) {
       xtop = x + 1;
       while (PercentFullSand[xtop][y] > 0) {
         xtop += 1;
@@ -4263,7 +4263,7 @@ void PauseRun(int x, int y, int in)
 {
   printf("\nPaused \n");
 
-  if (SAVE_LINE) SaveLineToFile();
+  //if (SAVE_LINE) SaveLineToFile();
   if (SAVE_FILE) SaveSandToFile();
 
   if (NO_PAUSE_RUN) return;

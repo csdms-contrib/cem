@@ -12,9 +12,9 @@ extern "C" {
 // size of cells (meters)
 #define CELL_WIDTH (100.)
 // number of cells in x (cross-shore) direction
-#define X_MAX (5)
+#define X_MAX (103)
 // number of cells in y (longshore) direction
-#define Y_MAX (10)
+#define Y_MAX (110)
 
 // maximum length of arrays that contain beach data at each time step
 #define MaxBeachLength (8 * Y_MAX)
