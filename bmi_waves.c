@@ -386,6 +386,14 @@ get_var_nbytes(void *self, const char *name, int *nbytes)
 
 
 static int
+get_var_location(void *self, const char *name, char *location)
+{
+    strncpy(location, "node", BMI_MAX_UNITS_NAME);
+    return BMI_SUCCESS;
+}
+
+
+static int
 get_value(void *self, const char *name, void *dest)
 {
     double *dptr = (double*)dest;
@@ -448,6 +456,7 @@ register_bmi_waves(BMI_Model *model)
     model->get_var_type = get_var_type;
     model->get_var_units = get_var_units;
     model->get_var_nbytes = get_var_nbytes;
+    model->get_var_location = get_var_location;
     model->get_current_time = get_current_time;
     model->get_start_time = get_start_time;
     model->get_end_time = get_end_time;
