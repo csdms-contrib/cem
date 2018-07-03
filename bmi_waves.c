@@ -457,6 +457,7 @@ register_bmi_waves(BMI_Model *model)
     model->get_var_units = get_var_units;
     model->get_var_nbytes = get_var_nbytes;
     model->get_var_location = get_var_location;
+    model->get_var_itemsize = get_var_itemsize;
     model->get_current_time = get_current_time;
     model->get_start_time = get_start_time;
     model->get_end_time = get_end_time;
