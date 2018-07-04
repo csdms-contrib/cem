@@ -329,9 +329,9 @@ get_var_units(void *self, const char *name, char *units)
     } else if (strcmp(name, "sea_surface_water_wave__period") == 0) {
         strncpy(units, "seconds", BMI_MAX_UNITS_NAME);
     } else if (strcmp(name, "sea_shoreline_wave~incoming~deepwater__ashton_et_al_approach_angle_highness_parameter") == 0) {
-        strncpy(units, "-", BMI_MAX_UNITS_NAME);
+        strncpy(units, "", BMI_MAX_UNITS_NAME);
     } else if (strcmp(name, "sea_shoreline_wave~incoming~deepwater__ashton_et_al_approach_angle_asymmetry_parameter") == 0) {
-        strncpy(units, "-", BMI_MAX_UNITS_NAME);
+        strncpy(units, "", BMI_MAX_UNITS_NAME);
     } else {
         units[0] = '\0'; return BMI_FAILURE;
     }
