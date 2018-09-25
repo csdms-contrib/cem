@@ -48,7 +48,7 @@ main (int argc, char *argv[])
     int len;
     double *qs = NULL;
     double *z = NULL;
-    double stop_time = 2500;
+    double n_steps = 2500;
     const double river_flux = 1250.;
 
     if (model->get_var_grid(model->self, "land_surface__elevation", &grid) == BMI_FAILURE) {
@@ -94,7 +94,7 @@ main (int argc, char *argv[])
     qs = (double *)malloc (sizeof (double) * len);
     z = (double *)malloc (sizeof (double) * len);
 
-    for (i = 1; i <= stop_time; i++) {
+    for (i = 1; i <= n_steps; i++) {
       deltas_avulsion (model->self, qs, river_flux);
 
       if (model->set_value(model->self, "land_surface_water_sediment~bedload__mass_flow_rate", qs) == BMI_FAILURE) {
@@ -114,7 +114,7 @@ main (int argc, char *argv[])
 
       if (i%100 == 0) {
         print_model_info(model);
-        print_matrix (z, shape);
+        // print_matrix (z, shape);
       }
     }
 
@@ -124,16 +124,20 @@ main (int argc, char *argv[])
 
     {
       double time;
+      double dt;
 
+      model->get_time_step(model->self, &dt);
       model->get_current_time(model->self, &time);
-      if (fabs (time - stop_time) > 1e-6)
+      if (fabs (time - n_steps * dt) > 1e-6) {
+        fprintf(stderr, "%f != %f\n", time, n_steps * dt);
         return EXIT_FAILURE;
+      }
     }
   }
 
   model->finalize(model->self);
 
-  return EXIT_SUCCESS;
+  return 0;
 }
 
 
