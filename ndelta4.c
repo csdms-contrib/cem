@@ -21,10 +21,6 @@ Program Notes:
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
-#ifdef WITH_OPENGL
-# include <GL/glx.h>
-# include <GL/gl.h>
-#endif
 #include <unistd.h>
 #include <limits.h>
 #include <string.h>
@@ -441,11 +437,6 @@ _cem_initialize (CemModel * _s)
     }
   }
 
-#ifdef WITH_OPENGL
-  if (KeysOn)
-    ScreenInit (_s);
-#endif
-
   /* Count Initial Mass */
 
   DEBUG_PRINT (DEBUG_ERIC, "Set periodic boundary conditions\n");
@@ -459,22 +450,6 @@ _cem_initialize (CemModel * _s)
      SaveLineToFile();
      if (SaveFile)
      SaveSandToFile(); */
-
-  /* Open Display */
-#ifdef WITH_OPENGL
-  if (DO_GRAPHICS)
-  {
-    _s->xcellwidth = 2.0 / (2.0 * (double)XPlotExtent) * (CELL_PIXEL_SIZE) / 2.0;
-    _s->ycellwidth = 2.0 / (2.0 * (double)YPlotExtent) * (CELL_PIXEL_SIZE) / 2.0;
-    _s->xplotoff = 0;
-    _s->yplotoff = _s->ny / 2;
-
-    OpenWindow (_s);
-
-    if (EveryPlotSpacing)
-      GraphCells (_s);
-  }
-#endif
 
   if (WAVE_IN)
     ReadWaveIn (_s);
@@ -633,13 +608,6 @@ cem_advance_one_time_step (CemModel * model)
 
       /* Count Mass */
       model->MassCurrent = MassCount (model);
-
-#ifdef WITH_OPENGL
-      /* GRAPHING */
-      if (DO_GRAPHICS && EveryPlotSpacing
-          && (model->CurrentTimeStep % EveryPlotSpacing == 0))
-        GraphCells (model);
-#endif
 
       model->CurrentTimeStep++;
 
@@ -879,14 +847,6 @@ _cem_run_until (CemModel * _s, int until)
       /* Count Mass */
 
       _s->MassCurrent = MassCount (_s);
-
-      /* GRAPHING */
-
-#ifdef WITH_OPENGL
-      if (DO_GRAPHICS && EveryPlotSpacing
-          && (_s->CurrentTimeStep % EveryPlotSpacing == 0))
-        GraphCells (_s);
-#endif
 
       /* current_getch = getch();
          printf("%d",current_getch);
@@ -4009,223 +3969,6 @@ ReadWaveIn (CemModel * _s)
 
 }
 
-#ifdef WITH_OPENGL
-Bool
-WaitForNotify (Display * d, XEvent * e, char *arg)
-{
-  return (e->type == MapNotify) && (e->xmap.window == (Window) arg);
-}
-
-void
-OpenWindow (CemModel * _s)
-{
-
-  static int attributeListSgl[] =
-    { GLX_RGBA, GLX_RED_SIZE, 1, GLX_GREEN_SIZE, 1, GLX_BLUE_SIZE, 1, None };
-  static int attributeListDbl[] =
-    { GLX_RGBA, 1, GLX_RED_SIZE, 1, GLX_GREEN_SIZE, 1, GLX_BLUE_SIZE, 1,
-    None
-  };
-
-//    static Bool WaitForNotify(Display *d, XEvent *e, char *arg) {
-//      return (e->type == MapNotify) && (e->xmap.window == (Window)arg); }
-
-  /*int FALSE =0;
-     int TRUE =1; */
-  int winwidth;
-
-  int winheight;
-
-  Display *dpy;
-
-  XVisualInfo *vi;
-
-  Colormap cmap;
-
-  XSetWindowAttributes swa;
-
-  Window win;
-
-  GLXContext cx;
-
-  XEvent event;
-
-  int swap_flag = FALSE;
-
-  dpy = XOpenDisplay (0);
-
-  vi = glXChooseVisual (dpy, DefaultScreen (dpy), attributeListSgl);
-
-  if (vi == NULL)
-  {
-    vi = glXChooseVisual (dpy, DefaultScreen (dpy), attributeListDbl);
-    swap_flag = TRUE;
-  }
-  cx = glXCreateContext (dpy, vi, 0, GL_TRUE);
-
-  cmap =
-    XCreateColormap (dpy, RootWindow (dpy, vi->screen), vi->visual, AllocNone);
-
-  swa.colormap = cmap;
-  swa.border_pixel = 0;
-  swa.event_mask = StructureNotifyMask;
-
-  winwidth = CELL_PIXEL_SIZE * _s->nx;
-  winheight = CELL_PIXEL_SIZE * _s->ny;
-
-  win =
-    XCreateWindow (dpy, RootWindow (dpy, vi->screen), 0, 0,
-                   YPlotExtent * CELL_PIXEL_SIZE,
-                   XPlotExtent * CELL_PIXEL_SIZE, 0, vi->depth, InputOutput,
-                   vi->visual, CWBorderPixel | CWColormap | CWEventMask, &swa);
-  XMapWindow (dpy, win);
-  XIfEvent (dpy, &event, WaitForNotify, (char *)win);
-
-  glXMakeCurrent (dpy, win, cx);
-  glClearColor (0.0, 0.0, 0.0, 1);
-  glClear (GL_COLOR_BUFFER_BIT);
-  glFlush ();
-}
-
-void
-PutPixel (CemModel * _s, double x, double y, double R, double G, double B)
-{
-
-  double xstart,
-    ystart;
-
-  /* translate x and y integer components to the openGL grid */
-
-  xstart = (x - _s->nx / 2.0) / (_s->nx / 2.0);
-  ystart = (y - _s->ny / 2.0) / (_s->ny / 2.0);
-
-  glColor3f (R, G, B);
-  glBegin (GL_POLYGON);
-  glVertex3f (ystart, xstart, 0.0);
-  glVertex3f (ystart, xstart + _s->xcellwidth, 0.0);
-  glVertex3f (ystart + _s->ycellwidth, xstart + _s->xcellwidth, 0.0);
-  glVertex3f (ystart + _s->ycellwidth, xstart, 0.0);
-  glEnd ();
-
-}
-
-/** Plots entire Array
-*/
-void
-GraphCells (CemModel * _s)
-{
-  int x,
-    y;
-
-  double Red,
-    Green,
-    Blue,
-    backRed,
-    backGreen,
-    backBlue;
-
-  double AgeFactorRed,
-    AgeFactorGreen,
-    AgeFactorBlue,
-    DepthBlue;
-
-  double DepthFactorX;
-
-  int AgeShadeSpacing = AGE_SHADE_SPACING;      /* For graphics - how many time steps means back to original shade */
-
-  DepthFactorX = XPlotExtent;
-  for (y = _s->yplotoff; y <= YPlotExtent + _s->yplotoff; y++)
-
-    for (x = _s->xplotoff; x <= XPlotExtent + _s->xplotoff; x++)
-    {
-
-      backRed = 0;
-      backBlue = (75 + 130 * (x / DepthFactorX));
-      backGreen = (165 - 125 * (x / DepthFactorX));
-
-      DepthBlue = floor ((.8 - (double)x / (XPlotExtent * 3)) * 255) / 255.0;
-      /*  PutPixel( CELL_PIXEL_SIZE*(y-yplotoff), CELL_PIXEL_SIZE*x,0,0, DepthBlue); */
-
-      AgeFactorRed =
-        (double)((_s->Age[x][y]) % AgeShadeSpacing) / AgeShadeSpacing;
-      AgeFactorGreen =
-        (double)((_s->Age[x][y] +
-                 AgeShadeSpacing / 3) % AgeShadeSpacing) / AgeShadeSpacing;
-      AgeFactorBlue =
-        (double)((_s->Age[x][y] +
-                 2 * AgeShadeSpacing / 3) % AgeShadeSpacing) / AgeShadeSpacing;
-
-      if ((_s->PercentFull[x][y] > 0) && (_s->AllBeach[x][y] == 'n'))
-      {
-        Red =
-          ((((235 - 100 * (AgeFactorRed)) -
-             backRed) * _s->PercentFull[x][y]) + backRed) / 255.0;
-        Green =
-          ((((235 - 95 * (AgeFactorGreen)) -
-             backGreen) * _s->PercentFull[x][y]) + backGreen) / 255.0;
-        Blue =
-          ((((210 - 150 * AgeFactorBlue) -
-             backBlue) * _s->PercentFull[x][y]) + backBlue) / 255.0;
-
-      }
-      else if (_s->AllBeach[x][y] == 'y')
-      {
-        Red =
-          ((((235 - 100 * (AgeFactorRed)) -
-             backRed) * _s->PercentFull[x][y]) + backRed) / 255.0;
-        Green =
-          ((((235 - 95 * (AgeFactorGreen)) -
-             backGreen) * _s->PercentFull[x][y]) + backGreen) / 255.0;
-        Blue =
-          ((((210 - 150 * AgeFactorBlue) -
-             backBlue) * _s->PercentFull[x][y]) + backBlue) / 255.0;
-      }
-      else
-      {
-        Red = backRed / 255.0;
-        Blue = backBlue / 255.0;
-        Green = backGreen / 255.0;
-      }
-
-      PutPixel (_s, x - _s->xplotoff, y - _s->yplotoff, Red, Green, Blue);
-
-    }
-
-  x = 0;
-
-  //y = _s->stream_spot;
-  y = _s->ny;
-
-  while (_s->AllBeach[x][y] == 'y')
-  {
-    PutPixel (_s, x - _s->xplotoff, y - _s->yplotoff, 1, 0, 0);
-    x += 1;
-  }
-
-  glFlush ();
-
-}
-
-/** this is for the keyboard thingies to work
-*/
-void
-ScreenInit (CemModel * _s)
-{
-  WINDOW *mainwnd;
-
-  WINDOW *screen;
-
-  mainwnd = initscr ();
-/*noecho();*/
-  cbreak ();
-  nodelay (mainwnd, TRUE);
-  halfdelay (.1);
-  refresh ();   // 1)
-  wrefresh (mainwnd);
-  screen = newwin (13, 27, 1, 1);
-  box (screen, ACS_VLINE, ACS_HLINE);
-}
-#endif
 
 /** Simple 'first approximation of sediment delivery
 
@@ -4975,32 +4718,6 @@ DoOverwash (CemModel * _s, int xfrom, int yfrom, int xto, int yto, double xintto
   DEBUG_PRINT (DEBUG_10B, "DepthBB: %f  BBNeed: %f DelShore: %f  DelBB: %f\n",
                DepthBB, BBneed, delShore, delBB);
   /*if (DepthBB == _s->shoreface_depth) PauseRun(xto,yto,-1); */
-
-#ifdef WITH_OPENGL
-#ifdef DEBUG_ON
-  if (DEBUG_10B && (DO_GRAPHICS == 'y'))
-  {
-    short vertex[2];
-
-    /*bgnpolygon();
-       RGBcolor(250,0,0);
-       vertex[0] = (yfrom+0.2)*CELL_PIXEL_SIZE;
-       vertex[1] = (xfrom+.5)*CELL_PIXEL_SIZE;
-       v2s(vertex);
-       vertex[0] = (yfrom+0.8)*CELL_PIXEL_SIZE;
-       v2s(vertex);
-       vertex[0] = (yto+0.8)*CELL_PIXEL_SIZE;
-       vertex[1] = (xto+0.5)*CELL_PIXEL_SIZE;
-       v2s(vertex);
-       vertex[0] = (yto+0.3)*CELL_PIXEL_SIZE;;
-       v2s(vertex);
-       vertex[0] = (yfrom+0.2)*CELL_PIXEL_SIZE;
-       vertex[1] = (xfrom+.5)*CELL_PIXEL_SIZE;
-       v2s(vertex);
-       endpolygon(); */
-  }
-#endif
-#endif
 
   _s->PercentFull[xto][yto] += delBB;
   _s->PercentFull[xfrom][yfrom] -= delShore;
