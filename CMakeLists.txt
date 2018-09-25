@@ -24,31 +24,6 @@ pkg_check_modules (GTHREAD2 gthread-2.0)
 include_directories (${GLIB2_INCLUDE_DIRS} ${GTHREAD2_INCLUDE_DIRS})
 link_directories (${GLIB2_LIBRARY_DIRS} ${GTHREAD2_LIBRARY_DIRS})
 
-########### enable/disable graphics  ###############
-
-option( WITH_X11 "Enable X11 graphics" OFF)
-if (WITH_X11)
-  include(FindPkgConfig)
-  pkg_check_modules( X11 x11 )
-  find_library( OPENGL GL )
-  find_library( NCURSES ncurses )
-
-  if (X11_FOUND AND OPENGL AND NCURSES)
-    include_directories( ${X11_INCLUDE_DIRS} )
-    link_directories( ${X11_LIBRARY_DIRS} )
-    set(OPENGL_LIBRARIES ncurses GL ${X11_LIBRARIES})
-  else (X11_FOUND AND OPENGL AND NCURSES)
-    set(WITH_X11 OFF)
-    message( STATUS "Disabling X11" )
-  endif (X11_FOUND AND OPENGL AND NCURSES)
-
-endif (WITH_X11)
-
-if (WITH_X11)
-  add_definitions( -DWITH_OPENGL )
-else (WITH_X11)
-  add_definitions( -UWITH_OPENGL )
-endif (WITH_X11)
 
 ########### libdeltas ###############
 
