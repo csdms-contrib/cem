@@ -26,11 +26,13 @@ Program Notes:
 # include <GL/gl.h>
 #endif
 #include <unistd.h>
-#include <ncurses.h>
 #include <limits.h>
 #include <string.h>
 
 #include "cem_model.h"
+
+#define TRUE (1)
+#define FALSE (0)
 
 #define DEBUG_ON
 
