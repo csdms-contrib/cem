@@ -329,9 +329,9 @@ get_var_units(void *self, const char *name, char *units)
     } else if (strcmp(name, "sea_surface_water_wave__period") == 0) {
         strncpy(units, "seconds", BMI_MAX_UNITS_NAME);
     } else if (strcmp(name, "sea_shoreline_wave~incoming~deepwater__ashton_et_al_approach_angle_highness_parameter") == 0) {
-        strncpy(units, "-", BMI_MAX_UNITS_NAME);
+        strncpy(units, "", BMI_MAX_UNITS_NAME);
     } else if (strcmp(name, "sea_shoreline_wave~incoming~deepwater__ashton_et_al_approach_angle_asymmetry_parameter") == 0) {
-        strncpy(units, "-", BMI_MAX_UNITS_NAME);
+        strncpy(units, "", BMI_MAX_UNITS_NAME);
     } else {
         units[0] = '\0'; return BMI_FAILURE;
     }
@@ -381,6 +381,14 @@ get_var_nbytes(void *self, const char *name, int *nbytes)
 
     *nbytes = itemsize * size;
 
+    return BMI_SUCCESS;
+}
+
+
+static int
+get_var_location(void *self, const char *name, char *location)
+{
+    strncpy(location, "node", BMI_MAX_UNITS_NAME);
     return BMI_SUCCESS;
 }
 
@@ -448,6 +456,8 @@ register_bmi_waves(BMI_Model *model)
     model->get_var_type = get_var_type;
     model->get_var_units = get_var_units;
     model->get_var_nbytes = get_var_nbytes;
+    model->get_var_location = get_var_location;
+    model->get_var_itemsize = get_var_itemsize;
     model->get_current_time = get_current_time;
     model->get_start_time = get_start_time;
     model->get_end_time = get_end_time;

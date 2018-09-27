@@ -23,13 +23,13 @@ get_component_name (void *self, char * name)
 }
 
 
-#define INPUT_VAR_NAME_COUNT (8)
+#define INPUT_VAR_NAME_COUNT (6)
 static const char *input_var_names[INPUT_VAR_NAME_COUNT] = {
     "sea_surface_water_wave__azimuth_angle_of_opposite_of_phase_velocity",
-    "basin_outlet_water_sediment~bedload__mass_flow_rate",
+    // "basin_outlet_water_sediment~bedload__mass_flow_rate",
     "land_surface_water_sediment~bedload__mass_flow_rate",
     "sea_surface_water_wave__period",
-    "basin_outlet_water_sediment~suspended__mass_flow_rate",
+    // "basin_outlet_water_sediment~suspended__mass_flow_rate",
     "sea_surface_water_wave__height",
     "land_surface__elevation",
     "model__time_step"
@@ -447,6 +447,13 @@ get_var_stride(void *self, const char *name, int *stride)
     return BMI_SUCCESS;
 }
 
+static int
+get_var_location(void *self, const char *name, char *location)
+{
+    strncpy(location, "node", BMI_MAX_UNITS_NAME);
+    return BMI_SUCCESS;
+}
+
 
 static int
 get_value_ptr(void *self, const char *name, void **dest)
@@ -612,6 +619,8 @@ register_bmi_cem(BMI_Model *model)
     model->get_var_type = get_var_type;
     model->get_var_units = get_var_units;
     model->get_var_nbytes = get_var_nbytes;
+    model->get_var_location = get_var_location;
+    model->get_var_itemsize = get_var_itemsize;
     model->get_current_time = get_current_time;
     model->get_start_time = get_start_time;
     model->get_end_time = get_end_time;
