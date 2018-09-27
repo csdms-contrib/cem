@@ -1,5 +1,0 @@
-#!/bin/sh
-
-touch AUTHORS ChangeLog NEWS README
-autoreconf -fvi
-

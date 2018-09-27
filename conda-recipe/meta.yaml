@@ -1,6 +1,6 @@
 package:
   name: cem
-  version: "0.1.1"
+  version: "0.1.5"
 
 source:
   path: ..
@@ -8,13 +8,12 @@ source:
 requirements:
   build:
     - cmake
-    - gcc
-    - pkgconfig-command [osx]
-    - glib [osx]
-
+    - pkg-config
+    - {{ compiler('c') }}
+  host:
+    - glib
   run:
-    - libgcc
-    - glib [osx]
+    - glib
 
 test:
   commands:
@@ -32,4 +31,4 @@ about:
   summary: The Coastline Evolution Model
 
 build:
-  string: {{ environ.get('BUILD_STR', '') }}
+  number: 0

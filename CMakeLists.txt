@@ -26,31 +26,6 @@ pkg_check_modules (GTHREAD2 gthread-2.0)
 include_directories (${GLIB2_INCLUDE_DIRS} ${GTHREAD2_INCLUDE_DIRS})
 link_directories (${GLIB2_LIBRARY_DIRS} ${GTHREAD2_LIBRARY_DIRS})
 
-########### enable/disable graphics  ###############
-
-option( WITH_X11 "Enable X11 graphics" OFF)
-if (WITH_X11)
-  include(FindPkgConfig)
-  pkg_check_modules( X11 x11 )
-  find_library( OPENGL GL )
-  find_library( NCURSES ncurses )
-
-  if (X11_FOUND AND OPENGL AND NCURSES)
-    include_directories( ${X11_INCLUDE_DIRS} )
-    link_directories( ${X11_LIBRARY_DIRS} )
-    set(OPENGL_LIBRARIES ncurses GL ${X11_LIBRARIES})
-  else (X11_FOUND AND OPENGL AND NCURSES)
-    set(WITH_X11 OFF)
-    message( STATUS "Disabling X11" )
-  endif (X11_FOUND AND OPENGL AND NCURSES)
-
-endif (WITH_X11)
-
-if (WITH_X11)
-  add_definitions( -DWITH_OPENGL )
-else (WITH_X11)
-  add_definitions( -UWITH_OPENGL )
-endif (WITH_X11)
 
 ########### libdeltas ###############
 
@@ -132,40 +107,6 @@ install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/run_cem
         DESTINATION bin
         RENAME cem
         COMPONENT cem)
-
-########### Python bindings ###############
-
-option (PYTHON_BINDINGS "Use SWIG to build Python bindings" OFF)
-
-if (PYTHON_BINDINGS )
-
-# You may need to use -DCMAKE_INCLUDE_PATH and -DCMAKE_LIBRARY_PATH
-# to find the correct libraries/include paths
-find_package (SWIG REQUIRED)
-include (${SWIG_USE_FILE})
-
-find_package (PythonLibs 2.6 EXACT)
-include_directories (${PYTHON_INCLUDE_PATH})
-include_directories (${CMAKE_CURRENT_SOURCE_DIR})
-
-set (CMAKE_SWIG_FLAGS "")
-
-#set_source_files_properties (deltas_mod.i PROPERTIES CPLUSPLUS ON) 
-#set_source_files_properties (deltas_mod.i PROPERTIES SWIG_FLAGS "-includeall")
-swig_add_module (deltas_mod python deltas_mod.i ndelta4.c deltas_api.c)
-swig_link_libraries (deltas_mod ${PYTHON_LIBRARIES})
-
-#add_library( _deltas_mod deltas_mod_wrap.c ndelta4.c deltas_api.c )
-#target_link_libraries( deltas_mod _deltas_mod)
-
-message ("Python include path " ${PYTHON_INCLUDE_PATH})
-message ("Python libs " ${PYTHON_LIBRARIES})
-message ("Python lib path " ${PYTHON_LIBRARY_PATH})
-
-install (FILES ${CMAKE_BINARY_DIR}/deltas_mod.py
-               ${CMAKE_BINARY_DIR}/_deltas_mod.so
-         DESTINATION lib/deltas-python COMPONENT deltas)
-endif (PYTHON_BINDINGS )
 
 ########### Install files ###############
 
