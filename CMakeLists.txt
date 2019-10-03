@@ -29,8 +29,8 @@ add_executable (cem ${cem_sources})
 target_link_libraries(cem bmi_cem-static)
 
 ########### Install files ###############
-
-# install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/cem DESTINATION bin)
+install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/cem${CMAKE_EXECUTABLE_SUFFIX} DESTINATION bin)
+#install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/cem DESTINATION bin)
 install(FILES bmi/bmi.h bmi/bmi_cem.h DESTINATION include/cem)
 install(TARGETS bmi_cem DESTINATION lib)
 install(TARGETS bmi_cem-static DESTINATION lib)
