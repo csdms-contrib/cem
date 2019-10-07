@@ -5,7 +5,7 @@ include (CTest)
 
 set(CMAKE_MACOSX_RPATH 1)
 
-set (CMAKE_C_FLAGS "-Wall -Wundef -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -O2")
+set (CMAKE_C_FLAGS "-Wall -O2")
 set (BUILD_SHARED_LIBS ON)
 
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/waves.pc.cmake ${CMAKE_CURRENT_SOURCE_DIR}/waves.pc )
@@ -41,7 +41,14 @@ add_library(bmi_cem ${deltas_lib_SRCS})
 add_library(bmi_cem-static STATIC ${deltas_lib_SRCS})
 set_target_properties(bmi_cem-static PROPERTIES OUTPUT_NAME bmi_cem)
 
-target_link_libraries(bmi_cem m ${GLIB2_LIBRARIES} ${GTHREAD2_LIBRARIES})
+find_library(LIB_M m)
+
+if (LIB_M)
+  set(MATH_LIB "m")
+elseif (LIB_M)
+  set(MATH_LIB "")
+endif (LIB_M)
+target_link_libraries(bmi_cem ${MATH_LIB} ${GLIB2_LIBRARIES} ${GTHREAD2_LIBRARIES})
 
 install(TARGETS bmi_cem DESTINATION lib)
 install(TARGETS bmi_cem-static DESTINATION lib)
