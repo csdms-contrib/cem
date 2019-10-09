@@ -24,6 +24,9 @@
 
 #define WAVE_ANGLE_SIGN (1.0)
 
+#ifndef M_PI
+    #define M_PI 3.14159265358979323846
+#endif
 
 double
 waves_next_angle (GRand * rand, double asymmetry, double highness)

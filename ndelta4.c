@@ -21,11 +21,18 @@ Program Notes:
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
-#include <unistd.h>
+#ifdef WITH_UNISTD
+# include <unistd.h>
+#endif
 #include <limits.h>
 #include <string.h>
+#include <stdarg.h>
 
 #include "cem_model.h"
+
+#ifndef M_PI
+    #define M_PI 3.14159265358979323846
+#endif
 
 #define TRUE (1)
 #define FALSE (0)
@@ -355,7 +362,7 @@ deltas_init_state (CemModel * s)
   s->VolumeOut = NULL;
 
   s->state = (char *)malloc (sizeof (char) * 256);
-  initstate (44, s->state, 256);
+  //initstate (44, s->state, 256);
 
   return;
 }
@@ -391,8 +398,8 @@ _cem_initialize (CemModel * _s)
   _s->ShadowXMax = _s->nx - 5;
 
   //srandom(seed);
-  setstate (_s->state);
-  srandom (SEED);
+  //setstate (_s->state);
+  srand (SEED);
 
   /* Start from file or not? */
   if (PromptStart == 'y')
@@ -1452,14 +1459,14 @@ FindNextCell (CemModel * _s, const int x, const int y, const int z)
 
 *  NOT CURRENTLY BEING USED			 *
 *  When thin entrance is discovered, fill it up *
-	
+
 {
 if (_s->AllBeach[X][Y+2*LorR] == 'n')
 {
     _s->AllBeach[X][Y+2*LorR] = 'y';
     _s->PercentFull[X][Y+2*LorR] = 1;
     printf("!!!!!!!!!!!!!!!!!\n		FILLEDERUP: %d, %d, %d \n", X, Y, LorR);
-}	
+}
 }*/
 
 /**  Moves along beach and tests to see if cells are in shadow
@@ -3209,7 +3216,7 @@ currently this function has no seed
 double
 RandZeroToOne (void)
 {
-  return random () / (Raise (2, 31) - 1);
+  return rand () / (Raise (2, 31) - 1);
 }
 
 /** Creates initial beach conditions

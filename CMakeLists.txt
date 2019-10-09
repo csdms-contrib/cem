@@ -2,10 +2,12 @@ cmake_minimum_required(VERSION 2.6)
 
 project (deltas)
 include (CTest)
+include(CheckIncludeFile)
 
 set(CMAKE_MACOSX_RPATH 1)
 
-set (CMAKE_C_FLAGS "-Wall -Wundef -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -O2")
+#set (CMAKE_C_FLAGS "-Wall -Wundef -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -O2")
+set (CMAKE_C_FLAGS "-Wall -O2")
 set (BUILD_SHARED_LIBS ON)
 
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/waves.pc.cmake ${CMAKE_CURRENT_SOURCE_DIR}/waves.pc )
@@ -28,6 +30,11 @@ link_directories (${GLIB2_LIBRARY_DIRS} ${GTHREAD2_LIBRARY_DIRS})
 
 
 ########### libdeltas ###############
+check_include_file(unistd.h WITH_UNISTD)
+
+if (WITH_UNISTD)
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DWITH_UNISTD")
+endif (WITH_UNISTD)
 
 include_directories( ${CMAKE_CURRENT_SOURCE_DIR} )
 
@@ -37,11 +44,19 @@ set( deltas_lib_SRCS
   ndelta4.c)
 set_source_files_properties (${deltas_lib_SRCS} PROPERTIES LANGUAGE C)
 
+find_library(LIB_M m)
+
+if (LIB_M)
+  set(MATH_LIB "m")
+elseif (LIB_M)
+  set(MATH_LIB "")
+endif (LIB_M)
+
 add_library(bmi_cem ${deltas_lib_SRCS})
 add_library(bmi_cem-static STATIC ${deltas_lib_SRCS})
 set_target_properties(bmi_cem-static PROPERTIES OUTPUT_NAME bmi_cem)
 
-target_link_libraries(bmi_cem m ${GLIB2_LIBRARIES} ${GTHREAD2_LIBRARIES})
+target_link_libraries(bmi_cem ${MATH_LIB} ${GLIB2_LIBRARIES} ${GTHREAD2_LIBRARIES})
 
 install(TARGETS bmi_cem DESTINATION lib)
 install(TARGETS bmi_cem-static DESTINATION lib)
@@ -73,11 +88,11 @@ set( deltas_SRCS deltas_main.c)
 set_source_files_properties (${deltas_SRCS} PROPERTIES LANGUAGE C)
 
 add_executable(run_deltas ${deltas_SRCS})
-target_link_libraries(run_deltas bmi_cem-static m)
+target_link_libraries(run_deltas bmi_cem-static ${MATH_LIB})
 
-install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/run_deltas
+install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/run_deltas${CMAKE_EXECUTABLE_SUFFIX}
         DESTINATION bin
-        RENAME deltas
+        RENAME deltas${CMAKE_EXECUTABLE_SUFFIX}
         COMPONENT deltas)
 
 ########### waves main program ###############
@@ -87,11 +102,11 @@ set_source_files_properties (${waves_SRCS} PROPERTIES LANGUAGE C)
 
 add_executable(run_waves ${waves_SRCS})
 target_link_libraries(run_waves bmi_waves-static ${GLIB2_LIBRARIES}
-  ${GTHREAD2_LIBRARIES} m)
+  ${GTHREAD2_LIBRARIES} ${MATH_LIB})
 
-install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/run_waves
+install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/run_waves${CMAKE_EXECUTABLE_SUFFIX}
         DESTINATION bin
-        RENAME waves
+        RENAME waves${CMAKE_EXECUTABLE_SUFFIX}
         COMPONENT waves)
 
 ########### cem main program ###############
@@ -101,11 +116,11 @@ set_source_files_properties (${cem_SRCS} PROPERTIES LANGUAGE C)
 
 add_executable(run_cem ${cem_SRCS})
 target_link_libraries(run_cem bmi_waves-static bmi_cem-static
-  ${GLIB2_LIBRARIES} ${GTHREAD2_LIBRARIES} m)
+  ${GLIB2_LIBRARIES} ${GTHREAD2_LIBRARIES} ${MATH_LIB})
 
-install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/run_cem
+install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/run_cem${CMAKE_EXECUTABLE_SUFFIX}
         DESTINATION bin
-        RENAME cem
+        RENAME cem${CMAKE_EXECUTABLE_SUFFIX}
         COMPONENT cem)
 
 ########### Install files ###############
