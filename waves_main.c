@@ -29,6 +29,10 @@
 #define WAVES_MINOR_VERSION (1)
 #define WAVES_MICRO_VERSION (1)
 
+#ifndef M_PI
+    #define M_PI 3.14159265358979323846
+#endif
+
 double waves_next_angle (GRand * rand, double asymmetry, double highness);
 
 int
