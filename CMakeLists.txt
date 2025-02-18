@@ -5,7 +5,8 @@ project (cem)
 set (CEM_VERSION 0.1)
 
 #set (CMAKE_C_FLAGS "-Wall -Wundef -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -O2")
-set (CMAKE_C_FLAGS "-Wall -O2")
+# set (CMAKE_C_FLAGS "-Wall -O2")
+set (CMAKE_C_FLAGS "-Wall -g -O0")
 
 ########### CEM BMI library ###############
 
