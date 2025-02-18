@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 3.0)
 
 include(FindPkgConfig)
 pkg_check_modules(GLIB2 glib-2.0)
