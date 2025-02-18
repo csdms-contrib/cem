@@ -35,7 +35,7 @@ jobs:
       - name: Build
         shell: bash
         run: |
-          cmake -S . -B _build -DCMAKE_INSTALL_PREFIX=_inst -DCMAKE_BUILD_TYPE=Release
+          cmake -S . -B _build -DCMAKE_INSTALL_PREFIX=_inst
           cmake --build _build --target all
           cmake --build _build --target install
 
