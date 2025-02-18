@@ -5,6 +5,7 @@
 
 #include "conditions.h"
 #include "consts.h"
+#include "rocks.h"
 #include "utils.h"
 
 static int *rock_line;
