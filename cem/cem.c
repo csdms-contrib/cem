@@ -5078,7 +5078,7 @@ float ConvertAngle(float EvaluteAngle, int type)
 
  #SWAN */
 {
-  float value; /* What direction to look offshore to find a breaking wave? */
+  float value = 0.0; /* What direction to look offshore to find a breaking wave? */
 
   /*if (debugSWAN)*/
   /*printf("\n incoming angle: %f \n", EvaluateAngle);*/
@@ -5106,19 +5106,27 @@ float ConvertAngle(float EvaluteAngle, int type)
     }
 
     /* Moving straight up or straight down along shoreline */
-    else if (EvaluateAngle == (-90 * (PI / 180)) ||
-             EvaluateAngle == (90 * (PI / 180))) {
-      if (EvaluateAngle == (-90 * (PI / 180))) {
+    else if (EvaluateAngle == (-90 * (PI / 180)))
         value = (270 * (PI / 180));
-      } else if (EvaluateAngle == (90 * (PI / 180))) {
+    else if (EvaluateAngle == (90 * (PI / 180)))
         value = (90 * (PI / 180));
-      }
-    }
+    /* else if ( */
+    /*     EvaluateAngle == (-90 * (PI / 180)) */
+    /*     || EvaluateAngle == (90 * (PI / 180)) */
+	/* ) { */
+    /*   if (EvaluateAngle == (-90 * (PI / 180))) { */
+    /*     value = (270 * (PI / 180)); */
+    /*   } else if (EvaluateAngle == (90 * (PI / 180))) { */
+    /*     value = (90 * (PI / 180)); */
+    /*   } */
+    /* } */
 
     /* Moving left (and up, down, or straight) along shoreline */
-    else if (EvaluateAngle >
-             (-270 * (PI / 180) && EvaluateAngle < (-90 * (PI / 180)))) {
-      value = fabs(EvaluateAngle);
+    else if (
+        EvaluateAngle > (-270 * (PI / 180)
+        && EvaluateAngle < (-90 * (PI / 180)))
+    ) {
+        value = fabs(EvaluateAngle);
     }
 
     /* Oops -- did not find a search direction! */
