@@ -51,3 +51,4 @@ jobs:
           _inst/bin/cem --version
           _inst/bin/waves --help
           _inst/bin/waves --version
+          cd examples && ../_inst/bin/cem waves.txt cem.txt output.csv
