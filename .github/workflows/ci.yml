@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  - push
+  - pull_request
+
+
+concurrency:
+  group: ${{ github.ref }}-${{ github.workflow }}
+  cancel-in-progress: true
+
+
+jobs:
+  build-and-test:
+    # Run on external PRs, but not on internal PRs, to avoid duplicate runs
+    if: |
+      github.event_name == 'push' ||
+      github.event.pull_request.head.repo.full_name != github.repository
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, ubuntu-24.04-arm, macos-13, macos-14]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash -el {0}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - uses: conda-incubator/setup-miniconda@v3
+        with:
+          python-version: ${{ matrix.python-version }}
+          miniforge-variant: Miniforge3
+          miniforge-version: latest
+          auto-update-conda: true
+          channels: conda-forge,defaults
+
+      - name: Install dependencies
+        run: conda install --quiet c-compiler cmake glib pkg-config
+
+      - name: Build
+        run: |
+          cmake -S . -B _build -DCMAKE_INSTALL_PREFIX=_inst
+          cmake --build _build --target all
+          cmake --build _build --target install
+
+      - name: Run Tests
+        run: |
+          _inst/bin/cem --help
+          _inst/bin/cem --version
+          _inst/bin/waves --help
+          _inst/bin/waves --version
+          cd examples && ../_inst/bin/cem waves.txt cem.txt output.csv

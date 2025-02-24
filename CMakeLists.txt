@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 3.0)
 
 project (deltas)
 include (CTest)
@@ -7,7 +7,11 @@ include(CheckIncludeFile)
 set(CMAKE_MACOSX_RPATH 1)
 
 #set (CMAKE_C_FLAGS "-Wall -Wundef -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -O2")
-set (CMAKE_C_FLAGS "-Wall -O2")
+# set (CMAKE_C_FLAGS "-Wall -O2")
+set (CMAKE_C_FLAGS "-Wall -g -O0")
+
+########### CEM BMI library ###############
+
 set (BUILD_SHARED_LIBS ON)
 
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/waves.pc.cmake ${CMAKE_CURRENT_SOURCE_DIR}/waves.pc )

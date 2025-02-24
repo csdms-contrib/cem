@@ -5,6 +5,9 @@
 
 #include "cem_model.h"
 
+void deltas_init_state(CemModel* s);
+int _cem_initialize(CemModel* _s);
+
 
 static char *
 _scan_next_non_comment_line (char *line, int len, FILE *fp)
