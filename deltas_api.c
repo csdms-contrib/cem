@@ -39,7 +39,7 @@ scan_next_non_comment_line (char *line, int len, FILE *fp)
 }
 
 int
-BMI_CEM_Initialize (const char *config_file, BMI_Model **handle)
+BMI_CEM_Initialize (const char *config_file, Bmi **handle)
 {
   int rtn = BMI_FAILURE;
 
@@ -150,7 +150,7 @@ deltas_init (Deltas_state * s)
 }
 
 int
-BMI_CEM_Get_component_name (BMI_Model *s, char *name)
+BMI_CEM_Get_component_name (Bmi *s, char *name)
 {
   if (*name) {
     strncpy (name, "CEM", BMI_CEM_COMPONENT_NAME_MAX);
@@ -159,7 +159,7 @@ BMI_CEM_Get_component_name (BMI_Model *s, char *name)
 }
 
 int
-BMI_CEM_Update (BMI_Model * s)
+BMI_CEM_Update (Bmi * s)
 {
   State *p = (State *) s;
   double now;
