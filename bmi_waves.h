@@ -8,7 +8,7 @@ extern "C" {
 #include "bmi.h"
 #include "waves_model.h"
 
-BMI_Model * register_bmi_waves(BMI_Model *model);
+Bmi * register_bmi_waves(Bmi *model);
 WavesModel* waves_new(void);
 
 #if defined(__cplusplus)
