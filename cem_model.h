@@ -101,7 +101,7 @@ typedef struct
 }
 CemModel;
 
-int cem_initialize (const char *config_file, CemModel **handle);
+int cem_initialize (const char *config_file, CemModel *handle);
 int cem_finalize (CemModel * model);
 int cem_advance_one_time_step (CemModel * model);
 
