@@ -74,7 +74,7 @@ main (int argc, char *argv[])
     register_bmi_waves(model);
 
     fprintf (stdout, "Initializing... ");
-    if (model->initialize(NULL, &(model->self)) == BMI_FAILURE) {
+    if (model->initialize(model, NULL) == BMI_FAILURE) {
       fprintf (stdout, "FAIL.\n");
       fprintf (stderr, "Unable to initialize\n");
       return EXIT_FAILURE;
@@ -82,28 +82,28 @@ main (int argc, char *argv[])
     else
       fprintf (stdout, "PASS.\n");
 
-    if (model->set_value(model->self, "sea_shoreline_wave~incoming~deepwater__ashton_et_al_approach_angle_asymmetry_parameter", &(args->asymmetry)) == BMI_FAILURE)
+    if (model->set_value(model, "sea_shoreline_wave~incoming~deepwater__ashton_et_al_approach_angle_asymmetry_parameter", &(args->asymmetry)) == BMI_FAILURE)
       return EXIT_FAILURE;
-    if (model->set_value(model->self, "sea_shoreline_wave~incoming~deepwater__ashton_et_al_approach_angle_highness_parameter", &(args->highness)) == BMI_FAILURE)
+    if (model->set_value(model, "sea_shoreline_wave~incoming~deepwater__ashton_et_al_approach_angle_highness_parameter", &(args->highness)) == BMI_FAILURE)
       return EXIT_FAILURE;
     
     for (i = 0; i < len; i++) {
       fprintf (stdout, "Updating... ");
-      if (model->update(model->self) == BMI_SUCCESS)
+      if (model->update(model) == BMI_SUCCESS)
         fprintf (stdout, "PASS\n");
       else {
         fprintf (stdout, "FAIL.\n");
         fprintf (stderr, "Unable to update\n");
       }
 
-      if (model->get_value(model->self, "sea_surface_water_wave__azimuth_angle_of_opposite_of_phase_velocity", &a) == BMI_SUCCESS)
+      if (model->get_value(model, "sea_surface_water_wave__azimuth_angle_of_opposite_of_phase_velocity", &a) == BMI_SUCCESS)
         fprintf (stdout, "Wave angle: %f\n", a * scale);
       else
         fprintf (stderr, "Unable to get wave angle\n");
     }
 
     fprintf (stdout, "Finalizing... ");
-    if (model->finalize(model->self) == BMI_SUCCESS)
+    if (model->finalize(model) == BMI_SUCCESS)
       fprintf (stdout, "PASS\n");
     else {
       fprintf (stdout, "FAIL.\n");
