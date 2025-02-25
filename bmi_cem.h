@@ -8,7 +8,7 @@ extern "C" {
 #include "bmi.h"
 #include "cem_model.h"
 
-BMI_Model * register_bmi_cem(BMI_Model *model);
+Bmi * register_bmi_cem(Bmi *model);
 CemModel* new_cem_model(void);
 
 #if defined(__cplusplus)
