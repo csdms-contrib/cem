@@ -13,61 +13,61 @@ extern "C" {
 #define BMI_MAX_VAR_NAME (2048)
 
 
-typedef struct {
-
-  int (* initialize)(const char *, void**);
-  int (* update)(void*);
-  int (* update_until)(void *, double);
-  int (* update_frac)(void *, double);
-  int (* finalize)(void *);
-  int (* run_model)(void *);
-
-  int (* get_component_name)(void *, char *);
-  int (* get_input_var_name_count)(void *, int *);
-  int (* get_output_var_name_count)(void *, int *);
-  int (* get_input_var_names)(void *, char **);
-  int (* get_output_var_names)(void *, char **);
-
-  int (* get_var_grid)(void *, const char *, int *);
-  int (* get_var_type)(void *, const char *, char *);
-  int (* get_var_units)(void *, const char *, char *);
-  int (* get_var_itemsize)(void *, const char *, int *);
-  int (* get_var_nbytes)(void *, const char *, int *);
-  int (* get_var_location)(void *, const char *, char *);
-  int (* get_current_time)(void *, double *);
-  int (* get_start_time)(void *, double *);
-  int (* get_end_time)(void *, double *);
-  int (* get_time_units)(void *, char *);
-  int (* get_time_step)(void *, double *);
+typedef struct BMI_Model {
   void * data;
 
-  /* Variable getter and setter functions */
-  int (* get_value)(void *, const char *, void *);
-  int (* get_value_ptr)(void *, const char *, void **);
-  int (* get_value_at_indices)(void *, const char *, void *, int *, int);
+  int (*initialize)(struct BMI_Model* self, const char* config_file);
+  int (* update)(struct BMI_Model*);
+  int (* update_until)(struct BMI_Model *, double);
+  int (* update_frac)(struct BMI_Model *, double);
+  int (* finalize)(struct BMI_Model *);
+  int (* run_model)(struct BMI_Model *);
 
-  int (* set_value)(void *, const char *, void *);
-  int (* set_value_ptr)(void *, const char *, void **);
-  int (* set_value_at_indices)(void *, const char *, int *, int, void *);
+  int (* get_component_name)(struct BMI_Model *, char *);
+  int (* get_input_var_name_count)(struct BMI_Model *, int *);
+  int (* get_output_var_name_count)(struct BMI_Model *, int *);
+  int (* get_input_var_names)(struct BMI_Model *, char **);
+  int (* get_output_var_names)(struct BMI_Model *, char **);
+
+  int (* get_var_grid)(struct BMI_Model *, const char *, int *);
+  int (* get_var_type)(struct BMI_Model *, const char *, char *);
+  int (* get_var_units)(struct BMI_Model *, const char *, char *);
+  int (* get_var_itemsize)(struct BMI_Model *, const char *, int *);
+  int (* get_var_nbytes)(struct BMI_Model *, const char *, int *);
+  int (* get_var_location)(struct BMI_Model *, const char *, char *);
+  int (* get_current_time)(struct BMI_Model *, double *);
+  int (* get_start_time)(struct BMI_Model *, double *);
+  int (* get_end_time)(struct BMI_Model *, double *);
+  int (* get_time_units)(struct BMI_Model *, char *);
+  int (* get_time_step)(struct BMI_Model *, double *);
+
+  /* Variable getter and setter functions */
+  int (* get_value)(struct BMI_Model *, const char *, void *);
+  int (* get_value_ptr)(struct BMI_Model *, const char *, void **);
+  int (* get_value_at_indices)(struct BMI_Model *, const char *, void *, int *, int);
+
+  int (* set_value)(struct BMI_Model *, const char *, void *);
+  int (* set_value_ptr)(struct BMI_Model *, const char *, void **);
+  int (* set_value_at_indices)(struct BMI_Model *, const char *, int *, int, void *);
 
   /* Grid information functions */
-  int (* get_grid_rank)(void *, int, int *);
-  int (* get_grid_size)(void *, int, int *);
-  int (* get_grid_type)(void *, int, char *);
-  int (* get_grid_shape)(void *, int, int *);
-  int (* get_grid_spacing)(void *, int, double *);
-  int (* get_grid_origin)(void *, int, double *);
+  int (* get_grid_rank)(struct BMI_Model *, int, int *);
+  int (* get_grid_size)(struct BMI_Model *, int, int *);
+  int (* get_grid_type)(struct BMI_Model *, int, char *);
+  int (* get_grid_shape)(struct BMI_Model *, int, int *);
+  int (* get_grid_spacing)(struct BMI_Model *, int, double *);
+  int (* get_grid_origin)(struct BMI_Model *, int, double *);
 
-  int (* get_grid_x)(void *, int, double *);
-  int (* get_grid_y)(void *, int, double *);
-  int (* get_grid_z)(void *, int, double *);
+  int (* get_grid_x)(struct BMI_Model *, int, double *);
+  int (* get_grid_y)(struct BMI_Model *, int, double *);
+  int (* get_grid_z)(struct BMI_Model *, int, double *);
 
-  int (* get_grid_face_count)(void *, int, int *);
-  int (* get_grid_point_count)(void *, int, int *);
-  int (* get_grid_vertex_count)(void *, int, int *);
+  int (* get_grid_face_count)(struct BMI_Model *, int, int *);
+  int (* get_grid_point_count)(struct BMI_Model *, int, int *);
+  int (* get_grid_vertex_count)(struct BMI_Model *, int, int *);
 
-  int (* get_grid_connectivity)(void *, int, int *);
-  int (* get_grid_offset)(void *, int, int *);
+  int (* get_grid_connectivity)(struct BMI_Model *, int, int *);
+  int (* get_grid_offset)(struct BMI_Model *, int, int *);
 } BMI_Model;
 
 
