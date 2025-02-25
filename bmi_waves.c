@@ -87,7 +87,7 @@ get_start_time(BMI_Model * self, double *time)
 static int
 get_end_time(BMI_Model * self, double *time)
 { /* Implement this: Set end time */
-    WavesModel *model = (WavesModel*)self;
+    WavesModel *model = (WavesModel*)self->data;
     *time = model->end * model->time_step;
     return BMI_SUCCESS;
 }
@@ -96,7 +96,7 @@ get_end_time(BMI_Model * self, double *time)
 static int
 get_current_time(BMI_Model * self, double *time)
 { /* Implement this: Set current time */
-    WavesModel *model = (WavesModel*)self;
+    WavesModel *model = (WavesModel*)self->data;
     *time = model->now * model->time_step;
     return BMI_SUCCESS;
 }
@@ -105,7 +105,7 @@ get_current_time(BMI_Model * self, double *time)
 static int
 get_time_step(BMI_Model * self, double *dt)
 { /* Implement this: Set time step */
-    WavesModel *model = (WavesModel*)self;
+    WavesModel *model = (WavesModel*)self->data;
     *dt = model->time_step;
     return BMI_SUCCESS;
 }
@@ -123,14 +123,12 @@ static int
 initialize(BMI_Model* handle, const char * file)
 { /* Implement this: Create and initialize a model handle */
   {
-    WavesModel * self = waves_new();
+    WavesModel * self = (WavesModel*)handle->data;
     double end_time = 20.;
     double wave_height = 2.;
     double wave_period = 7.;
     double angle_highness = 0.2;
     double angle_asymmetry = 0.5;
-
-    //_waves_initialize((State *) self);
 
     if (file) {
       FILE *fp = fopen(file, "r");
@@ -153,11 +151,7 @@ initialize(BMI_Model* handle, const char * file)
     {
       WavesModel *p = (WavesModel *) self;
       p->end = end_time / p->time_step;
-      fprintf(stderr, "Setting end time to %d\n", p->end);
-      fflush(stderr);
     }
-
-    *handle = self;
   }
 
   return BMI_SUCCESS;
@@ -167,7 +161,7 @@ initialize(BMI_Model* handle, const char * file)
 static int
 update_frac(BMI_Model * self, double f)
 { /* Implement this: Update for a fraction of a time step */
-    WavesModel *p = (WavesModel *) self;
+    WavesModel *p = (WavesModel *) self->data;
     double now;
     //int until_time_step = p->time_step * f;
 
@@ -219,7 +213,7 @@ update_until(BMI_Model * self, double then)
 static int
 finalize(BMI_Model * self)
 { /* Implement this: Clean up */
-    waves_destroy ((WavesModel*) self);
+    waves_destroy ((WavesModel*)self->data);
 
     return BMI_SUCCESS;
 }
@@ -400,17 +394,17 @@ get_value(BMI_Model *self, const char *name, void *dest)
     double *dptr = (double*)dest;
 
     if (strcmp(name, "sea_surface_water_wave__min_of_increment_of_azimuth_angle_of_opposite_of_phase_velocity") == 0) {
-        *dptr = waves_get_wave_angle_min ((WavesModel*)self);
+        *dptr = waves_get_wave_angle_min ((WavesModel*)self->data);
     } else if (strcmp(name, "sea_surface_water_wave__azimuth_angle_of_opposite_of_phase_velocity") == 0) {
-        *dptr = waves_get_wave_angle ((WavesModel*)self);
+        *dptr = waves_get_wave_angle ((WavesModel*)self->data);
     } else if (strcmp(name, "sea_surface_water_wave__mean_of_increment_of_azimuth_angle_of_opposite_of_phase_velocity") == 0) {
-        *dptr =  waves_get_wave_angle_mean ((WavesModel*)self);
+        *dptr =  waves_get_wave_angle_mean ((WavesModel*)self->data);
     } else if (strcmp(name, "sea_surface_water_wave__max_of_increment_of_azimuth_angle_of_opposite_of_phase_velocity") == 0) {
-        *dptr = waves_get_wave_angle_max ((WavesModel*)self);
+        *dptr = waves_get_wave_angle_max ((WavesModel*)self->data);
     } else if (strcmp(name, "sea_surface_water_wave__height") == 0) {
-        *dptr = waves_get_height ((WavesModel*)self);
+        *dptr = waves_get_height ((WavesModel*)self->data);
     } else if (strcmp(name, "sea_surface_water_wave__period") == 0) {
-        *dptr = waves_get_period ((WavesModel*)self);
+        *dptr = waves_get_period ((WavesModel*)self->data);
     } else {
         return BMI_FAILURE;
     }
@@ -423,13 +417,13 @@ static int
 set_value (BMI_Model *self, const char *name, void *array)
 {
     if (strcmp(name, "sea_shoreline_wave~incoming~deepwater__ashton_et_al_approach_angle_asymmetry_parameter") == 0)
-      waves_set_angle_asymmetry((WavesModel*)self, *(double*)array);
+      waves_set_angle_asymmetry((WavesModel*)self->data, *(double*)array);
     else if (strcmp(name, "sea_shoreline_wave~incoming~deepwater__ashton_et_al_approach_angle_highness_parameter") == 0)
-      waves_set_angle_highness((WavesModel*)self, *(double*)array);
+      waves_set_angle_highness((WavesModel*)self->data, *(double*)array);
     else if (strcmp(name, "sea_surface_water_wave__height") == 0)
-      waves_set_height((WavesModel*)self, *(double*)array);
+      waves_set_height((WavesModel*)self->data, *(double*)array);
     else if (strcmp(name, "sea_surface_water_wave__period") == 0)
-      waves_set_period((WavesModel*)self, *(double*)array);
+      waves_set_period((WavesModel*)self->data, *(double*)array);
 
     return BMI_SUCCESS;
 }
