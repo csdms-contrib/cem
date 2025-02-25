@@ -21,7 +21,7 @@ typedef struct
 }
 Deltas_state;
 
-typedef Deltas_state BMI_Model;
+typedef Deltas_state Bmi;
 
 #define BMI_SUCCESS (0)
 #define BMI_FAILURE (1)
@@ -55,36 +55,36 @@ typedef enum {
 BMI_Grid_type;
 
 /* BMI Function definitions */
-int BMI_CEM_Initialize (const char *config_file, BMI_Model **handle);
-int BMI_CEM_Update (BMI_Model * s);
-int BMI_CEM_Update_until (BMI_Model * s, double time_in_days);
-int BMI_CEM_Finalize (BMI_Model * s);
+int BMI_CEM_Initialize (const char *config_file, Bmi **handle);
+int BMI_CEM_Update (Bmi * s);
+int BMI_CEM_Update_until (Bmi * s, double time_in_days);
+int BMI_CEM_Finalize (Bmi * s);
 
-int BMI_CEM_Get_component_name (BMI_Model *s, char *name);
-int BMI_CEM_Get_output_var_names (BMI_Model *s, char **names);
+int BMI_CEM_Get_component_name (Bmi *s, char *name);
+int BMI_CEM_Get_output_var_names (Bmi *s, char **names);
 int BMI_CEM_Get_output_var_name_count (Deltas_state *s, int *count);
-int BMI_CEM_Get_input_var_names (BMI_Model *s, char **names);
+int BMI_CEM_Get_input_var_names (Bmi *s, char **names);
 int BMI_CEM_Get_input_var_name_count (Deltas_state *s, int *count);
 
-int BMI_CEM_Get_double (BMI_Model *s, const char *value, double *dest);
-int BMI_CEM_Get_double_ptr (BMI_Model *s, const char *value, double **dest);
-int BMI_CEM_Set_double (BMI_Model *s, const char * value, double *src);
+int BMI_CEM_Get_double (Bmi *s, const char *value, double *dest);
+int BMI_CEM_Get_double_ptr (Bmi *s, const char *value, double **dest);
+int BMI_CEM_Set_double (Bmi *s, const char * value, double *src);
 
-int BMI_CEM_Get_end_time (BMI_Model * s, double * time);
-int BMI_CEM_Get_current_time (BMI_Model * s, double * time);
-int BMI_CEM_Get_start_time (BMI_Model * s, double * time);
-int BMI_CEM_Get_time_step (BMI_Model * s, double * dt);
+int BMI_CEM_Get_end_time (Bmi * s, double * time);
+int BMI_CEM_Get_current_time (Bmi * s, double * time);
+int BMI_CEM_Get_start_time (Bmi * s, double * time);
+int BMI_CEM_Get_time_step (Bmi * s, double * dt);
 int BMI_CEM_Get_time_units (Deltas_state * s, char *units);
 
-int BMI_CEM_Get_var_type (BMI_Model *s, const char *value, BMI_Var_type *type);
-int BMI_CEM_Get_var_rank (BMI_Model * s, const char *name, int *rank);
-int BMI_CEM_Get_var_stride (BMI_Model *s, const char *value, int *stride);
-int BMI_CEM_Get_var_point_count (BMI_Model * model, const char *name, int *count);
+int BMI_CEM_Get_var_type (Bmi *s, const char *value, BMI_Var_type *type);
+int BMI_CEM_Get_var_rank (Bmi * s, const char *name, int *rank);
+int BMI_CEM_Get_var_stride (Bmi *s, const char *value, int *stride);
+int BMI_CEM_Get_var_point_count (Bmi * model, const char *name, int *count);
 
-int BMI_CEM_Get_grid_type (BMI_Model * s, const char *name, BMI_Grid_type *type);
-int BMI_CEM_Get_grid_shape (BMI_Model * s, const char *name, int *shape);
-int BMI_CEM_Get_grid_spacing (BMI_Model * s, const char *name, double *spacing);
-int BMI_CEM_Get_grid_origin (BMI_Model * s, char const *name, double *origin);
+int BMI_CEM_Get_grid_type (Bmi * s, const char *name, BMI_Grid_type *type);
+int BMI_CEM_Get_grid_shape (Bmi * s, const char *name, int *shape);
+int BMI_CEM_Get_grid_spacing (Bmi * s, const char *name, double *spacing);
+int BMI_CEM_Get_grid_origin (Bmi * s, char const *name, double *origin);
 
 #define NO_BMI_CEM_GET_GRID_CONNECTIVITY
 #define NO_BMI_CEM_GET_GRID_OFFSET
