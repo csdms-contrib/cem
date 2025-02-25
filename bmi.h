@@ -14,7 +14,6 @@ extern "C" {
 
 
 typedef struct {
-  void * self;
 
   int (* initialize)(const char *, void**);
   int (* update)(void*);
@@ -40,6 +39,7 @@ typedef struct {
   int (* get_end_time)(void *, double *);
   int (* get_time_units)(void *, char *);
   int (* get_time_step)(void *, double *);
+  void * data;
 
   /* Variable getter and setter functions */
   int (* get_value)(void *, const char *, void *);
