@@ -30,9 +30,9 @@ main (int argc, char *argv[])
 
   fprintf (stdout, "Initializing... ");
   if (argc>1)
-    status = model->initialize(argv[1], &(model->self));
+    status = model->initialize(model, argv[1]);
   else
-    status = model->initialize(NULL, &(model->self));
+    status = model->initialize(model, NULL);
 
   if (status == BMI_FAILURE) {
     fprintf (stdout, "FAIL.\n");
@@ -51,11 +51,11 @@ main (int argc, char *argv[])
     double n_steps = 2500;
     const double river_flux = 1250.;
 
-    if (model->get_var_grid(model->self, "land_surface__elevation", &grid) == BMI_FAILURE) {
+    if (model->get_var_grid(model, "land_surface__elevation", &grid) == BMI_FAILURE) {
       fprintf(stderr, "unable to get var grid\n");
       return EXIT_FAILURE;
     }
-    if (model->get_grid_rank(model->self, grid, &rank) == BMI_FAILURE) {
+    if (model->get_grid_rank(model, grid, &rank) == BMI_FAILURE) {
       fprintf(stderr, "unable to get var grid\n");
       return EXIT_FAILURE;
     }
@@ -63,14 +63,14 @@ main (int argc, char *argv[])
       fprintf (stderr, "Grid rank: %d\n", rank);
 
     shape = (int*) malloc (sizeof (int)*rank);
-    if (model->get_grid_shape(model->self, grid, shape) == BMI_FAILURE) {
+    if (model->get_grid_shape(model, grid, shape) == BMI_FAILURE) {
       fprintf(stderr, "unable to get var grid\n");
       return EXIT_FAILURE;
     }
     else
       fprintf (stderr, "Grid shape: %d x %d\n", shape[0], shape[1]);
 
-    if (model->get_grid_size(model->self, grid, &len) == BMI_FAILURE) {
+    if (model->get_grid_size(model, grid, &len) == BMI_FAILURE) {
       fprintf(stderr, "unable to get var grid\n");
       return EXIT_FAILURE;
     }
@@ -81,9 +81,9 @@ main (int argc, char *argv[])
       double wave_period = 7;
       int status = 0;
 
-      status += model->set_value(model->self, "sea_surface_water_wave__azimuth_angle_of_opposite_of_phase_velocity", &angle);
-      status += model->set_value(model->self, "sea_surface_water_wave__height", &wave_height);
-      status += model->set_value(model->self, "sea_surface_water_wave__period", &wave_period);
+      status += model->set_value(model, "sea_surface_water_wave__azimuth_angle_of_opposite_of_phase_velocity", &angle);
+      status += model->set_value(model, "sea_surface_water_wave__height", &wave_height);
+      status += model->set_value(model, "sea_surface_water_wave__period", &wave_period);
 
       if (status != 0) {
         fprintf(stderr, "status is %d\n", status);
@@ -95,19 +95,19 @@ main (int argc, char *argv[])
     z = (double *)malloc (sizeof (double) * len);
 
     for (i = 1; i <= n_steps; i++) {
-      deltas_avulsion (model->self, qs, river_flux);
+      deltas_avulsion (model->data, qs, river_flux);
 
-      if (model->set_value(model->self, "land_surface_water_sediment~bedload__mass_flow_rate", qs) == BMI_FAILURE) {
+      if (model->set_value(model, "land_surface_water_sediment~bedload__mass_flow_rate", qs) == BMI_FAILURE) {
         fprintf(stderr, "unable to set qs\n");
         return EXIT_FAILURE;
       }
 
-      if (model->update(model->self) == BMI_FAILURE) {
+      if (model->update(model) == BMI_FAILURE) {
         fprintf(stderr, "unable to update\n");
         return EXIT_FAILURE;
       }
 
-      if (model->get_value(model->self, "sea_water__depth", z) == BMI_FAILURE) {
+      if (model->get_value(model, "sea_water__depth", z) == BMI_FAILURE) {
         fprintf(stderr, "unable to get water depth\n");
         return EXIT_FAILURE;
       }
@@ -126,8 +126,8 @@ main (int argc, char *argv[])
       double time;
       double dt;
 
-      model->get_time_step(model->self, &dt);
-      model->get_current_time(model->self, &time);
+      model->get_time_step(model, &dt);
+      model->get_current_time(model, &time);
       if (fabs (time - n_steps * dt) > 1e-6) {
         fprintf(stderr, "%f != %f\n", time, n_steps * dt);
         return EXIT_FAILURE;
@@ -135,7 +135,7 @@ main (int argc, char *argv[])
     }
   }
 
-  model->finalize(model->self);
+  model->finalize(model);
 
   return 0;
 }
@@ -151,10 +151,10 @@ print_model_info(BMI_Model *model)
 
     fprintf (stderr, "\n");
 
-    status += model->get_value(model->self, "sea_surface_water_wave__azimuth_angle_of_opposite_of_phase_velocity", &angle);
-    status += model->get_value(model->self, "sea_surface_water_wave__height", &wave_height);
-    status += model->get_value(model->self, "sea_surface_water_wave__period", &wave_period);
-    status += model->get_current_time(model->self, &time);
+    status += model->get_value(model, "sea_surface_water_wave__azimuth_angle_of_opposite_of_phase_velocity", &angle);
+    status += model->get_value(model, "sea_surface_water_wave__height", &wave_height);
+    status += model->get_value(model, "sea_surface_water_wave__period", &wave_period);
+    status += model->get_current_time(model, &time);
 
     if (status != 0) {
         fprintf(stderr, "Error getting model info.\n");
