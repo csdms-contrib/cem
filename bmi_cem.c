@@ -608,7 +608,6 @@ register_bmi_cem(Bmi *model)
     model->update_until = update_until;
     model->update_frac = update_frac;
     model->finalize = finalize;
-    model->run_model = NULL;
 
     model->get_component_name = get_component_name;
     model->get_input_var_name_count = get_input_var_name_count;

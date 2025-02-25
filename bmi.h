@@ -21,7 +21,6 @@ typedef struct Bmi {
   int (* update_until)(struct Bmi *, double);
   int (* update_frac)(struct Bmi *, double);
   int (* finalize)(struct Bmi *);
-  int (* run_model)(struct Bmi *);
 
   int (* get_component_name)(struct Bmi *, char *);
   int (* get_input_var_name_count)(struct Bmi *, int *);
