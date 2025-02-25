@@ -97,7 +97,7 @@ get_start_time(BMI_Model * self, double *time)
 static int
 get_end_time(BMI_Model * self, double *time)
 { /* Implement this: Set end time */
-    *time = deltas_get_end_time((CemModel*)self);
+    *time = deltas_get_end_time((CemModel*)self->data);
     return BMI_SUCCESS;
 }
 
@@ -105,7 +105,7 @@ get_end_time(BMI_Model * self, double *time)
 static int
 get_current_time(BMI_Model * self, double *time)
 { /* Implement this: Set current time */
-    *time = deltas_get_current_time((CemModel*)self);
+    *time = deltas_get_current_time((CemModel*)self->data);
     return BMI_SUCCESS;
 }
 
@@ -113,7 +113,7 @@ get_current_time(BMI_Model * self, double *time)
 static int
 get_time_step(BMI_Model * self, double *dt)
 { /* Implement this: Set time step */
-    *dt = deltas_get_time_step((CemModel*)self);
+    *dt = deltas_get_time_step((CemModel*)self->data);
     return BMI_SUCCESS;
 }
 
@@ -129,7 +129,7 @@ get_time_units(BMI_Model * self, char *units)
 static int
 initialize(BMI_Model* self, const char* config_file)
 { /* Implement this: Create and initialize a model handle */
-    return cem_initialize(file, (CemModel**)handle);
+	return cem_initialize(config_file, (CemModel*)self->data);
 }
 
 
@@ -143,7 +143,7 @@ update_frac(BMI_Model * self, double f)
 static int
 update(BMI_Model * self)
 {
-    cem_advance_one_time_step((CemModel*)self);
+    cem_advance_one_time_step((CemModel*)self->data);
     return BMI_SUCCESS;
 }
 
@@ -172,7 +172,7 @@ update_until(BMI_Model * self, double then)
 static int
 finalize(BMI_Model * self)
 { /* Implement this: Clean up */
-    cem_finalize((CemModel*)self);
+    cem_finalize((CemModel*)self->data);
     return BMI_SUCCESS;
 }
 
@@ -213,8 +213,8 @@ static int
 get_grid_shape(BMI_Model *self, int id, int *shape)
 { /* Implement this: set shape of structured grids */
     if (id == 2) {
-        shape[0] = deltas_get_nx((CemModel*)self);
-        shape[1] = deltas_get_ny((CemModel*)self) / 2;
+        shape[0] = deltas_get_nx((CemModel*)self->data);
+        shape[1] = deltas_get_ny((CemModel*)self->data) / 2;
     } else {
         return BMI_FAILURE;
     }
@@ -226,8 +226,8 @@ static int
 get_grid_spacing(BMI_Model *self, int id, double *spacing)
 { /* Implement this: set spacing of uniform rectilinear grids */
     if (id == 2) {
-        spacing[0] = deltas_get_dx((CemModel*)self);
-        spacing[1] = deltas_get_dy((CemModel*)self);
+        spacing[0] = deltas_get_dx((CemModel*)self->data);
+        spacing[1] = deltas_get_dy((CemModel*)self->data);
     } else {
         return BMI_FAILURE;
     }
@@ -254,9 +254,9 @@ get_grid_size(BMI_Model *self, int id, int *size)
     if (id == 0)
         *size = 1;
     else if (id == 1)
-        *size = deltas_get_n_rivers((CemModel*)self);
+        *size = deltas_get_n_rivers((CemModel*)self->data);
     else if (id == 2)
-        *size = deltas_get_nx((CemModel*)self) * deltas_get_ny((CemModel*)self) / 2;
+        *size = deltas_get_nx((CemModel*)self->data) * deltas_get_ny((CemModel*)self->data) / 2;
     else
         return BMI_FAILURE;
 
@@ -441,7 +441,7 @@ get_var_stride(BMI_Model *self, const char *name, int *stride)
         stride[0] = 1;
     }
     else if (id == 2) {
-        stride[0] = deltas_get_ny((CemModel*)self);
+        stride[0] = deltas_get_ny((CemModel*)self->data);
         stride[1] = 1;
     }
 
@@ -460,29 +460,29 @@ static int
 get_value_ptr(BMI_Model *self, const char *name, void **dest)
 {
     if (strcmp(name, "basin_outlet~coastal_center__x_coordinate") == 0) {
-        *dest = (double*)deltas_get_river_x_position((CemModel*)self);
+        *dest = (double*)deltas_get_river_x_position((CemModel*)self->data);
     } else if (strcmp(name, "sea_surface_water_wave__azimuth_angle_of_opposite_of_phase_velocity") == 0) {
-        *dest = &(((CemModel*)self)->WaveAngle);
+        *dest = &(((CemModel*)self->data)->WaveAngle);
     } else if (strcmp(name, "basin_outlet_water_sediment~bedload__mass_flow_rate") == 0) {
         *dest = NULL;
     } else if (strcmp(name, "basin_outlet~coastal_water_sediment~bedload__mass_flow_rate") == 0) {
-        *dest = (double*)deltas_get_river_flux((CemModel*)self);
+        *dest = (double*)deltas_get_river_flux((CemModel*)self->data);
     } else if (strcmp(name, "land_surface_water_sediment~bedload__mass_flow_rate") == 0) {
         *dest = NULL;
     } else if (strcmp(name, "sea_surface_water_wave__period") == 0) {
-        *dest = &(((CemModel*)self)->wave_period);
+        *dest = &(((CemModel*)self->data)->wave_period);
     } else if (strcmp(name, "land_surface__elevation") == 0) {
         *dest = NULL;
     } else if (strcmp(name, "sea_water__depth") == 0) {
-        *dest = (double*)deltas_get_depth((CemModel*)self) + deltas_get_ny((CemModel*)self) / 2;
+        *dest = (double*)deltas_get_depth((CemModel*)self->data) + deltas_get_ny((CemModel*)self->data) / 2;
     } else if (strcmp(name, "basin_outlet_water_sediment~suspended__mass_flow_rate") == 0) {
         *dest = NULL;
     } else if (strcmp(name, "sea_surface_water_wave__height") == 0) {
-        *dest = &(((CemModel*)self)->wave_height);
+        *dest = &(((CemModel*)self->data)->wave_height);
     } else if (strcmp(name, "basin_outlet~coastal_center__y_coordinate") == 0) {
-        *dest = (double*)deltas_get_river_y_position((CemModel*)self);
+        *dest = (double*)deltas_get_river_y_position((CemModel*)self->data);
     } else if (strcmp(name, "model__time_step") == 0) {
-        *dest = &(((CemModel*)self)->time_step);
+        *dest = &(((CemModel*)self->data)->time_step);
     } else {
         *dest = NULL; return BMI_FAILURE;
     }
@@ -498,19 +498,19 @@ int
 get_value(BMI_Model * self, const char * name, void *dest)
 {
     if (strcmp(name, "sea_water__depth") == 0) {
-        deltas_get_depth_dup((CemModel*)self, dest);
+        deltas_get_depth_dup((CemModel*)self->data, dest);
         return BMI_SUCCESS;
     }
     else if (strcmp(name, "land_surface__elevation") == 0) {
-        deltas_get_elevation_dup((CemModel*)self, dest);
+        deltas_get_elevation_dup((CemModel*)self->data, dest);
         return BMI_SUCCESS;
     }
     else if (strcmp(name, "sea_surface_water_wave__azimuth_angle_of_opposite_of_phase_velocity") == 0)
-        *(double*)dest = ((CemModel*)self)->WaveAngle;
+        *(double*)dest = ((CemModel*)self->data)->WaveAngle;
     else if (strcmp(name, "sea_surface_water_wave__height") == 0)
-        *(double*)dest = ((CemModel*)self)->wave_height;
+        *(double*)dest = ((CemModel*)self->data)->wave_height;
     else if (strcmp(name, "sea_surface_water_wave__period") == 0)
-        *(double*)dest = ((CemModel*)self)->wave_period;
+        *(double*)dest = ((CemModel*)self->data)->wave_period;
     else {
         void *src = NULL;
         int nbytes = 0;
@@ -555,15 +555,15 @@ set_value (BMI_Model *self, const char *name, void *array)
     int nbytes = 0;
 
     if (strcmp(name, "land_surface_water_sediment~bedload__mass_flow_rate") == 0)
-        deltas_set_sediment_flux_grid ((CemModel*)self, (double*)array);
+        deltas_set_sediment_flux_grid ((CemModel*)self->data, (double*)array);
     else if (strcmp(name, "land_surface__elevation") == 0)
-        deltas_set_elevation_grid ((CemModel*)self, (double*)array);
+        deltas_set_elevation_grid ((CemModel*)self->data, (double*)array);
     else if (strcmp(name, "sea_surface_water_wave__azimuth_angle_of_opposite_of_phase_velocity") == 0)
-      ((CemModel*)self)->WaveAngle = *((double*)array);
+      ((CemModel*)self->data)->WaveAngle = *((double*)array);
     else if (strcmp(name, "sea_surface_water_wave__height") == 0)
-      ((CemModel*)self)->wave_height = *((double*)array);
+      ((CemModel*)self->data)->wave_height = *((double*)array);
     else if (strcmp(name, "sea_surface_water_wave__period") == 0)
-      ((CemModel*)self)->wave_period = *((double*)array);
+      ((CemModel*)self->data)->wave_period = *((double*)array);
     else {
         return_on_error(get_value_ptr(self, name, &dest));
         return_on_error(get_var_nbytes(self, name, &nbytes));
