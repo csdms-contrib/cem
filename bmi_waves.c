@@ -432,7 +432,7 @@ set_value (BMI_Model *self, const char *name, void *array)
 BMI_Model*
 register_bmi_waves(BMI_Model *model)
 {
-    model->self = NULL;
+    model->data = waves_new();
 
     model->initialize = initialize;
     model->update = update;
