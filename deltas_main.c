@@ -6,13 +6,13 @@
 #include "cem_model.h"
 #include "bmi_cem.h"
 
-void print_model_info(BMI_Model *model);
+void print_model_info(Bmi *model);
 void print_matrix (double *x, int *shape);
 
 int
 main (int argc, char *argv[])
 {
-  BMI_Model *model = (BMI_Model*) malloc(sizeof(BMI_Model));
+  Bmi *model = (Bmi*) malloc(sizeof(Bmi));
   int status;
 
   if (argc > 1) {
@@ -142,7 +142,7 @@ main (int argc, char *argv[])
 
 
 void
-print_model_info(BMI_Model *model)
+print_model_info(Bmi *model)
 {
     double angle = 0.;
     double wave_height = 0., wave_period = 0.;
