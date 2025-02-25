@@ -17,7 +17,7 @@
 }
 
 static int
-get_component_name (BMI_Model *self, char * name)
+get_component_name (Bmi *self, char * name)
 {
     strncpy (name, "cem", BMI_MAX_COMPONENT_NAME);
     return BMI_SUCCESS;
@@ -38,7 +38,7 @@ static const char *input_var_names[INPUT_VAR_NAME_COUNT] = {
 
 
 static int
-get_input_var_name_count(BMI_Model *self, int *count)
+get_input_var_name_count(Bmi *self, int *count)
 {
     *count = INPUT_VAR_NAME_COUNT;
     return BMI_SUCCESS;
@@ -46,7 +46,7 @@ get_input_var_name_count(BMI_Model *self, int *count)
 
 
 static int
-get_input_var_names(BMI_Model *self, char **names)
+get_input_var_names(Bmi *self, char **names)
 {
     int i;
     for (i=0; i<INPUT_VAR_NAME_COUNT; i++) {
@@ -68,7 +68,7 @@ static const char *output_var_names[OUTPUT_VAR_NAME_COUNT] = {
 
 
 static int
-get_output_var_name_count(BMI_Model *self, int *count)
+get_output_var_name_count(Bmi *self, int *count)
 {
     *count = OUTPUT_VAR_NAME_COUNT;
     return BMI_SUCCESS;
@@ -76,7 +76,7 @@ get_output_var_name_count(BMI_Model *self, int *count)
 
 
 static int
-get_output_var_names(BMI_Model *self, char **names)
+get_output_var_names(Bmi *self, char **names)
 {
     int i;
     for (i=0; i<OUTPUT_VAR_NAME_COUNT; i++) {
@@ -87,7 +87,7 @@ get_output_var_names(BMI_Model *self, char **names)
 
 
 static int
-get_start_time(BMI_Model * self, double *time)
+get_start_time(Bmi * self, double *time)
 {
     *time = 0.0;
     return BMI_SUCCESS;
@@ -95,7 +95,7 @@ get_start_time(BMI_Model * self, double *time)
 
 
 static int
-get_end_time(BMI_Model * self, double *time)
+get_end_time(Bmi * self, double *time)
 { /* Implement this: Set end time */
     *time = deltas_get_end_time((CemModel*)self->data);
     return BMI_SUCCESS;
@@ -103,7 +103,7 @@ get_end_time(BMI_Model * self, double *time)
 
 
 static int
-get_current_time(BMI_Model * self, double *time)
+get_current_time(Bmi * self, double *time)
 { /* Implement this: Set current time */
     *time = deltas_get_current_time((CemModel*)self->data);
     return BMI_SUCCESS;
@@ -111,7 +111,7 @@ get_current_time(BMI_Model * self, double *time)
 
 
 static int
-get_time_step(BMI_Model * self, double *dt)
+get_time_step(Bmi * self, double *dt)
 { /* Implement this: Set time step */
     *dt = deltas_get_time_step((CemModel*)self->data);
     return BMI_SUCCESS;
@@ -119,7 +119,7 @@ get_time_step(BMI_Model * self, double *dt)
 
 
 static int
-get_time_units(BMI_Model * self, char *units)
+get_time_units(Bmi * self, char *units)
 {
     strncpy(units, "d", BMI_MAX_UNITS_NAME);
     return BMI_SUCCESS;
@@ -127,21 +127,21 @@ get_time_units(BMI_Model * self, char *units)
 
 
 static int
-initialize(BMI_Model* self, const char* config_file)
+initialize(Bmi* self, const char* config_file)
 { /* Implement this: Create and initialize a model handle */
 	return cem_initialize(config_file, (CemModel*)self->data);
 }
 
 
 static int
-update_frac(BMI_Model * self, double f)
+update_frac(Bmi * self, double f)
 { /* Implement this: Update for a fraction of a time step */
     return BMI_FAILURE;
 }
 
 
 static int
-update(BMI_Model * self)
+update(Bmi * self)
 {
     cem_advance_one_time_step((CemModel*)self->data);
     return BMI_SUCCESS;
@@ -149,7 +149,7 @@ update(BMI_Model * self)
 
 
 static int
-update_until(BMI_Model * self, double then)
+update_until(Bmi * self, double then)
 {
     double dt;
     double now;
@@ -170,7 +170,7 @@ update_until(BMI_Model * self, double then)
 
 
 static int
-finalize(BMI_Model * self)
+finalize(Bmi * self)
 { /* Implement this: Clean up */
     cem_finalize((CemModel*)self->data);
     return BMI_SUCCESS;
@@ -178,7 +178,7 @@ finalize(BMI_Model * self)
 
 
 static int
-get_grid_type(BMI_Model *self, int id, char *type)
+get_grid_type(Bmi *self, int id, char *type)
 {
     if (id == 0) {
         strncpy(type, "scalar", 2048);
@@ -194,7 +194,7 @@ get_grid_type(BMI_Model *self, int id, char *type)
 
 
 static int
-get_grid_rank(BMI_Model *self, int id, int *rank)
+get_grid_rank(Bmi *self, int id, int *rank)
 {
     if (id == 0) {
         *rank = 0;
@@ -210,7 +210,7 @@ get_grid_rank(BMI_Model *self, int id, int *rank)
 
 
 static int
-get_grid_shape(BMI_Model *self, int id, int *shape)
+get_grid_shape(Bmi *self, int id, int *shape)
 { /* Implement this: set shape of structured grids */
     if (id == 2) {
         shape[0] = deltas_get_nx((CemModel*)self->data);
@@ -223,7 +223,7 @@ get_grid_shape(BMI_Model *self, int id, int *shape)
 
 
 static int
-get_grid_spacing(BMI_Model *self, int id, double *spacing)
+get_grid_spacing(Bmi *self, int id, double *spacing)
 { /* Implement this: set spacing of uniform rectilinear grids */
     if (id == 2) {
         spacing[0] = deltas_get_dx((CemModel*)self->data);
@@ -236,7 +236,7 @@ get_grid_spacing(BMI_Model *self, int id, double *spacing)
 
 
 static int
-get_grid_origin(BMI_Model *self, int id, double *origin)
+get_grid_origin(Bmi *self, int id, double *origin)
 { /* Implement this: set origin of uniform rectilinear grids */
     if (id == 2) {
         origin[0] = 0.;
@@ -249,7 +249,7 @@ get_grid_origin(BMI_Model *self, int id, double *origin)
 
 
 static int
-get_grid_size(BMI_Model *self, int id, int *size)
+get_grid_size(Bmi *self, int id, int *size)
 {
     if (id == 0)
         *size = 1;
@@ -265,7 +265,7 @@ get_grid_size(BMI_Model *self, int id, int *size)
 
 
 static int
-get_var_grid(BMI_Model *self, const char *name, int *grid)
+get_var_grid(Bmi *self, const char *name, int *grid)
 {
     if (strcmp(name, "basin_outlet~coastal_center__x_coordinate") == 0) {
         *grid = 1;
@@ -300,7 +300,7 @@ get_var_grid(BMI_Model *self, const char *name, int *grid)
 
 
 static int
-get_var_type(BMI_Model *self, const char *name, char *type)
+get_var_type(Bmi *self, const char *name, char *type)
 {
     if (strcmp(name, "basin_outlet~coastal_center__x_coordinate") == 0) {
         strncpy(type, "double", BMI_MAX_UNITS_NAME);
@@ -334,7 +334,7 @@ get_var_type(BMI_Model *self, const char *name, char *type)
 
 
 static int
-get_var_units(BMI_Model *self, const char *name, char *units)
+get_var_units(Bmi *self, const char *name, char *units)
 {
     if (strcmp(name, "basin_outlet~coastal_center__x_coordinate") == 0) {
         strncpy(units, "meters", BMI_MAX_UNITS_NAME);
@@ -368,7 +368,7 @@ get_var_units(BMI_Model *self, const char *name, char *units)
 
 
 static int
-get_var_itemsize(BMI_Model *self, const char *name, int *itemsize)
+get_var_itemsize(Bmi *self, const char *name, int *itemsize)
 {
     if (strcmp(name, "basin_outlet~coastal_center__x_coordinate") == 0) {
         *itemsize = sizeof(double);
@@ -402,7 +402,7 @@ get_var_itemsize(BMI_Model *self, const char *name, int *itemsize)
 
 
 static int
-get_var_nbytes(BMI_Model *self, const char *name, int *nbytes)
+get_var_nbytes(Bmi *self, const char *name, int *nbytes)
 {
     int id, size, itemsize;
 
@@ -417,7 +417,7 @@ get_var_nbytes(BMI_Model *self, const char *name, int *nbytes)
 
 
 static int
-get_var_ndim(BMI_Model *self, const char *name, int *ndim)
+get_var_ndim(Bmi *self, const char *name, int *ndim)
 {
     int id, rank;
 
@@ -431,7 +431,7 @@ get_var_ndim(BMI_Model *self, const char *name, int *ndim)
 
 
 static int
-get_var_stride(BMI_Model *self, const char *name, int *stride)
+get_var_stride(Bmi *self, const char *name, int *stride)
 {
     int id;
 
@@ -449,7 +449,7 @@ get_var_stride(BMI_Model *self, const char *name, int *stride)
 }
 
 static int
-get_var_location(BMI_Model *self, const char *name, char *location)
+get_var_location(Bmi *self, const char *name, char *location)
 {
     strncpy(location, "node", BMI_MAX_UNITS_NAME);
     return BMI_SUCCESS;
@@ -457,7 +457,7 @@ get_var_location(BMI_Model *self, const char *name, char *location)
 
 
 static int
-get_value_ptr(BMI_Model *self, const char *name, void **dest)
+get_value_ptr(Bmi *self, const char *name, void **dest)
 {
     if (strcmp(name, "basin_outlet~coastal_center__x_coordinate") == 0) {
         *dest = (double*)deltas_get_river_x_position((CemModel*)self->data);
@@ -495,7 +495,7 @@ get_value_ptr(BMI_Model *self, const char *name, void **dest)
 
 
 int
-get_value(BMI_Model * self, const char * name, void *dest)
+get_value(Bmi * self, const char * name, void *dest)
 {
     if (strcmp(name, "sea_water__depth") == 0) {
         deltas_get_depth_dup((CemModel*)self->data, dest);
@@ -525,7 +525,7 @@ get_value(BMI_Model * self, const char * name, void *dest)
 
 
 static int
-get_value_at_indices (BMI_Model *self, const char *name, void *dest,
+get_value_at_indices (Bmi *self, const char *name, void *dest,
     int * inds, int len)
 {
     void *src = NULL;
@@ -549,7 +549,7 @@ get_value_at_indices (BMI_Model *self, const char *name, void *dest,
 
 
 static int
-set_value (BMI_Model *self, const char *name, void *array)
+set_value (Bmi *self, const char *name, void *array)
 {
     void * dest = NULL;
     int nbytes = 0;
@@ -576,7 +576,7 @@ set_value (BMI_Model *self, const char *name, void *array)
 
 
 static int
-set_value_at_indices (BMI_Model *self, const char *name, int * inds, int len,
+set_value_at_indices (Bmi *self, const char *name, int * inds, int len,
     void *src)
 {
     void * to = NULL;
@@ -598,8 +598,8 @@ set_value_at_indices (BMI_Model *self, const char *name, int * inds, int len,
 }
 
 
-BMI_Model*
-register_bmi_cem(BMI_Model *model)
+Bmi*
+register_bmi_cem(Bmi *model)
 {
     model->data = (void*)new_cem_model();
 
