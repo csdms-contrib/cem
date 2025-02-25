@@ -60,7 +60,7 @@ main (int argc, char *argv[])
     const double highness = args->highness;
     const double scale = (args->radians) ? 1. : 180. / M_PI;
 
-    BMI_Model *model = (BMI_Model*) malloc(sizeof(BMI_Model));
+    Bmi *model = (Bmi*) malloc(sizeof(Bmi));
 
     if (args->verbose)
     {
