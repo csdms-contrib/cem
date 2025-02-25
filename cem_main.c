@@ -8,14 +8,14 @@
 #include "bmi_cem.h"
 #include "bmi_waves.h"
 
-void print_model_info(BMI_Model *model);
+void print_model_info(Bmi *model);
 void print_matrix (double *x, int *shape, FILE *fp);
 
 int
 main (int argc, char *argv[])
 {
-  BMI_Model *cem = (BMI_Model*) malloc(sizeof(BMI_Model));
-  BMI_Model *waves = (BMI_Model*) malloc(sizeof(BMI_Model));
+  Bmi *cem = (Bmi*) malloc(sizeof(Bmi));
+  Bmi *waves = (Bmi*) malloc(sizeof(Bmi));
   FILE *output_file = NULL;
   int status;
 
@@ -173,7 +173,7 @@ main (int argc, char *argv[])
 
 
 void
-print_model_info(BMI_Model *model)
+print_model_info(Bmi *model)
 {
     double angle = 0.;
     double wave_height = 0., wave_period = 0.;
