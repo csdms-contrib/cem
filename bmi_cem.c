@@ -601,7 +601,7 @@ set_value_at_indices (BMI_Model *self, const char *name, int * inds, int len,
 BMI_Model*
 register_bmi_cem(BMI_Model *model)
 {
-    model->self = NULL;
+    model->data = (void*)new_cem_model();
 
     model->initialize = initialize;
     model->update = update;
