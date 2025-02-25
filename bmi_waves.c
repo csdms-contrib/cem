@@ -4,13 +4,14 @@
 #include <float.h>
 
 #include "bmi.h"
+#include "bmi_waves.h"
 
 /* Implement this: Add model-specific includes */
 #include "waves_model.h"
 
 
 static int
-get_component_name (void *self, char * name)
+get_component_name (BMI_Model *self, char * name)
 {
     strncpy (name, "waves", BMI_MAX_COMPONENT_NAME);
     return BMI_SUCCESS;
@@ -27,7 +28,7 @@ static const char *input_var_names[INPUT_VAR_NAME_COUNT] = {
 
 
 static int
-get_input_var_name_count(void *self, int *count)
+get_input_var_name_count(BMI_Model *self, int *count)
 {
     *count = INPUT_VAR_NAME_COUNT;
     return BMI_SUCCESS;
@@ -35,7 +36,7 @@ get_input_var_name_count(void *self, int *count)
 
 
 static int
-get_input_var_names(void *self, char **names)
+get_input_var_names(BMI_Model *self, char **names)
 {
     int i;
     for (i=0; i<INPUT_VAR_NAME_COUNT; i++) {
@@ -57,7 +58,7 @@ static const char *output_var_names[OUTPUT_VAR_NAME_COUNT] = {
 
 
 static int
-get_output_var_name_count(void *self, int *count)
+get_output_var_name_count(BMI_Model *self, int *count)
 {
     *count = OUTPUT_VAR_NAME_COUNT;
     return BMI_SUCCESS;
@@ -65,7 +66,7 @@ get_output_var_name_count(void *self, int *count)
 
 
 static int
-get_output_var_names(void *self, char **names)
+get_output_var_names(BMI_Model *self, char **names)
 {
     int i;
     for (i=0; i<OUTPUT_VAR_NAME_COUNT; i++) {
@@ -76,7 +77,7 @@ get_output_var_names(void *self, char **names)
 
 
 static int
-get_start_time(void * self, double *time)
+get_start_time(BMI_Model * self, double *time)
 {
     *time = 0.0;
     return BMI_SUCCESS;
@@ -84,7 +85,7 @@ get_start_time(void * self, double *time)
 
 
 static int
-get_end_time(void * self, double *time)
+get_end_time(BMI_Model * self, double *time)
 { /* Implement this: Set end time */
     WavesModel *model = (WavesModel*)self;
     *time = model->end * model->time_step;
@@ -93,7 +94,7 @@ get_end_time(void * self, double *time)
 
 
 static int
-get_current_time(void * self, double *time)
+get_current_time(BMI_Model * self, double *time)
 { /* Implement this: Set current time */
     WavesModel *model = (WavesModel*)self;
     *time = model->now * model->time_step;
@@ -102,7 +103,7 @@ get_current_time(void * self, double *time)
 
 
 static int
-get_time_step(void * self, double *dt)
+get_time_step(BMI_Model * self, double *dt)
 { /* Implement this: Set time step */
     WavesModel *model = (WavesModel*)self;
     *dt = model->time_step;
@@ -111,7 +112,7 @@ get_time_step(void * self, double *dt)
 
 
 static int
-get_time_units(void * self, char *units)
+get_time_units(BMI_Model * self, char *units)
 {
     strncpy(units, "d", BMI_MAX_UNITS_NAME);
     return BMI_SUCCESS;
@@ -119,7 +120,7 @@ get_time_units(void * self, char *units)
 
 
 static int
-initialize(const char * file, void **handle)
+initialize(BMI_Model* handle, const char * file)
 { /* Implement this: Create and initialize a model handle */
   {
     WavesModel * self = waves_new();
@@ -164,7 +165,7 @@ initialize(const char * file, void **handle)
 
 
 static int
-update_frac(void * self, double f)
+update_frac(BMI_Model * self, double f)
 { /* Implement this: Update for a fraction of a time step */
     WavesModel *p = (WavesModel *) self;
     double now;
@@ -181,14 +182,14 @@ update_frac(void * self, double f)
 
 
 static int
-update(void * self)
+update(BMI_Model * self)
 {
     return update_frac(self, 1.);
 }
 
 
 static int
-update_until(void * self, double then)
+update_until(BMI_Model * self, double then)
 {
     double dt;
     double now;
@@ -216,7 +217,7 @@ update_until(void * self, double then)
 
 
 static int
-finalize(void * self)
+finalize(BMI_Model * self)
 { /* Implement this: Clean up */
     waves_destroy ((WavesModel*) self);
 
@@ -225,7 +226,7 @@ finalize(void * self)
 
 
 static int
-get_grid_type(void *self, int id, char *type)
+get_grid_type(BMI_Model *self, int id, char *type)
 {
     if (id == 0) {
         strncpy(type, "scalar", 2048);
@@ -237,7 +238,7 @@ get_grid_type(void *self, int id, char *type)
 
 
 static int
-get_grid_rank(void *self, int id, int *rank)
+get_grid_rank(BMI_Model *self, int id, int *rank)
 {
     if (id == 0) {
         *rank = 0;
@@ -249,7 +250,7 @@ get_grid_rank(void *self, int id, int *rank)
 
 
 static int
-get_grid_size(void *self, int id, int *size)
+get_grid_size(BMI_Model *self, int id, int *size)
 {
     int rank;
     if (get_grid_rank(self, id, &rank) == BMI_FAILURE)
@@ -262,7 +263,7 @@ get_grid_size(void *self, int id, int *size)
 
 
 static int
-get_var_grid(void *self, const char *name, int *grid)
+get_var_grid(BMI_Model *self, const char *name, int *grid)
 {
     if (strcmp(name, "sea_surface_water_wave__min_of_increment_of_azimuth_angle_of_opposite_of_phase_velocity") == 0) {
         *grid = 0;
@@ -288,7 +289,7 @@ get_var_grid(void *self, const char *name, int *grid)
 
 
 static int
-get_var_type(void *self, const char *name, char *type)
+get_var_type(BMI_Model *self, const char *name, char *type)
 {
     if (strcmp(name, "sea_surface_water_wave__min_of_increment_of_azimuth_angle_of_opposite_of_phase_velocity") == 0) {
         strncpy(type, "double", BMI_MAX_UNITS_NAME);
@@ -314,7 +315,7 @@ get_var_type(void *self, const char *name, char *type)
 
 
 static int
-get_var_units(void *self, const char *name, char *units)
+get_var_units(BMI_Model *self, const char *name, char *units)
 {
     if (strcmp(name, "sea_surface_water_wave__min_of_increment_of_azimuth_angle_of_opposite_of_phase_velocity") == 0) {
         strncpy(units, "radians", BMI_MAX_UNITS_NAME);
@@ -340,7 +341,7 @@ get_var_units(void *self, const char *name, char *units)
 
 
 static int
-get_var_itemsize(void *self, const char *name, int *itemsize)
+get_var_itemsize(BMI_Model *self, const char *name, int *itemsize)
 {
     if (strcmp(name, "sea_surface_water_wave__min_of_increment_of_azimuth_angle_of_opposite_of_phase_velocity") == 0) {
         *itemsize = sizeof(double);
@@ -366,7 +367,7 @@ get_var_itemsize(void *self, const char *name, int *itemsize)
 
 
 static int
-get_var_nbytes(void *self, const char *name, int *nbytes)
+get_var_nbytes(BMI_Model *self, const char *name, int *nbytes)
 {
     int id, size, itemsize;
 
@@ -386,7 +387,7 @@ get_var_nbytes(void *self, const char *name, int *nbytes)
 
 
 static int
-get_var_location(void *self, const char *name, char *location)
+get_var_location(BMI_Model *self, const char *name, char *location)
 {
     strncpy(location, "node", BMI_MAX_UNITS_NAME);
     return BMI_SUCCESS;
@@ -394,7 +395,7 @@ get_var_location(void *self, const char *name, char *location)
 
 
 static int
-get_value(void *self, const char *name, void *dest)
+get_value(BMI_Model *self, const char *name, void *dest)
 {
     double *dptr = (double*)dest;
 
@@ -419,7 +420,7 @@ get_value(void *self, const char *name, void *dest)
 
 
 static int
-set_value (void *self, const char *name, void *array)
+set_value (BMI_Model *self, const char *name, void *array)
 {
     if (strcmp(name, "sea_shoreline_wave~incoming~deepwater__ashton_et_al_approach_angle_asymmetry_parameter") == 0)
       waves_set_angle_asymmetry((WavesModel*)self, *(double*)array);
