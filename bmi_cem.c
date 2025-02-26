@@ -631,7 +631,6 @@ register_bmi_cem(Bmi *model)
     model->get_value_at_indices = get_value_at_indices;
 
     model->set_value = set_value;
-    model->set_value_ptr = NULL;
     model->set_value_at_indices = set_value_at_indices;
 
     model->get_grid_rank = get_grid_rank;
