@@ -17,7 +17,7 @@
 }
 
 static int
-get_component_name (Bmi *self, char * name)
+get_component_name (Bmi *self, char * const name)
 {
     strncpy (name, "cem", BMI_MAX_COMPONENT_NAME);
     return BMI_SUCCESS;
@@ -119,7 +119,7 @@ get_time_step(Bmi * self, double *dt)
 
 
 static int
-get_time_units(Bmi * self, char *units)
+get_time_units(Bmi * self, char * const units)
 {
     strncpy(units, "d", BMI_MAX_UNITS_NAME);
     return BMI_SUCCESS;
@@ -178,7 +178,7 @@ finalize(Bmi * self)
 
 
 static int
-get_grid_type(Bmi *self, int id, char *type)
+get_grid_type(Bmi *self, const int id, char* const type)
 {
     if (id == 0) {
         strncpy(type, "scalar", 2048);
@@ -194,7 +194,7 @@ get_grid_type(Bmi *self, int id, char *type)
 
 
 static int
-get_grid_rank(Bmi *self, int id, int *rank)
+get_grid_rank(Bmi *self, const int id, int *rank)
 {
     if (id == 0) {
         *rank = 0;
@@ -210,7 +210,7 @@ get_grid_rank(Bmi *self, int id, int *rank)
 
 
 static int
-get_grid_shape(Bmi *self, int id, int *shape)
+get_grid_shape(Bmi *self, const int id, int* const shape)
 { /* Implement this: set shape of structured grids */
     if (id == 2) {
         shape[0] = deltas_get_nx((CemModel*)self->data);
@@ -223,7 +223,7 @@ get_grid_shape(Bmi *self, int id, int *shape)
 
 
 static int
-get_grid_spacing(Bmi *self, int id, double *spacing)
+get_grid_spacing(Bmi *self, const int id, double * const spacing)
 { /* Implement this: set spacing of uniform rectilinear grids */
     if (id == 2) {
         spacing[0] = deltas_get_dx((CemModel*)self->data);
@@ -236,7 +236,7 @@ get_grid_spacing(Bmi *self, int id, double *spacing)
 
 
 static int
-get_grid_origin(Bmi *self, int id, double *origin)
+get_grid_origin(Bmi *self, const int id, double * const origin)
 { /* Implement this: set origin of uniform rectilinear grids */
     if (id == 2) {
         origin[0] = 0.;
@@ -249,7 +249,7 @@ get_grid_origin(Bmi *self, int id, double *origin)
 
 
 static int
-get_grid_size(Bmi *self, int id, int *size)
+get_grid_size(Bmi *self, const int id, int *size)
 {
     if (id == 0)
         *size = 1;
@@ -300,7 +300,7 @@ get_var_grid(Bmi *self, const char *name, int *grid)
 
 
 static int
-get_var_type(Bmi *self, const char *name, char *type)
+get_var_type(Bmi *self, const char *name, char *const type)
 {
     if (strcmp(name, "basin_outlet~coastal_center__x_coordinate") == 0) {
         strncpy(type, "double", BMI_MAX_UNITS_NAME);
@@ -334,7 +334,7 @@ get_var_type(Bmi *self, const char *name, char *type)
 
 
 static int
-get_var_units(Bmi *self, const char *name, char *units)
+get_var_units(Bmi *self, const char *name, char *const units)
 {
     if (strcmp(name, "basin_outlet~coastal_center__x_coordinate") == 0) {
         strncpy(units, "meters", BMI_MAX_UNITS_NAME);
@@ -449,7 +449,7 @@ get_var_stride(Bmi *self, const char *name, int *stride)
 }
 
 static int
-get_var_location(Bmi *self, const char *name, char *location)
+get_var_location(Bmi *self, const char *name, char *const location)
 {
     strncpy(location, "node", BMI_MAX_UNITS_NAME);
     return BMI_SUCCESS;
@@ -495,7 +495,7 @@ get_value_ptr(Bmi *self, const char *name, void **dest)
 
 
 int
-get_value(Bmi * self, const char * name, void *dest)
+get_value(Bmi * self, const char * name, void *const dest)
 {
     if (strcmp(name, "sea_water__depth") == 0) {
         deltas_get_depth_dup((CemModel*)self->data, dest);
@@ -525,8 +525,8 @@ get_value(Bmi * self, const char * name, void *dest)
 
 
 static int
-get_value_at_indices (Bmi *self, const char *name, void *dest,
-    int * inds, int len)
+get_value_at_indices (Bmi *self, const char *name, void *const dest,
+    const int * inds, const int len)
 {
     void *src = NULL;
     int itemsize = 0;
@@ -549,7 +549,7 @@ get_value_at_indices (Bmi *self, const char *name, void *dest,
 
 
 static int
-set_value (Bmi *self, const char *name, void *array)
+set_value (Bmi *self, const char *name, void *const array)
 {
     void * dest = NULL;
     int nbytes = 0;
@@ -576,8 +576,8 @@ set_value (Bmi *self, const char *name, void *array)
 
 
 static int
-set_value_at_indices (Bmi *self, const char *name, int * inds, int len,
-    void *src)
+set_value_at_indices (Bmi *self, const char *name, const int * inds, const int len,
+    void *const src)
 {
     void * to = NULL;
     int itemsize = 0;
