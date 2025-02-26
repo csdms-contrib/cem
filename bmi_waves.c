@@ -462,7 +462,6 @@ register_bmi_waves(Bmi *model)
     model->get_value_at_indices = NULL;
 
     model->set_value = set_value;
-    model->set_value_ptr = NULL;
     model->set_value_at_indices = NULL;
 
     model->get_grid_rank = get_grid_rank;
