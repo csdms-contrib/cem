@@ -437,7 +437,6 @@ register_bmi_waves(Bmi *model)
     model->initialize = initialize;
     model->update = update;
     model->update_until = update_until;
-    model->update_frac = update_frac;
     model->finalize = finalize;
 
     model->get_component_name = get_component_name;
