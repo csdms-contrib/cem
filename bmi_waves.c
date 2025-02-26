@@ -28,7 +28,7 @@ static const char *input_var_names[INPUT_VAR_NAME_COUNT] = {
 
 
 static int
-get_input_var_name_count(Bmi *self, int *count)
+get_input_item_count(Bmi *self, int *count)
 {
     *count = INPUT_VAR_NAME_COUNT;
     return BMI_SUCCESS;
@@ -58,7 +58,7 @@ static const char *output_var_names[OUTPUT_VAR_NAME_COUNT] = {
 
 
 static int
-get_output_var_name_count(Bmi *self, int *count)
+get_output_item_count(Bmi *self, int *count)
 {
     *count = OUTPUT_VAR_NAME_COUNT;
     return BMI_SUCCESS;
@@ -441,8 +441,8 @@ register_bmi_waves(Bmi *model)
     model->finalize = finalize;
 
     model->get_component_name = get_component_name;
-    model->get_input_var_name_count = get_input_var_name_count;
-    model->get_output_var_name_count = get_output_var_name_count;
+    model->get_input_item_count = get_input_item_count;
+    model->get_output_item_count = get_output_item_count;
     model->get_input_var_names = get_input_var_names;
     model->get_output_var_names = get_output_var_names;
 
