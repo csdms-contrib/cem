@@ -1,72 +1,82 @@
-#ifndef BMI_H_INCLUDED
-#define BMI_H_INCLUDED
+#ifndef BMI_H
+#define BMI_H
 
 #if defined(__cplusplus)
 extern "C" {
 #endif
 
-#define BMI_SUCCESS (0)
-#define BMI_FAILURE (1)
+const static int BMI_SUCCESS = 0;
+const static int BMI_FAILURE = 1;
 
 #define BMI_MAX_UNITS_NAME (2048)
+#define BMI_MAX_TYPE_NAME (2048)
 #define BMI_MAX_COMPONENT_NAME (2048)
 #define BMI_MAX_VAR_NAME (2048)
 
 
 typedef struct Bmi {
-  void * data;
+  void *data;
 
-  int (*initialize)(struct Bmi* self, const char* config_file);
-  int (* update)(struct Bmi*);
-  int (* update_until)(struct Bmi *, const double);
-  int (* update_frac)(struct Bmi *, const double);
-  int (* finalize)(struct Bmi *);
+  /* Initialize, run, finalize (IRF) */
+  int (*initialize)(struct Bmi *self, const char *config_file);
+  int (*update)(struct Bmi *self);
+  int (*update_until)(struct Bmi *self, double then);
+  int (*finalize)(struct Bmi *self);
 
-  int (* get_component_name)(struct Bmi *, char * const);
-  int (* get_input_item_count)(struct Bmi *, int *);
-  int (* get_output_item_count)(struct Bmi *, int *);
-  int (* get_input_var_names)(struct Bmi *, char **);
-  int (* get_output_var_names)(struct Bmi *, char **);
+  /* Exchange items */
+  int (*get_component_name)(struct Bmi *self, char *name);
+  int (*get_input_item_count)(struct Bmi *self, int *count);
+  int (*get_output_item_count)(struct Bmi *self, int *count);
+  int (*get_input_var_names)(struct Bmi *self, char **names);
+  int (*get_output_var_names)(struct Bmi *self, char **names);
 
-  int (* get_var_grid)(struct Bmi *, const char *, int *);
-  int (* get_var_type)(struct Bmi *, const char *, char *);
-  int (* get_var_units)(struct Bmi *, const char *, char *);
-  int (* get_var_itemsize)(struct Bmi *, const char *, int *);
-  int (* get_var_nbytes)(struct Bmi *, const char *, int *);
-  int (* get_var_location)(struct Bmi *, const char *, char * const);
-  int (* get_current_time)(struct Bmi *, double *);
-  int (* get_start_time)(struct Bmi *, double *);
-  int (* get_end_time)(struct Bmi *, double *);
-  int (* get_time_units)(struct Bmi *, char * const);
-  int (* get_time_step)(struct Bmi *, double *);
+  /* Variable information */
+  int (*get_var_grid)(struct Bmi *self, const char *name, int *grid);
+  int (*get_var_type)(struct Bmi *self, const char *name, char *type);
+  int (*get_var_units)(struct Bmi *self, const char *name, char *units);
+  int (*get_var_itemsize)(struct Bmi *self, const char *name, int *size);
+  int (*get_var_nbytes)(struct Bmi *self, const char *name, int *nbytes);
+  int (*get_var_location)(struct Bmi *self, const char *name, char *location);
 
-  /* Variable getter and setter functions */
-  int (* get_value)(struct Bmi *, const char *, void *const);
-  int (* get_value_ptr)(struct Bmi *, const char *, void **);
-  int (* get_value_at_indices)(struct Bmi *, const char *, void *const, const int *, const int);
+  /* Time information */
+  int (*get_current_time)(struct Bmi *self, double *time);
+  int (*get_start_time)(struct Bmi *self, double *time);
+  int (*get_end_time)(struct Bmi *self, double *time);
+  int (*get_time_units)(struct Bmi *self, char *units);
+  int (*get_time_step)(struct Bmi *self, double *time_step);
 
-  int (* set_value)(struct Bmi *, const char *, void *const);
-  int (* set_value_ptr)(struct Bmi *, const char *, void **);
-  int (* set_value_at_indices)(struct Bmi *, const char *, const int *, const int, void * const );
+  /* Getters */
+  int (*get_value)(struct Bmi *self, const char *name, void *dest);
+  int (*get_value_ptr)(struct Bmi *self, const char *name, void **dest_ptr);
+  int (*get_value_at_indices)(struct Bmi *self, const char *name, void * const dest, const int *inds, int count);
 
-  /* Grid information functions */
-  int (* get_grid_rank)(struct Bmi *, const int, int *);
-  int (* get_grid_size)(struct Bmi *, const int, int *);
-  int (* get_grid_type)(struct Bmi *, const int, char *const);
-  int (* get_grid_shape)(struct Bmi *, const int, int *const);
-  int (* get_grid_spacing)(struct Bmi *, const int, double *const);
-  int (* get_grid_origin)(struct Bmi *, const int, double *const);
+  /* Setters */
+  int (*set_value)(struct Bmi *self, const char *name, void *src);
+  int (*set_value_at_indices)(struct Bmi *self, const char *name, const int *inds, const int count, void * const src);
 
-  int (* get_grid_x)(struct Bmi *, const int, double *const);
-  int (* get_grid_y)(struct Bmi *, const int, double *const);
-  int (* get_grid_z)(struct Bmi *, const int, double *const);
+  /* Grid information */
+  int (*get_grid_rank)(struct Bmi *self, int grid, int *rank);
+  int (*get_grid_size)(struct Bmi *self, int grid, int *size);
+  int (*get_grid_type)(struct Bmi *self, int grid, char *type);
 
-  int (* get_grid_face_count)(struct Bmi *, const int, int * const);
-  int (* get_grid_node_count)(struct Bmi *, const int, int * const);
-  int (* get_grid_vertex_count)(struct Bmi *, const int, int * const);
+  /* Uniform rectilinear */
+  int (*get_grid_shape)(struct Bmi *self, int grid, int *shape);
+  int (*get_grid_spacing)(struct Bmi *self, int grid, double *spacing);
+  int (*get_grid_origin)(struct Bmi *self, int grid, double *origin);
 
-  int (* get_grid_connectivity)(struct Bmi *, int, int *);
-  int (* get_grid_offset)(struct Bmi *, int, int *);
+  /* Non-uniform rectilinear, curvilinear */
+  int (*get_grid_x)(struct Bmi *self, int grid, double *x);
+  int (*get_grid_y)(struct Bmi *self, int grid, double *y);
+  int (*get_grid_z)(struct Bmi *self, int grid, double *z);
+
+  /* Unstructured */
+  int (*get_grid_node_count)(struct Bmi *self, int grid, int *count);
+  int (*get_grid_edge_count)(struct Bmi *self, int grid, int *count);
+  int (*get_grid_face_count)(struct Bmi *self, int grid, int *count);
+  int (*get_grid_edge_nodes)(struct Bmi *self, int grid, int *edge_nodes);
+  int (*get_grid_face_edges)(struct Bmi *self, int grid, int *face_edges);
+  int (*get_grid_face_nodes)(struct Bmi *self, int grid, int *face_nodes);
+  int (*get_grid_nodes_per_face)(struct Bmi *self, int grid, int *nodes_per_face);
 } Bmi;
 
 
