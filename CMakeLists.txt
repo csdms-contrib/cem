@@ -64,7 +64,7 @@ target_link_libraries(bmi_cem ${MATH_LIB} ${GLIB2_LIBRARIES} ${GTHREAD2_LIBRARIE
 
 install(TARGETS bmi_cem DESTINATION lib)
 install(TARGETS bmi_cem-static DESTINATION lib)
-install(FILES bmi.h bmi_cem.h DESTINATION include/cem)
+install(FILES bmi.h bmi_cem.h cem_model.h DESTINATION include/cem)
 
 ########### libwaves ###############
 
@@ -84,7 +84,7 @@ target_link_libraries(bmi_waves ${GLIB2_LIBRARIES} ${GTHREAD2_LIBRARIES})
 
 install(TARGETS bmi_waves DESTINATION lib)
 install(TARGETS bmi_waves-static DESTINATION lib)
-install(FILES bmi.h bmi_waves.h DESTINATION include/waves)
+install(FILES bmi.h bmi_waves.h waves_model.h DESTINATION include/waves)
 
 ########### deltas main program ###############
 
