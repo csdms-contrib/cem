@@ -181,9 +181,9 @@ static int
 get_grid_type(Bmi *self, const int id, char* const type)
 {
     if (id == 0) {
-        strncpy(type, "scalar", 2048);
+        strncpy(type, "none", 2048);
     } else if (id == 1) {
-        strncpy(type, "vector", 2048);
+        strncpy(type, "none", 2048);
     } else if (id == 2) {
         strncpy(type, "uniform_rectilinear", 2048);
     } else {
@@ -407,7 +407,14 @@ get_var_nbytes(Bmi *self, const char *name, int *nbytes)
     int id, size, itemsize;
 
     return_on_error(get_var_grid(self, name, &id));
-    return_on_error(get_grid_size(self, id, &size));
+
+    if (id == 2) {
+        return_on_error(get_grid_size(self, id, &size));
+    } else if (id == 1) {
+        size = deltas_get_n_rivers((CemModel*)self->data);
+    } else {
+        size = 1;
+    }
     return_on_error(get_var_itemsize(self, name, &itemsize));
 
     *nbytes = itemsize * size;
