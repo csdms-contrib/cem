@@ -363,13 +363,8 @@ get_var_itemsize(Bmi *self, const char *name, int *itemsize)
 static int
 get_var_nbytes(Bmi *self, const char *name, int *nbytes)
 {
-    int id, size, itemsize;
-
-    if (get_var_grid(self, name, &id) == BMI_FAILURE)
-        return BMI_FAILURE;
-
-    if (get_grid_size(self, id, &size) == BMI_FAILURE)
-        return BMI_FAILURE;
+    int itemsize;
+	const int size = 1;
 
     if (get_var_itemsize(self, name, &itemsize) == BMI_FAILURE)
         return BMI_FAILURE;
