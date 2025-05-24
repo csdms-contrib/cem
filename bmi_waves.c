@@ -223,7 +223,7 @@ static int
 get_grid_type(Bmi *self, int id, char *type)
 {
     if (id == 0) {
-        strncpy(type, "scalar", 2048);
+        strncpy(type, "none", 2048);
     } else {
         type[0] = '\0'; return BMI_FAILURE;
     }
