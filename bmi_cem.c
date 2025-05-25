@@ -258,33 +258,16 @@ get_grid_size(Bmi *self, const int id, int *size)
 static int
 get_var_grid(Bmi *self, const char *name, int *grid)
 {
-    if (strcmp(name, "basin_outlet~coastal_center__x_coordinate") == 0) {
-        *grid = 1;
-    } else if (strcmp(name, "sea_surface_water_wave__azimuth_angle_of_opposite_of_phase_velocity") == 0) {
-        *grid = 0;
-    } else if (strcmp(name, "basin_outlet_water_sediment~bedload__mass_flow_rate") == 0) {
-        *grid = 0;
-    } else if (strcmp(name, "basin_outlet~coastal_water_sediment~bedload__mass_flow_rate") == 0) {
-        *grid = 1;
-    } else if (strcmp(name, "land_surface_water_sediment~bedload__mass_flow_rate") == 0) {
+    if (strcmp(name, "land_surface_water_sediment~bedload__mass_flow_rate") == 0) {
         *grid = 2;
-    } else if (strcmp(name, "sea_surface_water_wave__period") == 0) {
-        *grid = 0;
     } else if (strcmp(name, "land_surface__elevation") == 0) {
         *grid = 2;
     } else if (strcmp(name, "sea_water__depth") == 0) {
         *grid = 2;
-    } else if (strcmp(name, "basin_outlet_water_sediment~suspended__mass_flow_rate") == 0) {
-        *grid = 0;
-    } else if (strcmp(name, "sea_surface_water_wave__height") == 0) {
-        *grid = 0;
-    } else if (strcmp(name, "basin_outlet~coastal_center__y_coordinate") == 0) {
-        *grid = 1;
-    } else if (strcmp(name, "model__time_step") == 0) {
-        *grid = 0;
     } else {
-      fprintf(stderr, "bad grid. returning %d", BMI_FAILURE);
-        *grid = -1; return BMI_FAILURE;
+        fprintf(stderr, "bad grid. returning %d", BMI_FAILURE);
+        *grid = -1;
+        return BMI_FAILURE;
     }
     return BMI_SUCCESS;
 }
