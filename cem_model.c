@@ -36,8 +36,8 @@ _scan_next_non_comment_line (char *line, int len, FILE *fp)
 }
 
 
-static CemModel *
-_deltas_new (void)
+CemModel *
+new_cem_model(void)
 {
   CemModel *model = (CemModel*) malloc (sizeof (CemModel));
 
@@ -120,7 +120,7 @@ _deltas_init (CemModel * model)
 {
   if (!model)
   {
-    model = _deltas_new ();
+    model = new_cem_model();
   }
 
   _cem_initialize (model);
@@ -137,9 +137,9 @@ _deltas_use_sed_flux (CemModel * model)
 
 
 int
-cem_initialize (const char *config_file, CemModel **handle)
+cem_initialize (const char *config_file, CemModel *handle)
 {
-    CemModel *model = NULL;
+    CemModel *model = handle;
     int n_rows, n_cols;
     int sed_flux_flag = 0;
     int shape[2];
@@ -186,7 +186,6 @@ cem_initialize (const char *config_file, CemModel **handle)
     shape[0] = n_rows;
     shape[1] = n_cols;
 
-    model = _deltas_new ();
     if (!model)
       return 4;
 
@@ -203,8 +202,6 @@ cem_initialize (const char *config_file, CemModel **handle)
     deltas_set_shelf_slope (model, shelf_slope);
 
     deltas_set_save_file (model, "test.txt"); 
-
-    *handle = model;
 
     return 0;
 }

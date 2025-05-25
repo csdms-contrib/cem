@@ -8,14 +8,14 @@
 #include "bmi_cem.h"
 #include "bmi_waves.h"
 
-void print_model_info(BMI_Model *model);
+void print_model_info(Bmi *model);
 void print_matrix (double *x, int *shape, FILE *fp);
 
 int
 main (int argc, char *argv[])
 {
-  BMI_Model *cem = (BMI_Model*) malloc(sizeof(BMI_Model));
-  BMI_Model *waves = (BMI_Model*) malloc(sizeof(BMI_Model));
+  Bmi *cem = (Bmi*) malloc(sizeof(Bmi));
+  Bmi *waves = (Bmi*) malloc(sizeof(Bmi));
   FILE *output_file = NULL;
   int status;
 
@@ -45,14 +45,14 @@ main (int argc, char *argv[])
 
   fprintf (stdout, "Initializing... ");
 
-  status = waves->initialize(argv[1], &(waves->self));
+  status = waves->initialize(waves, argv[1]);
   if (status == BMI_FAILURE) {
     fprintf (stdout, "FAIL.\n");
     fprintf (stderr, "Unable to initialize\n");
     return EXIT_FAILURE;
   }
 
-  status = cem->initialize(argv[2], &(cem->self));
+  status = cem->initialize(cem, argv[2]);
   if (status == BMI_FAILURE) {
     fprintf (stdout, "FAIL.\n");
     fprintf (stderr, "Unable to initialize\n");
@@ -74,14 +74,14 @@ main (int argc, char *argv[])
     double time_step;
 
 
-    cem->get_value(cem->self, "model__time_step", &time_step);
+    cem->get_value(cem, "model__time_step", &time_step);
     fprintf(stderr, "Time step: %f\n", time_step);
 
-    if (cem->get_var_grid(cem->self, "land_surface__elevation", &grid) == BMI_FAILURE) {
+    if (cem->get_var_grid(cem, "land_surface__elevation", &grid) == BMI_FAILURE) {
       fprintf(stderr, "unable to get var grid\n");
       return EXIT_FAILURE;
     }
-    if (cem->get_grid_rank(cem->self, grid, &rank) == BMI_FAILURE) {
+    if (cem->get_grid_rank(cem, grid, &rank) == BMI_FAILURE) {
       fprintf(stderr, "unable to get var grid\n");
       return EXIT_FAILURE;
     }
@@ -89,14 +89,14 @@ main (int argc, char *argv[])
       fprintf (stderr, "Grid rank: %d\n", rank);
 
     shape = (int*) malloc (sizeof (int)*rank);
-    if (cem->get_grid_shape(cem->self, grid, shape) == BMI_FAILURE) {
+    if (cem->get_grid_shape(cem, grid, shape) == BMI_FAILURE) {
       fprintf(stderr, "unable to get var grid\n");
       return EXIT_FAILURE;
     }
     else
       fprintf (stderr, "Grid shape: %d x %d\n", shape[0], shape[1]);
 
-    if (cem->get_grid_size(cem->self, grid, &len) == BMI_FAILURE) {
+    if (cem->get_grid_size(cem, grid, &len) == BMI_FAILURE) {
       fprintf(stderr, "unable to get var grid\n");
       return EXIT_FAILURE;
     }
@@ -104,39 +104,39 @@ main (int argc, char *argv[])
     qs = (double *)malloc (sizeof (double) * len);
     z = (double *)malloc (sizeof (double) * len);
 
-    waves->get_current_time(waves->self, &time);
-    waves->get_end_time(waves->self, &stop_time);
+    waves->get_current_time(waves, &time);
+    waves->get_end_time(waves, &stop_time);
     i = 0;
 
     while (time < stop_time) {
     //for (i = 1; i <= stop_time; i++) {
-      deltas_avulsion (cem->self, qs, river_flux);
+      deltas_avulsion (cem->data, qs, river_flux);
 
-      if (cem->set_value(cem->self, "land_surface_water_sediment~bedload__mass_flow_rate", qs) == BMI_FAILURE) {
+      if (cem->set_value(cem, "land_surface_water_sediment~bedload__mass_flow_rate", qs) == BMI_FAILURE) {
         fprintf(stderr, "unable to set qs\n");
         return EXIT_FAILURE;
       }
 
-      if (waves->update(waves->self) == BMI_FAILURE) {
+      if (waves->update(waves) == BMI_FAILURE) {
         fprintf(stderr, "unable to update waves\n");
         return EXIT_FAILURE;
       }
-      waves->get_current_time(waves->self, &time);
+      waves->get_current_time(waves, &time);
 
-      status += waves->get_value(waves->self, "sea_surface_water_wave__azimuth_angle_of_opposite_of_phase_velocity", &angle);
-      status += waves->get_value(waves->self, "sea_surface_water_wave__height", &wave_height);
-      status += waves->get_value(waves->self, "sea_surface_water_wave__period", &wave_period);
+      status += waves->get_value(waves, "sea_surface_water_wave__azimuth_angle_of_opposite_of_phase_velocity", &angle);
+      status += waves->get_value(waves, "sea_surface_water_wave__height", &wave_height);
+      status += waves->get_value(waves, "sea_surface_water_wave__period", &wave_period);
 
-      status += cem->set_value(cem->self, "sea_surface_water_wave__azimuth_angle_of_opposite_of_phase_velocity", &angle);
-      status += cem->set_value(cem->self, "sea_surface_water_wave__height", &wave_height);
-      status += cem->set_value(cem->self, "sea_surface_water_wave__period", &wave_period);
+      status += cem->set_value(cem, "sea_surface_water_wave__azimuth_angle_of_opposite_of_phase_velocity", &angle);
+      status += cem->set_value(cem, "sea_surface_water_wave__height", &wave_height);
+      status += cem->set_value(cem, "sea_surface_water_wave__period", &wave_period);
 
-      if (cem->update_until(cem->self, time) == BMI_FAILURE) {
+      if (cem->update_until(cem, time) == BMI_FAILURE) {
         fprintf(stderr, "unable to update cem\n");
         return EXIT_FAILURE;
       }
 
-      if (cem->get_value(cem->self, "sea_water__depth", z) == BMI_FAILURE) {
+      if (cem->get_value(cem, "sea_water__depth", z) == BMI_FAILURE) {
         fprintf(stderr, "unable to get water depth\n");
         return EXIT_FAILURE;
       }
@@ -157,14 +157,14 @@ main (int argc, char *argv[])
     {
       double time;
 
-      cem->get_current_time(cem->self, &time);
+      cem->get_current_time(cem, &time);
       if (fabs (time - stop_time) > 1e-6)
         return EXIT_FAILURE;
     }
   }
 
-  cem->finalize(cem->self);
-  waves->finalize(waves->self);
+  cem->finalize(cem);
+  waves->finalize(waves);
 
   fclose(output_file);
 
@@ -173,7 +173,7 @@ main (int argc, char *argv[])
 
 
 void
-print_model_info(BMI_Model *model)
+print_model_info(Bmi *model)
 {
     double angle = 0.;
     double wave_height = 0., wave_period = 0.;
@@ -182,10 +182,10 @@ print_model_info(BMI_Model *model)
 
     fprintf (stderr, "\n");
 
-    status += model->get_value(model->self, "sea_surface_water_wave__azimuth_angle_of_opposite_of_phase_velocity", &angle);
-    status += model->get_value(model->self, "sea_surface_water_wave__height", &wave_height);
-    status += model->get_value(model->self, "sea_surface_water_wave__period", &wave_period);
-    status += model->get_current_time(model->self, &time);
+    status += model->get_value(model, "sea_surface_water_wave__azimuth_angle_of_opposite_of_phase_velocity", &angle);
+    status += model->get_value(model, "sea_surface_water_wave__height", &wave_height);
+    status += model->get_value(model, "sea_surface_water_wave__period", &wave_period);
+    status += model->get_current_time(model, &time);
 
     if (status != 0) {
         fprintf(stderr, "Error getting model info.\n");

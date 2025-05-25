@@ -4,6 +4,7 @@
 #include <float.h>
 
 #include "bmi.h"
+#include "bmi_cem.h"
 
 /* Implement this: Add model-specific includes */
 #include "cem_model.h"
@@ -16,7 +17,7 @@
 }
 
 static int
-get_component_name (void *self, char * name)
+get_component_name (Bmi *self, char * const name)
 {
     strncpy (name, "cem", BMI_MAX_COMPONENT_NAME);
     return BMI_SUCCESS;
@@ -37,7 +38,7 @@ static const char *input_var_names[INPUT_VAR_NAME_COUNT] = {
 
 
 static int
-get_input_var_name_count(void *self, int *count)
+get_input_item_count(Bmi *self, int *count)
 {
     *count = INPUT_VAR_NAME_COUNT;
     return BMI_SUCCESS;
@@ -45,7 +46,7 @@ get_input_var_name_count(void *self, int *count)
 
 
 static int
-get_input_var_names(void *self, char **names)
+get_input_var_names(Bmi *self, char **names)
 {
     int i;
     for (i=0; i<INPUT_VAR_NAME_COUNT; i++) {
@@ -67,7 +68,7 @@ static const char *output_var_names[OUTPUT_VAR_NAME_COUNT] = {
 
 
 static int
-get_output_var_name_count(void *self, int *count)
+get_output_item_count(Bmi *self, int *count)
 {
     *count = OUTPUT_VAR_NAME_COUNT;
     return BMI_SUCCESS;
@@ -75,7 +76,7 @@ get_output_var_name_count(void *self, int *count)
 
 
 static int
-get_output_var_names(void *self, char **names)
+get_output_var_names(Bmi *self, char **names)
 {
     int i;
     for (i=0; i<OUTPUT_VAR_NAME_COUNT; i++) {
@@ -86,7 +87,7 @@ get_output_var_names(void *self, char **names)
 
 
 static int
-get_start_time(void * self, double *time)
+get_start_time(Bmi * self, double *time)
 {
     *time = 0.0;
     return BMI_SUCCESS;
@@ -94,31 +95,31 @@ get_start_time(void * self, double *time)
 
 
 static int
-get_end_time(void * self, double *time)
+get_end_time(Bmi * self, double *time)
 { /* Implement this: Set end time */
-    *time = deltas_get_end_time((CemModel*)self);
+    *time = deltas_get_end_time((CemModel*)self->data);
     return BMI_SUCCESS;
 }
 
 
 static int
-get_current_time(void * self, double *time)
+get_current_time(Bmi * self, double *time)
 { /* Implement this: Set current time */
-    *time = deltas_get_current_time((CemModel*)self);
+    *time = deltas_get_current_time((CemModel*)self->data);
     return BMI_SUCCESS;
 }
 
 
 static int
-get_time_step(void * self, double *dt)
+get_time_step(Bmi * self, double *dt)
 { /* Implement this: Set time step */
-    *dt = deltas_get_time_step((CemModel*)self);
+    *dt = deltas_get_time_step((CemModel*)self->data);
     return BMI_SUCCESS;
 }
 
 
 static int
-get_time_units(void * self, char *units)
+get_time_units(Bmi * self, char * const units)
 {
     strncpy(units, "d", BMI_MAX_UNITS_NAME);
     return BMI_SUCCESS;
@@ -126,29 +127,29 @@ get_time_units(void * self, char *units)
 
 
 static int
-initialize(const char * file, void **handle)
+initialize(Bmi* self, const char* config_file)
 { /* Implement this: Create and initialize a model handle */
-    return cem_initialize(file, (CemModel**)handle);
+	return cem_initialize(config_file, (CemModel*)self->data);
 }
 
 
 static int
-update_frac(void * self, double f)
+update_frac(Bmi * self, double f)
 { /* Implement this: Update for a fraction of a time step */
     return BMI_FAILURE;
 }
 
 
 static int
-update(void * self)
+update(Bmi * self)
 {
-    cem_advance_one_time_step((CemModel*)self);
+    cem_advance_one_time_step((CemModel*)self->data);
     return BMI_SUCCESS;
 }
 
 
 static int
-update_until(void * self, double then)
+update_until(Bmi * self, double then)
 {
     double dt;
     double now;
@@ -169,15 +170,15 @@ update_until(void * self, double then)
 
 
 static int
-finalize(void * self)
+finalize(Bmi * self)
 { /* Implement this: Clean up */
-    cem_finalize((CemModel*)self);
+    cem_finalize((CemModel*)self->data);
     return BMI_SUCCESS;
 }
 
 
 static int
-get_grid_type(void *self, int id, char *type)
+get_grid_type(Bmi *self, const int id, char* const type)
 {
     if (id == 0) {
         strncpy(type, "scalar", 2048);
@@ -193,7 +194,7 @@ get_grid_type(void *self, int id, char *type)
 
 
 static int
-get_grid_rank(void *self, int id, int *rank)
+get_grid_rank(Bmi *self, const int id, int *rank)
 {
     if (id == 0) {
         *rank = 0;
@@ -209,11 +210,11 @@ get_grid_rank(void *self, int id, int *rank)
 
 
 static int
-get_grid_shape(void *self, int id, int *shape)
+get_grid_shape(Bmi *self, const int id, int* const shape)
 { /* Implement this: set shape of structured grids */
     if (id == 2) {
-        shape[0] = deltas_get_nx((CemModel*)self);
-        shape[1] = deltas_get_ny((CemModel*)self) / 2;
+        shape[0] = deltas_get_nx((CemModel*)self->data);
+        shape[1] = deltas_get_ny((CemModel*)self->data) / 2;
     } else {
         return BMI_FAILURE;
     }
@@ -222,11 +223,11 @@ get_grid_shape(void *self, int id, int *shape)
 
 
 static int
-get_grid_spacing(void *self, int id, double *spacing)
+get_grid_spacing(Bmi *self, const int id, double * const spacing)
 { /* Implement this: set spacing of uniform rectilinear grids */
     if (id == 2) {
-        spacing[0] = deltas_get_dx((CemModel*)self);
-        spacing[1] = deltas_get_dy((CemModel*)self);
+        spacing[0] = deltas_get_dx((CemModel*)self->data);
+        spacing[1] = deltas_get_dy((CemModel*)self->data);
     } else {
         return BMI_FAILURE;
     }
@@ -235,7 +236,7 @@ get_grid_spacing(void *self, int id, double *spacing)
 
 
 static int
-get_grid_origin(void *self, int id, double *origin)
+get_grid_origin(Bmi *self, const int id, double * const origin)
 { /* Implement this: set origin of uniform rectilinear grids */
     if (id == 2) {
         origin[0] = 0.;
@@ -248,14 +249,14 @@ get_grid_origin(void *self, int id, double *origin)
 
 
 static int
-get_grid_size(void *self, int id, int *size)
+get_grid_size(Bmi *self, const int id, int *size)
 {
     if (id == 0)
         *size = 1;
     else if (id == 1)
-        *size = deltas_get_n_rivers((CemModel*)self);
+        *size = deltas_get_n_rivers((CemModel*)self->data);
     else if (id == 2)
-        *size = deltas_get_nx((CemModel*)self) * deltas_get_ny((CemModel*)self) / 2;
+        *size = deltas_get_nx((CemModel*)self->data) * deltas_get_ny((CemModel*)self->data) / 2;
     else
         return BMI_FAILURE;
 
@@ -264,7 +265,7 @@ get_grid_size(void *self, int id, int *size)
 
 
 static int
-get_var_grid(void *self, const char *name, int *grid)
+get_var_grid(Bmi *self, const char *name, int *grid)
 {
     if (strcmp(name, "basin_outlet~coastal_center__x_coordinate") == 0) {
         *grid = 1;
@@ -299,7 +300,7 @@ get_var_grid(void *self, const char *name, int *grid)
 
 
 static int
-get_var_type(void *self, const char *name, char *type)
+get_var_type(Bmi *self, const char *name, char *const type)
 {
     if (strcmp(name, "basin_outlet~coastal_center__x_coordinate") == 0) {
         strncpy(type, "double", BMI_MAX_UNITS_NAME);
@@ -333,7 +334,7 @@ get_var_type(void *self, const char *name, char *type)
 
 
 static int
-get_var_units(void *self, const char *name, char *units)
+get_var_units(Bmi *self, const char *name, char *const units)
 {
     if (strcmp(name, "basin_outlet~coastal_center__x_coordinate") == 0) {
         strncpy(units, "meters", BMI_MAX_UNITS_NAME);
@@ -367,7 +368,7 @@ get_var_units(void *self, const char *name, char *units)
 
 
 static int
-get_var_itemsize(void *self, const char *name, int *itemsize)
+get_var_itemsize(Bmi *self, const char *name, int *itemsize)
 {
     if (strcmp(name, "basin_outlet~coastal_center__x_coordinate") == 0) {
         *itemsize = sizeof(double);
@@ -401,7 +402,7 @@ get_var_itemsize(void *self, const char *name, int *itemsize)
 
 
 static int
-get_var_nbytes(void *self, const char *name, int *nbytes)
+get_var_nbytes(Bmi *self, const char *name, int *nbytes)
 {
     int id, size, itemsize;
 
@@ -416,7 +417,7 @@ get_var_nbytes(void *self, const char *name, int *nbytes)
 
 
 static int
-get_var_ndim(void *self, const char *name, int *ndim)
+get_var_ndim(Bmi *self, const char *name, int *ndim)
 {
     int id, rank;
 
@@ -430,7 +431,7 @@ get_var_ndim(void *self, const char *name, int *ndim)
 
 
 static int
-get_var_stride(void *self, const char *name, int *stride)
+get_var_stride(Bmi *self, const char *name, int *stride)
 {
     int id;
 
@@ -440,7 +441,7 @@ get_var_stride(void *self, const char *name, int *stride)
         stride[0] = 1;
     }
     else if (id == 2) {
-        stride[0] = deltas_get_ny((CemModel*)self);
+        stride[0] = deltas_get_ny((CemModel*)self->data);
         stride[1] = 1;
     }
 
@@ -448,7 +449,7 @@ get_var_stride(void *self, const char *name, int *stride)
 }
 
 static int
-get_var_location(void *self, const char *name, char *location)
+get_var_location(Bmi *self, const char *name, char *const location)
 {
     strncpy(location, "node", BMI_MAX_UNITS_NAME);
     return BMI_SUCCESS;
@@ -456,32 +457,32 @@ get_var_location(void *self, const char *name, char *location)
 
 
 static int
-get_value_ptr(void *self, const char *name, void **dest)
+get_value_ptr(Bmi *self, const char *name, void **dest)
 {
     if (strcmp(name, "basin_outlet~coastal_center__x_coordinate") == 0) {
-        *dest = (double*)deltas_get_river_x_position((CemModel*)self);
+        *dest = (double*)deltas_get_river_x_position((CemModel*)self->data);
     } else if (strcmp(name, "sea_surface_water_wave__azimuth_angle_of_opposite_of_phase_velocity") == 0) {
-        *dest = &(((CemModel*)self)->WaveAngle);
+        *dest = &(((CemModel*)self->data)->WaveAngle);
     } else if (strcmp(name, "basin_outlet_water_sediment~bedload__mass_flow_rate") == 0) {
         *dest = NULL;
     } else if (strcmp(name, "basin_outlet~coastal_water_sediment~bedload__mass_flow_rate") == 0) {
-        *dest = (double*)deltas_get_river_flux((CemModel*)self);
+        *dest = (double*)deltas_get_river_flux((CemModel*)self->data);
     } else if (strcmp(name, "land_surface_water_sediment~bedload__mass_flow_rate") == 0) {
         *dest = NULL;
     } else if (strcmp(name, "sea_surface_water_wave__period") == 0) {
-        *dest = &(((CemModel*)self)->wave_period);
+        *dest = &(((CemModel*)self->data)->wave_period);
     } else if (strcmp(name, "land_surface__elevation") == 0) {
         *dest = NULL;
     } else if (strcmp(name, "sea_water__depth") == 0) {
-        *dest = (double*)deltas_get_depth((CemModel*)self) + deltas_get_ny((CemModel*)self) / 2;
+        *dest = (double*)deltas_get_depth((CemModel*)self->data) + deltas_get_ny((CemModel*)self->data) / 2;
     } else if (strcmp(name, "basin_outlet_water_sediment~suspended__mass_flow_rate") == 0) {
         *dest = NULL;
     } else if (strcmp(name, "sea_surface_water_wave__height") == 0) {
-        *dest = &(((CemModel*)self)->wave_height);
+        *dest = &(((CemModel*)self->data)->wave_height);
     } else if (strcmp(name, "basin_outlet~coastal_center__y_coordinate") == 0) {
-        *dest = (double*)deltas_get_river_y_position((CemModel*)self);
+        *dest = (double*)deltas_get_river_y_position((CemModel*)self->data);
     } else if (strcmp(name, "model__time_step") == 0) {
-        *dest = &(((CemModel*)self)->time_step);
+        *dest = &(((CemModel*)self->data)->time_step);
     } else {
         *dest = NULL; return BMI_FAILURE;
     }
@@ -494,22 +495,22 @@ get_value_ptr(void *self, const char *name, void **dest)
 
 
 int
-get_value(void * self, const char * name, void *dest)
+get_value(Bmi * self, const char * name, void *const dest)
 {
     if (strcmp(name, "sea_water__depth") == 0) {
-        deltas_get_depth_dup((CemModel*)self, dest);
+        deltas_get_depth_dup((CemModel*)self->data, dest);
         return BMI_SUCCESS;
     }
     else if (strcmp(name, "land_surface__elevation") == 0) {
-        deltas_get_elevation_dup((CemModel*)self, dest);
+        deltas_get_elevation_dup((CemModel*)self->data, dest);
         return BMI_SUCCESS;
     }
     else if (strcmp(name, "sea_surface_water_wave__azimuth_angle_of_opposite_of_phase_velocity") == 0)
-        *(double*)dest = ((CemModel*)self)->WaveAngle;
+        *(double*)dest = ((CemModel*)self->data)->WaveAngle;
     else if (strcmp(name, "sea_surface_water_wave__height") == 0)
-        *(double*)dest = ((CemModel*)self)->wave_height;
+        *(double*)dest = ((CemModel*)self->data)->wave_height;
     else if (strcmp(name, "sea_surface_water_wave__period") == 0)
-        *(double*)dest = ((CemModel*)self)->wave_period;
+        *(double*)dest = ((CemModel*)self->data)->wave_period;
     else {
         void *src = NULL;
         int nbytes = 0;
@@ -524,8 +525,8 @@ get_value(void * self, const char * name, void *dest)
 
 
 static int
-get_value_at_indices (void *self, const char *name, void *dest,
-    int * inds, int len)
+get_value_at_indices (Bmi *self, const char *name, void *const dest,
+    const int * inds, const int len)
 {
     void *src = NULL;
     int itemsize = 0;
@@ -548,21 +549,21 @@ get_value_at_indices (void *self, const char *name, void *dest,
 
 
 static int
-set_value (void *self, const char *name, void *array)
+set_value (Bmi *self, const char *name, void *const array)
 {
     void * dest = NULL;
     int nbytes = 0;
 
     if (strcmp(name, "land_surface_water_sediment~bedload__mass_flow_rate") == 0)
-        deltas_set_sediment_flux_grid ((CemModel*)self, (double*)array);
+        deltas_set_sediment_flux_grid ((CemModel*)self->data, (double*)array);
     else if (strcmp(name, "land_surface__elevation") == 0)
-        deltas_set_elevation_grid ((CemModel*)self, (double*)array);
+        deltas_set_elevation_grid ((CemModel*)self->data, (double*)array);
     else if (strcmp(name, "sea_surface_water_wave__azimuth_angle_of_opposite_of_phase_velocity") == 0)
-      ((CemModel*)self)->WaveAngle = *((double*)array);
+      ((CemModel*)self->data)->WaveAngle = *((double*)array);
     else if (strcmp(name, "sea_surface_water_wave__height") == 0)
-      ((CemModel*)self)->wave_height = *((double*)array);
+      ((CemModel*)self->data)->wave_height = *((double*)array);
     else if (strcmp(name, "sea_surface_water_wave__period") == 0)
-      ((CemModel*)self)->wave_period = *((double*)array);
+      ((CemModel*)self->data)->wave_period = *((double*)array);
     else {
         return_on_error(get_value_ptr(self, name, &dest));
         return_on_error(get_var_nbytes(self, name, &nbytes));
@@ -575,8 +576,8 @@ set_value (void *self, const char *name, void *array)
 
 
 static int
-set_value_at_indices (void *self, const char *name, int * inds, int len,
-    void *src)
+set_value_at_indices (Bmi *self, const char *name, const int * inds, const int len,
+    void *const src)
 {
     void * to = NULL;
     int itemsize = 0;
@@ -597,21 +598,19 @@ set_value_at_indices (void *self, const char *name, int * inds, int len,
 }
 
 
-BMI_Model*
-register_bmi_cem(BMI_Model *model)
+Bmi*
+register_bmi_cem(Bmi *model)
 {
-    model->self = NULL;
+    model->data = (void*)new_cem_model();
 
     model->initialize = initialize;
     model->update = update;
     model->update_until = update_until;
-    model->update_frac = update_frac;
     model->finalize = finalize;
-    model->run_model = NULL;
 
     model->get_component_name = get_component_name;
-    model->get_input_var_name_count = get_input_var_name_count;
-    model->get_output_var_name_count = get_output_var_name_count;
+    model->get_input_item_count = get_input_item_count;
+    model->get_output_item_count = get_output_item_count;
     model->get_input_var_names = get_input_var_names;
     model->get_output_var_names = get_output_var_names;
 
@@ -632,7 +631,6 @@ register_bmi_cem(BMI_Model *model)
     model->get_value_at_indices = get_value_at_indices;
 
     model->set_value = set_value;
-    model->set_value_ptr = NULL;
     model->set_value_at_indices = set_value_at_indices;
 
     model->get_grid_rank = get_grid_rank;
