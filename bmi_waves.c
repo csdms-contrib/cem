@@ -378,7 +378,7 @@ get_var_nbytes(Bmi *self, const char *name, int *nbytes)
 static int
 get_var_location(Bmi *self, const char *name, char *location)
 {
-    strncpy(location, "node", BMI_MAX_UNITS_NAME);
+    strncpy(location, "none", BMI_MAX_UNITS_NAME);
     return BMI_SUCCESS;
 }
 
