@@ -178,7 +178,6 @@ get_time_units(Bmi * self, char *units)
 static int
 initialize(Bmi* handle, const char * file)
 {
-  {
     WavesModel * self = (WavesModel*)handle->data;
     double end_time = 20.;
     double wave_height = 2.;
@@ -208,7 +207,6 @@ initialize(Bmi* handle, const char * file)
       WavesModel *p = (WavesModel *) self;
       p->end = end_time / p->time_step;
     }
-  }
 
   return BMI_SUCCESS;
 }
