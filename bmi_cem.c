@@ -180,14 +180,11 @@ finalize(Bmi * self)
 static int
 get_grid_type(Bmi *self, const int id, char* const type)
 {
-    if (id == 0) {
-        strncpy(type, "none", 2048);
-    } else if (id == 1) {
-        strncpy(type, "none", 2048);
-    } else if (id == 2) {
+    if (id == 2) {
         strncpy(type, "uniform_rectilinear", 2048);
     } else {
-        type[0] = '\0'; return BMI_FAILURE;
+        type[0] = '\0';
+        return BMI_FAILURE;
     }
     return BMI_SUCCESS;
 }
@@ -196,14 +193,11 @@ get_grid_type(Bmi *self, const int id, char* const type)
 static int
 get_grid_rank(Bmi *self, const int id, int *rank)
 {
-    if (id == 0) {
-        *rank = 0;
-    } else if (id == 1) {
-        *rank = 1;
-    } else if (id == 2) {
+    if (id == 2) {
         *rank = 2;
     } else {
-        *rank = -1; return BMI_FAILURE;
+        *rank = -1;
+        return BMI_FAILURE;
     }
     return BMI_SUCCESS;
 }
@@ -251,15 +245,12 @@ get_grid_origin(Bmi *self, const int id, double * const origin)
 static int
 get_grid_size(Bmi *self, const int id, int *size)
 {
-    if (id == 0)
-        *size = 1;
-    else if (id == 1)
-        *size = deltas_get_n_rivers((CemModel*)self->data);
-    else if (id == 2)
+    if (id == 2)
         *size = deltas_get_nx((CemModel*)self->data) * deltas_get_ny((CemModel*)self->data) / 2;
-    else
+    else {
+        *size = 0;
         return BMI_FAILURE;
-
+    }
     return BMI_SUCCESS;
 }
 
