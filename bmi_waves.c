@@ -10,6 +10,63 @@
 #include "waves_model.h"
 
 
+typedef struct {
+    const char *name;
+    const char *units;
+    const char *type;
+    int itemsize;
+} VarInfo;
+
+
+static const VarInfo variables[] = {
+    {
+        "sea_surface_water_wave__min_of_increment_of_azimuth_angle_of_opposite_of_phase_velocity",
+        "radians", "double", sizeof(double)
+    },
+    {
+        "sea_surface_water_wave__azimuth_angle_of_opposite_of_phase_velocity",
+        "radians", "double", sizeof(double)
+    },
+    {
+        "sea_surface_water_wave__mean_of_increment_of_azimuth_angle_of_opposite_of_phase_velocity",
+        "radians", "double", sizeof(double)
+    },
+    {
+        "sea_surface_water_wave__max_of_increment_of_azimuth_angle_of_opposite_of_phase_velocity",
+        "radians", "double", sizeof(double)
+    },
+    {
+        "sea_surface_water_wave__height",
+        "meters", "double", sizeof(double)
+    },
+    {
+        "sea_surface_water_wave__period",
+        "seconds", "double", sizeof(double)
+    },
+    {
+        "sea_shoreline_wave~incoming~deepwater__ashton_et_al_approach_angle_highness_parameter",
+        "", "double", sizeof(double)
+    },
+    {
+        "sea_shoreline_wave~incoming~deepwater__ashton_et_al_approach_angle_asymmetry_parameter",
+        "", "double", sizeof(double)
+    }
+};
+
+#define VAR_COUNT (sizeof(variables) / sizeof(variables[0]))
+
+static const VarInfo*
+find_variable(const char *name) {
+	size_t i;
+    for (i = 0; i < VAR_COUNT; i++) {
+        if (strcmp(name, variables[i].name) == 0) {
+            return &variables[i];
+        }
+    }
+    return NULL;
+}
+
+
 static int
 get_component_name (Bmi *self, char * name)
 {
