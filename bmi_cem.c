@@ -180,14 +180,11 @@ finalize(Bmi * self)
 static int
 get_grid_type(Bmi *self, const int id, char* const type)
 {
-    if (id == 0) {
-        strncpy(type, "scalar", 2048);
-    } else if (id == 1) {
-        strncpy(type, "vector", 2048);
-    } else if (id == 2) {
+    if (id == 2) {
         strncpy(type, "uniform_rectilinear", 2048);
     } else {
-        type[0] = '\0'; return BMI_FAILURE;
+        type[0] = '\0';
+        return BMI_FAILURE;
     }
     return BMI_SUCCESS;
 }
@@ -196,14 +193,11 @@ get_grid_type(Bmi *self, const int id, char* const type)
 static int
 get_grid_rank(Bmi *self, const int id, int *rank)
 {
-    if (id == 0) {
-        *rank = 0;
-    } else if (id == 1) {
-        *rank = 1;
-    } else if (id == 2) {
+    if (id == 2) {
         *rank = 2;
     } else {
-        *rank = -1; return BMI_FAILURE;
+        *rank = -1;
+        return BMI_FAILURE;
     }
     return BMI_SUCCESS;
 }
@@ -251,15 +245,12 @@ get_grid_origin(Bmi *self, const int id, double * const origin)
 static int
 get_grid_size(Bmi *self, const int id, int *size)
 {
-    if (id == 0)
-        *size = 1;
-    else if (id == 1)
-        *size = deltas_get_n_rivers((CemModel*)self->data);
-    else if (id == 2)
+    if (id == 2)
         *size = deltas_get_nx((CemModel*)self->data) * deltas_get_ny((CemModel*)self->data) / 2;
-    else
+    else {
+        *size = 0;
         return BMI_FAILURE;
-
+    }
     return BMI_SUCCESS;
 }
 
@@ -267,33 +258,16 @@ get_grid_size(Bmi *self, const int id, int *size)
 static int
 get_var_grid(Bmi *self, const char *name, int *grid)
 {
-    if (strcmp(name, "basin_outlet~coastal_center__x_coordinate") == 0) {
-        *grid = 1;
-    } else if (strcmp(name, "sea_surface_water_wave__azimuth_angle_of_opposite_of_phase_velocity") == 0) {
-        *grid = 0;
-    } else if (strcmp(name, "basin_outlet_water_sediment~bedload__mass_flow_rate") == 0) {
-        *grid = 0;
-    } else if (strcmp(name, "basin_outlet~coastal_water_sediment~bedload__mass_flow_rate") == 0) {
-        *grid = 1;
-    } else if (strcmp(name, "land_surface_water_sediment~bedload__mass_flow_rate") == 0) {
+    if (strcmp(name, "land_surface_water_sediment~bedload__mass_flow_rate") == 0) {
         *grid = 2;
-    } else if (strcmp(name, "sea_surface_water_wave__period") == 0) {
-        *grid = 0;
     } else if (strcmp(name, "land_surface__elevation") == 0) {
         *grid = 2;
     } else if (strcmp(name, "sea_water__depth") == 0) {
         *grid = 2;
-    } else if (strcmp(name, "basin_outlet_water_sediment~suspended__mass_flow_rate") == 0) {
-        *grid = 0;
-    } else if (strcmp(name, "sea_surface_water_wave__height") == 0) {
-        *grid = 0;
-    } else if (strcmp(name, "basin_outlet~coastal_center__y_coordinate") == 0) {
-        *grid = 1;
-    } else if (strcmp(name, "model__time_step") == 0) {
-        *grid = 0;
     } else {
-      fprintf(stderr, "bad grid. returning %d", BMI_FAILURE);
-        *grid = -1; return BMI_FAILURE;
+        fprintf(stderr, "bad grid. returning %d", BMI_FAILURE);
+        *grid = -1;
+        return BMI_FAILURE;
     }
     return BMI_SUCCESS;
 }
@@ -404,12 +378,42 @@ get_var_itemsize(Bmi *self, const char *name, int *itemsize)
 static int
 get_var_nbytes(Bmi *self, const char *name, int *nbytes)
 {
-    int id, size, itemsize;
+    int id;
+    int size;
+    int itemsize;
 
-    return_on_error(get_var_grid(self, name, &id));
-    return_on_error(get_grid_size(self, id, &size));
+    if (strcmp(name, "basin_outlet~coastal_center__x_coordinate") == 0) {
+        size = deltas_get_n_rivers((CemModel*)self->data);
+    } else if (strcmp(name, "sea_surface_water_wave__azimuth_angle_of_opposite_of_phase_velocity") == 0) {
+        size = 1;
+    } else if (strcmp(name, "basin_outlet_water_sediment~bedload__mass_flow_rate") == 0) {
+        size = 1;
+    } else if (strcmp(name, "basin_outlet~coastal_water_sediment~bedload__mass_flow_rate") == 0) {
+        size = deltas_get_n_rivers((CemModel*)self->data);
+    } else if (strcmp(name, "land_surface_water_sediment~bedload__mass_flow_rate") == 0) {
+        return_on_error(get_var_grid(self, name, &id));
+        return_on_error(get_grid_size(self, id, &size));
+    } else if (strcmp(name, "sea_surface_water_wave__period") == 0) {
+        size = 1;
+    } else if (strcmp(name, "land_surface__elevation") == 0) {
+        return_on_error(get_var_grid(self, name, &id));
+        return_on_error(get_grid_size(self, id, &size));
+    } else if (strcmp(name, "sea_water__depth") == 0) {
+        return_on_error(get_var_grid(self, name, &id));
+        return_on_error(get_grid_size(self, id, &size));
+    } else if (strcmp(name, "basin_outlet_water_sediment~suspended__mass_flow_rate") == 0) {
+        size = 1;
+    } else if (strcmp(name, "sea_surface_water_wave__height") == 0) {
+        size = 1;
+    } else if (strcmp(name, "basin_outlet~coastal_center__y_coordinate") == 0) {
+        size = deltas_get_n_rivers((CemModel*)self->data);
+    } else if (strcmp(name, "model__time_step") == 0) {
+        size = 1;
+    } else {
+        *nbytes = 0;
+        return BMI_FAILURE;
+    }
     return_on_error(get_var_itemsize(self, name, &itemsize));
-
     *nbytes = itemsize * size;
 
     return BMI_SUCCESS;
@@ -451,7 +455,33 @@ get_var_stride(Bmi *self, const char *name, int *stride)
 static int
 get_var_location(Bmi *self, const char *name, char *const location)
 {
-    strncpy(location, "node", BMI_MAX_UNITS_NAME);
+    if (strcmp(name, "basin_outlet~coastal_center__x_coordinate") == 0) {
+        strncpy(location, "none", BMI_MAX_UNITS_NAME);
+    } else if (strcmp(name, "sea_surface_water_wave__azimuth_angle_of_opposite_of_phase_velocity") == 0) {
+        strncpy(location, "none", BMI_MAX_UNITS_NAME);
+    } else if (strcmp(name, "basin_outlet_water_sediment~bedload__mass_flow_rate") == 0) {
+        strncpy(location, "none", BMI_MAX_UNITS_NAME);
+    } else if (strcmp(name, "basin_outlet~coastal_water_sediment~bedload__mass_flow_rate") == 0) {
+        strncpy(location, "none", BMI_MAX_UNITS_NAME);
+    } else if (strcmp(name, "land_surface_water_sediment~bedload__mass_flow_rate") == 0) {
+        strncpy(location, "node", BMI_MAX_UNITS_NAME);
+    } else if (strcmp(name, "sea_surface_water_wave__period") == 0) {
+        strncpy(location, "none", BMI_MAX_UNITS_NAME);
+    } else if (strcmp(name, "land_surface__elevation") == 0) {
+        strncpy(location, "node", BMI_MAX_UNITS_NAME);
+    } else if (strcmp(name, "sea_water__depth") == 0) {
+        strncpy(location, "node", BMI_MAX_UNITS_NAME);
+    } else if (strcmp(name, "basin_outlet_water_sediment~suspended__mass_flow_rate") == 0) {
+        strncpy(location, "none", BMI_MAX_UNITS_NAME);
+    } else if (strcmp(name, "sea_surface_water_wave__height") == 0) {
+        strncpy(location, "none", BMI_MAX_UNITS_NAME);
+    } else if (strcmp(name, "basin_outlet~coastal_center__y_coordinate") == 0) {
+        strncpy(location, "none", BMI_MAX_UNITS_NAME);
+    } else if (strcmp(name, "model__time_step") == 0) {
+        strncpy(location, "none", BMI_MAX_UNITS_NAME);
+    } else {
+        return BMI_FAILURE;
+    }
     return BMI_SUCCESS;
 }
 

@@ -222,63 +222,31 @@ finalize(Bmi * self)
 static int
 get_grid_type(Bmi *self, int id, char *type)
 {
-    if (id == 0) {
-        strncpy(type, "scalar", 2048);
-    } else {
-        type[0] = '\0'; return BMI_FAILURE;
-    }
-    return BMI_SUCCESS;
+    type[0] = '\0';
+    return BMI_FAILURE;
 }
 
 
 static int
 get_grid_rank(Bmi *self, int id, int *rank)
 {
-    if (id == 0) {
-        *rank = 0;
-    } else {
-        *rank = -1; return BMI_FAILURE;
-    }
-    return BMI_SUCCESS;
+    *rank = -1;
+    return BMI_FAILURE;
 }
 
 
 static int
 get_grid_size(Bmi *self, int id, int *size)
 {
-    int rank;
-    if (get_grid_rank(self, id, &rank) == BMI_FAILURE)
-        return BMI_FAILURE;
-
-    *size = 1;
-
-    return BMI_SUCCESS;
+    return BMI_FAILURE;
 }
 
 
 static int
 get_var_grid(Bmi *self, const char *name, int *grid)
 {
-    if (strcmp(name, "sea_surface_water_wave__min_of_increment_of_azimuth_angle_of_opposite_of_phase_velocity") == 0) {
-        *grid = 0;
-    } else if (strcmp(name, "sea_surface_water_wave__azimuth_angle_of_opposite_of_phase_velocity") == 0) {
-        *grid = 0;
-    } else if (strcmp(name, "sea_surface_water_wave__mean_of_increment_of_azimuth_angle_of_opposite_of_phase_velocity") == 0) {
-        *grid = 0;
-    } else if (strcmp(name, "sea_surface_water_wave__max_of_increment_of_azimuth_angle_of_opposite_of_phase_velocity") == 0) {
-        *grid = 0;
-    } else if (strcmp(name, "sea_surface_water_wave__height") == 0) {
-        *grid = 0;
-    } else if (strcmp(name, "sea_surface_water_wave__period") == 0) {
-        *grid = 0;
-    } else if (strcmp(name, "sea_shoreline_wave~incoming~deepwater__ashton_et_al_approach_angle_highness_parameter") == 0) {
-        *grid = 0;
-    } else if (strcmp(name, "sea_shoreline_wave~incoming~deepwater__ashton_et_al_approach_angle_asymmetry_parameter") == 0) {
-        *grid = 0;
-    } else {
-        *grid = -1; return BMI_FAILURE;
-    }
-    return BMI_SUCCESS;
+    *grid = -1;
+    return BMI_FAILURE;
 }
 
 
@@ -363,13 +331,8 @@ get_var_itemsize(Bmi *self, const char *name, int *itemsize)
 static int
 get_var_nbytes(Bmi *self, const char *name, int *nbytes)
 {
-    int id, size, itemsize;
-
-    if (get_var_grid(self, name, &id) == BMI_FAILURE)
-        return BMI_FAILURE;
-
-    if (get_grid_size(self, id, &size) == BMI_FAILURE)
-        return BMI_FAILURE;
+    int itemsize;
+	const int size = 1;
 
     if (get_var_itemsize(self, name, &itemsize) == BMI_FAILURE)
         return BMI_FAILURE;
@@ -383,7 +346,7 @@ get_var_nbytes(Bmi *self, const char *name, int *nbytes)
 static int
 get_var_location(Bmi *self, const char *name, char *location)
 {
-    strncpy(location, "node", BMI_MAX_UNITS_NAME);
+    strncpy(location, "none", BMI_MAX_UNITS_NAME);
     return BMI_SUCCESS;
 }
 
