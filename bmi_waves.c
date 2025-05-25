@@ -245,26 +245,8 @@ get_grid_size(Bmi *self, int id, int *size)
 static int
 get_var_grid(Bmi *self, const char *name, int *grid)
 {
-    if (strcmp(name, "sea_surface_water_wave__min_of_increment_of_azimuth_angle_of_opposite_of_phase_velocity") == 0) {
-        *grid = 0;
-    } else if (strcmp(name, "sea_surface_water_wave__azimuth_angle_of_opposite_of_phase_velocity") == 0) {
-        *grid = 0;
-    } else if (strcmp(name, "sea_surface_water_wave__mean_of_increment_of_azimuth_angle_of_opposite_of_phase_velocity") == 0) {
-        *grid = 0;
-    } else if (strcmp(name, "sea_surface_water_wave__max_of_increment_of_azimuth_angle_of_opposite_of_phase_velocity") == 0) {
-        *grid = 0;
-    } else if (strcmp(name, "sea_surface_water_wave__height") == 0) {
-        *grid = 0;
-    } else if (strcmp(name, "sea_surface_water_wave__period") == 0) {
-        *grid = 0;
-    } else if (strcmp(name, "sea_shoreline_wave~incoming~deepwater__ashton_et_al_approach_angle_highness_parameter") == 0) {
-        *grid = 0;
-    } else if (strcmp(name, "sea_shoreline_wave~incoming~deepwater__ashton_et_al_approach_angle_asymmetry_parameter") == 0) {
-        *grid = 0;
-    } else {
-        *grid = -1; return BMI_FAILURE;
-    }
-    return BMI_SUCCESS;
+    *grid = -1;
+    return BMI_FAILURE;
 }
 
 
