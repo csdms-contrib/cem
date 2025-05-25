@@ -222,37 +222,23 @@ finalize(Bmi * self)
 static int
 get_grid_type(Bmi *self, int id, char *type)
 {
-    if (id == 0) {
-        strncpy(type, "none", 2048);
-    } else {
-        type[0] = '\0'; return BMI_FAILURE;
-    }
-    return BMI_SUCCESS;
+    type[0] = '\0';
+    return BMI_FAILURE;
 }
 
 
 static int
 get_grid_rank(Bmi *self, int id, int *rank)
 {
-    if (id == 0) {
-        *rank = 0;
-    } else {
-        *rank = -1; return BMI_FAILURE;
-    }
-    return BMI_SUCCESS;
+    *rank = -1;
+    return BMI_FAILURE;
 }
 
 
 static int
 get_grid_size(Bmi *self, int id, int *size)
 {
-    int rank;
-    if (get_grid_rank(self, id, &rank) == BMI_FAILURE)
-        return BMI_FAILURE;
-
-    *size = 1;
-
-    return BMI_SUCCESS;
+    return BMI_FAILURE;
 }
 
 
