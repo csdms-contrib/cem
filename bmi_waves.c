@@ -6,7 +6,6 @@
 #include "bmi.h"
 #include "bmi_waves.h"
 
-/* Implement this: Add model-specific includes */
 #include "waves_model.h"
 
 
@@ -143,7 +142,7 @@ get_start_time(Bmi * self, double *time)
 
 static int
 get_end_time(Bmi * self, double *time)
-{ /* Implement this: Set end time */
+{
     WavesModel *model = (WavesModel*)self->data;
     *time = model->end * model->time_step;
     return BMI_SUCCESS;
@@ -152,7 +151,7 @@ get_end_time(Bmi * self, double *time)
 
 static int
 get_current_time(Bmi * self, double *time)
-{ /* Implement this: Set current time */
+{
     WavesModel *model = (WavesModel*)self->data;
     *time = model->now * model->time_step;
     return BMI_SUCCESS;
@@ -161,7 +160,7 @@ get_current_time(Bmi * self, double *time)
 
 static int
 get_time_step(Bmi * self, double *dt)
-{ /* Implement this: Set time step */
+{
     WavesModel *model = (WavesModel*)self->data;
     *dt = model->time_step;
     return BMI_SUCCESS;
@@ -178,7 +177,7 @@ get_time_units(Bmi * self, char *units)
 
 static int
 initialize(Bmi* handle, const char * file)
-{ /* Implement this: Create and initialize a model handle */
+{
   {
     WavesModel * self = (WavesModel*)handle->data;
     double end_time = 20.;
@@ -217,7 +216,7 @@ initialize(Bmi* handle, const char * file)
 
 static int
 update_frac(Bmi * self, double f)
-{ /* Implement this: Update for a fraction of a time step */
+{
     WavesModel *p = (WavesModel *) self->data;
     double now;
     //int until_time_step = p->time_step * f;
@@ -269,7 +268,7 @@ update_until(Bmi * self, double then)
 
 static int
 finalize(Bmi * self)
-{ /* Implement this: Clean up */
+{
     waves_destroy ((WavesModel*)self->data);
 
     return BMI_SUCCESS;
