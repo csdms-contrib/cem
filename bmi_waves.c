@@ -6,8 +6,64 @@
 #include "bmi.h"
 #include "bmi_waves.h"
 
-/* Implement this: Add model-specific includes */
 #include "waves_model.h"
+
+
+typedef struct {
+    const char *name;
+    const char *units;
+    const char *type;
+    int itemsize;
+} VarInfo;
+
+
+static const VarInfo variables[] = {
+    {
+        "sea_surface_water_wave__min_of_increment_of_azimuth_angle_of_opposite_of_phase_velocity",
+        "radians", "double", sizeof(double)
+    },
+    {
+        "sea_surface_water_wave__azimuth_angle_of_opposite_of_phase_velocity",
+        "radians", "double", sizeof(double)
+    },
+    {
+        "sea_surface_water_wave__mean_of_increment_of_azimuth_angle_of_opposite_of_phase_velocity",
+        "radians", "double", sizeof(double)
+    },
+    {
+        "sea_surface_water_wave__max_of_increment_of_azimuth_angle_of_opposite_of_phase_velocity",
+        "radians", "double", sizeof(double)
+    },
+    {
+        "sea_surface_water_wave__height",
+        "meters", "double", sizeof(double)
+    },
+    {
+        "sea_surface_water_wave__period",
+        "seconds", "double", sizeof(double)
+    },
+    {
+        "sea_shoreline_wave~incoming~deepwater__ashton_et_al_approach_angle_highness_parameter",
+        "", "double", sizeof(double)
+    },
+    {
+        "sea_shoreline_wave~incoming~deepwater__ashton_et_al_approach_angle_asymmetry_parameter",
+        "", "double", sizeof(double)
+    }
+};
+
+#define VAR_COUNT (sizeof(variables) / sizeof(variables[0]))
+
+static const VarInfo*
+find_variable(const char *name) {
+	size_t i;
+    for (i = 0; i < VAR_COUNT; i++) {
+        if (strcmp(name, variables[i].name) == 0) {
+            return &variables[i];
+        }
+    }
+    return NULL;
+}
 
 
 static int
@@ -86,7 +142,7 @@ get_start_time(Bmi * self, double *time)
 
 static int
 get_end_time(Bmi * self, double *time)
-{ /* Implement this: Set end time */
+{
     WavesModel *model = (WavesModel*)self->data;
     *time = model->end * model->time_step;
     return BMI_SUCCESS;
@@ -95,7 +151,7 @@ get_end_time(Bmi * self, double *time)
 
 static int
 get_current_time(Bmi * self, double *time)
-{ /* Implement this: Set current time */
+{
     WavesModel *model = (WavesModel*)self->data;
     *time = model->now * model->time_step;
     return BMI_SUCCESS;
@@ -104,7 +160,7 @@ get_current_time(Bmi * self, double *time)
 
 static int
 get_time_step(Bmi * self, double *dt)
-{ /* Implement this: Set time step */
+{
     WavesModel *model = (WavesModel*)self->data;
     *dt = model->time_step;
     return BMI_SUCCESS;
@@ -121,8 +177,7 @@ get_time_units(Bmi * self, char *units)
 
 static int
 initialize(Bmi* handle, const char * file)
-{ /* Implement this: Create and initialize a model handle */
-  {
+{
     WavesModel * self = (WavesModel*)handle->data;
     double end_time = 20.;
     double wave_height = 2.;
@@ -152,7 +207,6 @@ initialize(Bmi* handle, const char * file)
       WavesModel *p = (WavesModel *) self;
       p->end = end_time / p->time_step;
     }
-  }
 
   return BMI_SUCCESS;
 }
@@ -160,7 +214,7 @@ initialize(Bmi* handle, const char * file)
 
 static int
 update_frac(Bmi * self, double f)
-{ /* Implement this: Update for a fraction of a time step */
+{
     WavesModel *p = (WavesModel *) self->data;
     double now;
     //int until_time_step = p->time_step * f;
@@ -212,7 +266,7 @@ update_until(Bmi * self, double then)
 
 static int
 finalize(Bmi * self)
-{ /* Implement this: Clean up */
+{
     waves_destroy ((WavesModel*)self->data);
 
     return BMI_SUCCESS;
@@ -253,25 +307,12 @@ get_var_grid(Bmi *self, const char *name, int *grid)
 static int
 get_var_type(Bmi *self, const char *name, char *type)
 {
-    if (strcmp(name, "sea_surface_water_wave__min_of_increment_of_azimuth_angle_of_opposite_of_phase_velocity") == 0) {
-        strncpy(type, "double", BMI_MAX_UNITS_NAME);
-    } else if (strcmp(name, "sea_surface_water_wave__azimuth_angle_of_opposite_of_phase_velocity") == 0) {
-        strncpy(type, "double", BMI_MAX_UNITS_NAME);
-    } else if (strcmp(name, "sea_surface_water_wave__mean_of_increment_of_azimuth_angle_of_opposite_of_phase_velocity") == 0) {
-        strncpy(type, "double", BMI_MAX_UNITS_NAME);
-    } else if (strcmp(name, "sea_surface_water_wave__max_of_increment_of_azimuth_angle_of_opposite_of_phase_velocity") == 0) {
-        strncpy(type, "double", BMI_MAX_UNITS_NAME);
-    } else if (strcmp(name, "sea_surface_water_wave__height") == 0) {
-        strncpy(type, "double", BMI_MAX_UNITS_NAME);
-    } else if (strcmp(name, "sea_surface_water_wave__period") == 0) {
-        strncpy(type, "double", BMI_MAX_UNITS_NAME);
-    } else if (strcmp(name, "sea_shoreline_wave~incoming~deepwater__ashton_et_al_approach_angle_highness_parameter") == 0) {
-        strncpy(type, "double", BMI_MAX_UNITS_NAME);
-    } else if (strcmp(name, "sea_shoreline_wave~incoming~deepwater__ashton_et_al_approach_angle_asymmetry_parameter") == 0) {
-        strncpy(type, "double", BMI_MAX_UNITS_NAME);
-    } else {
-        type[0] = '\0'; return BMI_FAILURE;
+    const VarInfo *var = find_variable(name);
+    if (!var) {
+        type[0] = '\0';
+        return BMI_FAILURE;
     }
+    strncpy(type, var->type, BMI_MAX_UNITS_NAME);
     return BMI_SUCCESS;
 }
 
@@ -279,25 +320,12 @@ get_var_type(Bmi *self, const char *name, char *type)
 static int
 get_var_units(Bmi *self, const char *name, char *units)
 {
-    if (strcmp(name, "sea_surface_water_wave__min_of_increment_of_azimuth_angle_of_opposite_of_phase_velocity") == 0) {
-        strncpy(units, "radians", BMI_MAX_UNITS_NAME);
-    } else if (strcmp(name, "sea_surface_water_wave__azimuth_angle_of_opposite_of_phase_velocity") == 0) {
-        strncpy(units, "radians", BMI_MAX_UNITS_NAME);
-    } else if (strcmp(name, "sea_surface_water_wave__mean_of_increment_of_azimuth_angle_of_opposite_of_phase_velocity") == 0) {
-        strncpy(units, "radians", BMI_MAX_UNITS_NAME);
-    } else if (strcmp(name, "sea_surface_water_wave__max_of_increment_of_azimuth_angle_of_opposite_of_phase_velocity") == 0) {
-        strncpy(units, "radians", BMI_MAX_UNITS_NAME);
-    } else if (strcmp(name, "sea_surface_water_wave__height") == 0) {
-        strncpy(units, "meters", BMI_MAX_UNITS_NAME);
-    } else if (strcmp(name, "sea_surface_water_wave__period") == 0) {
-        strncpy(units, "seconds", BMI_MAX_UNITS_NAME);
-    } else if (strcmp(name, "sea_shoreline_wave~incoming~deepwater__ashton_et_al_approach_angle_highness_parameter") == 0) {
-        strncpy(units, "", BMI_MAX_UNITS_NAME);
-    } else if (strcmp(name, "sea_shoreline_wave~incoming~deepwater__ashton_et_al_approach_angle_asymmetry_parameter") == 0) {
-        strncpy(units, "", BMI_MAX_UNITS_NAME);
-    } else {
-        units[0] = '\0'; return BMI_FAILURE;
+    const VarInfo *var = find_variable(name);
+    if (!var) {
+        units[0] = '\0';
+        return BMI_FAILURE;
     }
+    strncpy(units, var->units, BMI_MAX_UNITS_NAME);
     return BMI_SUCCESS;
 }
 
@@ -305,25 +333,12 @@ get_var_units(Bmi *self, const char *name, char *units)
 static int
 get_var_itemsize(Bmi *self, const char *name, int *itemsize)
 {
-    if (strcmp(name, "sea_surface_water_wave__min_of_increment_of_azimuth_angle_of_opposite_of_phase_velocity") == 0) {
-        *itemsize = sizeof(double);
-    } else if (strcmp(name, "sea_surface_water_wave__azimuth_angle_of_opposite_of_phase_velocity") == 0) {
-        *itemsize = sizeof(double);
-    } else if (strcmp(name, "sea_surface_water_wave__mean_of_increment_of_azimuth_angle_of_opposite_of_phase_velocity") == 0) {
-        *itemsize = sizeof(double);
-    } else if (strcmp(name, "sea_surface_water_wave__max_of_increment_of_azimuth_angle_of_opposite_of_phase_velocity") == 0) {
-        *itemsize = sizeof(double);
-    } else if (strcmp(name, "sea_surface_water_wave__height") == 0) {
-        *itemsize = sizeof(double);
-    } else if (strcmp(name, "sea_surface_water_wave__period") == 0) {
-        *itemsize = sizeof(double);
-    } else if (strcmp(name, "sea_shoreline_wave~incoming~deepwater__ashton_et_al_approach_angle_highness_parameter") == 0) {
-        *itemsize = sizeof(double);
-    } else if (strcmp(name, "sea_shoreline_wave~incoming~deepwater__ashton_et_al_approach_angle_asymmetry_parameter") == 0) {
-        *itemsize = sizeof(double);
-    } else {
-        *itemsize = 0; return BMI_FAILURE;
+    const VarInfo *var = find_variable(name);
+    if (!var) {
+        *itemsize = 0;
+        return BMI_FAILURE;
     }
+    *itemsize = var->itemsize;
     return BMI_SUCCESS;
 }
 
@@ -346,6 +361,11 @@ get_var_nbytes(Bmi *self, const char *name, int *nbytes)
 static int
 get_var_location(Bmi *self, const char *name, char *location)
 {
+    const VarInfo *var = find_variable(name);
+    if (!var) {
+        location[0] = '\0';
+        return BMI_FAILURE;
+    }
     strncpy(location, "none", BMI_MAX_UNITS_NAME);
     return BMI_SUCCESS;
 }
