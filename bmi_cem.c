@@ -323,35 +323,14 @@ get_var_type(Bmi *self, const char *name, char *type)
 
 
 static int
-get_var_units(Bmi *self, const char *name, char *const units)
+get_var_units(Bmi *self, const char *name, char *units)
 {
-    if (strcmp(name, "basin_outlet~coastal_center__x_coordinate") == 0) {
-        strncpy(units, "meters", BMI_MAX_UNITS_NAME);
-    } else if (strcmp(name, "sea_surface_water_wave__azimuth_angle_of_opposite_of_phase_velocity") == 0) {
-        strncpy(units, "radians", BMI_MAX_UNITS_NAME);
-    } else if (strcmp(name, "basin_outlet_water_sediment~bedload__mass_flow_rate") == 0) {
-        strncpy(units, "kg / s", BMI_MAX_UNITS_NAME);
-    } else if (strcmp(name, "basin_outlet~coastal_water_sediment~bedload__mass_flow_rate") == 0) {
-        strncpy(units, "kg / s", BMI_MAX_UNITS_NAME);
-    } else if (strcmp(name, "land_surface_water_sediment~bedload__mass_flow_rate") == 0) {
-        strncpy(units, "kg / s", BMI_MAX_UNITS_NAME);
-    } else if (strcmp(name, "sea_surface_water_wave__period") == 0) {
-        strncpy(units, "seconds", BMI_MAX_UNITS_NAME);
-    } else if (strcmp(name, "land_surface__elevation") == 0) {
-        strncpy(units, "meters", BMI_MAX_UNITS_NAME);
-    } else if (strcmp(name, "sea_water__depth") == 0) {
-        strncpy(units, "meters", BMI_MAX_UNITS_NAME);
-    } else if (strcmp(name, "basin_outlet_water_sediment~suspended__mass_flow_rate") == 0) {
-        strncpy(units, "kg / s", BMI_MAX_UNITS_NAME);
-    } else if (strcmp(name, "sea_surface_water_wave__height") == 0) {
-        strncpy(units, "meters", BMI_MAX_UNITS_NAME);
-    } else if (strcmp(name, "basin_outlet~coastal_center__y_coordinate") == 0) {
-        strncpy(units, "meters", BMI_MAX_UNITS_NAME);
-    } else if (strcmp(name, "model__time_step") == 0) {
-        strncpy(units, "d", BMI_MAX_UNITS_NAME);
-    } else {
-        units[0] = '\0'; return BMI_FAILURE;
+    const VarInfo *var = find_variable(name);
+    if (!var) {
+        units[0] = '\0';
+        return BMI_FAILURE;
     }
+    strncpy(units, var->units, BMI_MAX_UNITS_NAME);
     return BMI_SUCCESS;
 }
 
