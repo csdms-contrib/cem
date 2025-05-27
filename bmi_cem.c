@@ -6,7 +6,6 @@
 #include "bmi.h"
 #include "bmi_cem.h"
 
-/* Implement this: Add model-specific includes */
 #include "cem_model.h"
 
 
@@ -96,7 +95,7 @@ get_start_time(Bmi * self, double *time)
 
 static int
 get_end_time(Bmi * self, double *time)
-{ /* Implement this: Set end time */
+{
     *time = deltas_get_end_time((CemModel*)self->data);
     return BMI_SUCCESS;
 }
@@ -104,7 +103,7 @@ get_end_time(Bmi * self, double *time)
 
 static int
 get_current_time(Bmi * self, double *time)
-{ /* Implement this: Set current time */
+{
     *time = deltas_get_current_time((CemModel*)self->data);
     return BMI_SUCCESS;
 }
@@ -112,7 +111,7 @@ get_current_time(Bmi * self, double *time)
 
 static int
 get_time_step(Bmi * self, double *dt)
-{ /* Implement this: Set time step */
+{
     *dt = deltas_get_time_step((CemModel*)self->data);
     return BMI_SUCCESS;
 }
@@ -128,14 +127,14 @@ get_time_units(Bmi * self, char * const units)
 
 static int
 initialize(Bmi* self, const char* config_file)
-{ /* Implement this: Create and initialize a model handle */
+{
 	return cem_initialize(config_file, (CemModel*)self->data);
 }
 
 
 static int
 update_frac(Bmi * self, double f)
-{ /* Implement this: Update for a fraction of a time step */
+{
     return BMI_FAILURE;
 }
 
@@ -171,7 +170,7 @@ update_until(Bmi * self, double then)
 
 static int
 finalize(Bmi * self)
-{ /* Implement this: Clean up */
+{
     cem_finalize((CemModel*)self->data);
     return BMI_SUCCESS;
 }
@@ -205,7 +204,7 @@ get_grid_rank(Bmi *self, const int id, int *rank)
 
 static int
 get_grid_shape(Bmi *self, const int id, int* const shape)
-{ /* Implement this: set shape of structured grids */
+{
     if (id == 2) {
         shape[0] = deltas_get_nx((CemModel*)self->data);
         shape[1] = deltas_get_ny((CemModel*)self->data) / 2;
@@ -218,7 +217,7 @@ get_grid_shape(Bmi *self, const int id, int* const shape)
 
 static int
 get_grid_spacing(Bmi *self, const int id, double * const spacing)
-{ /* Implement this: set spacing of uniform rectilinear grids */
+{
     if (id == 2) {
         spacing[0] = deltas_get_dx((CemModel*)self->data);
         spacing[1] = deltas_get_dy((CemModel*)self->data);
@@ -231,7 +230,7 @@ get_grid_spacing(Bmi *self, const int id, double * const spacing)
 
 static int
 get_grid_origin(Bmi *self, const int id, double * const origin)
-{ /* Implement this: set origin of uniform rectilinear grids */
+{
     if (id == 2) {
         origin[0] = 0.;
         origin[1] = 0.;
