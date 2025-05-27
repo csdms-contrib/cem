@@ -296,18 +296,16 @@ get_grid_size(Bmi *self, const int id, int *size)
 static int
 get_var_grid(Bmi *self, const char *name, int *grid)
 {
-    if (strcmp(name, "land_surface_water_sediment~bedload__mass_flow_rate") == 0) {
+    if (
+        strcmp(name, "land_surface_water_sediment~bedload__mass_flow_rate") == 0 ||
+        strcmp(name, "land_surface__elevation") == 0 ||
+        strcmp(name, "sea_water__depth") == 0
+    ) {
         *grid = 2;
-    } else if (strcmp(name, "land_surface__elevation") == 0) {
-        *grid = 2;
-    } else if (strcmp(name, "sea_water__depth") == 0) {
-        *grid = 2;
-    } else {
-        fprintf(stderr, "bad grid. returning %d", BMI_FAILURE);
-        *grid = -1;
-        return BMI_FAILURE;
+        return BMI_SUCCESS;
     }
-    return BMI_SUCCESS;
+    *grid = -1;
+    return BMI_FAILURE;
 }
 
 
