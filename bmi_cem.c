@@ -430,42 +430,42 @@ get_var_location(Bmi *self, const char *name, char *const location)
     return BMI_SUCCESS;
 }
 
-
 static int
 get_value_ptr(Bmi *self, const char *name, void **dest)
 {
+    CemModel *model = (CemModel*)self->data;
+    void *ptr = NULL;
+
     if (strcmp(name, "basin_outlet~coastal_center__x_coordinate") == 0) {
-        *dest = (double*)deltas_get_river_x_position((CemModel*)self->data);
+        ptr = (void*)deltas_get_river_x_position(model);
     } else if (strcmp(name, "sea_surface_water_wave__azimuth_angle_of_opposite_of_phase_velocity") == 0) {
-        *dest = &(((CemModel*)self->data)->WaveAngle);
-    } else if (strcmp(name, "basin_outlet_water_sediment~bedload__mass_flow_rate") == 0) {
-        *dest = NULL;
+        ptr = (void*)&model->WaveAngle;
     } else if (strcmp(name, "basin_outlet~coastal_water_sediment~bedload__mass_flow_rate") == 0) {
-        *dest = (double*)deltas_get_river_flux((CemModel*)self->data);
-    } else if (strcmp(name, "land_surface_water_sediment~bedload__mass_flow_rate") == 0) {
-        *dest = NULL;
+        ptr = (void*)deltas_get_river_flux(model);
     } else if (strcmp(name, "sea_surface_water_wave__period") == 0) {
-        *dest = &(((CemModel*)self->data)->wave_period);
-    } else if (strcmp(name, "land_surface__elevation") == 0) {
-        *dest = NULL;
+        ptr = (void*)&model->wave_period;
     } else if (strcmp(name, "sea_water__depth") == 0) {
-        *dest = (double*)deltas_get_depth((CemModel*)self->data) + deltas_get_ny((CemModel*)self->data) / 2;
-    } else if (strcmp(name, "basin_outlet_water_sediment~suspended__mass_flow_rate") == 0) {
-        *dest = NULL;
+        ptr = (void*)(deltas_get_depth(model) + deltas_get_ny(model) / 2);
     } else if (strcmp(name, "sea_surface_water_wave__height") == 0) {
-        *dest = &(((CemModel*)self->data)->wave_height);
+        ptr = (void*)&model->wave_height;
     } else if (strcmp(name, "basin_outlet~coastal_center__y_coordinate") == 0) {
-        *dest = (double*)deltas_get_river_y_position((CemModel*)self->data);
+        ptr = (void*)deltas_get_river_y_position(model);
     } else if (strcmp(name, "model__time_step") == 0) {
-        *dest = &(((CemModel*)self->data)->time_step);
+        ptr = (void*)&model->time_step;
+    } else if (
+        strcmp(name, "basin_outlet_water_sediment~bedload__mass_flow_rate") == 0 ||
+        strcmp(name, "land_surface_water_sediment~bedload__mass_flow_rate") == 0 ||
+        strcmp(name, "land_surface__elevation") == 0 ||
+        strcmp(name, "basin_outlet_water_sediment~suspended__mass_flow_rate") == 0
+    ) {
+        ptr = NULL;
     } else {
-        *dest = NULL; return BMI_FAILURE;
+        *dest = NULL;
+        return BMI_FAILURE;
     }
 
-    if (*dest)
-        return BMI_SUCCESS;
-    else
-        return BMI_FAILURE;
+    *dest = ptr;
+    return ptr ? BMI_SUCCESS : BMI_FAILURE;
 }
 
 
