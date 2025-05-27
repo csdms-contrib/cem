@@ -9,6 +9,45 @@
 #include "cem_model.h"
 
 
+typedef struct {
+    const char *name;
+    const char *units;
+    const char *type;
+    int itemsize;
+    const char *location;
+} VarInfo;
+
+
+const VarInfo variables[] = {
+    {"basin_outlet~coastal_center__x_coordinate", "meters", "double", sizeof(double), "none"},
+    {"basin_outlet~coastal_center__y_coordinate", "meters", "double", sizeof(double), "none"},
+    {"basin_outlet~coastal_water_sediment~bedload__mass_flow_rate", "kg / s", "double", sizeof(double), "none"},
+    {"basin_outlet_water_sediment~bedload__mass_flow_rate", "kg / s", "double", sizeof(double), "none"},
+    {"basin_outlet_water_sediment~suspended__mass_flow_rate", "kg / s", "double", sizeof(double), "none"},
+    {"land_surface__elevation", "meters", "double", sizeof(double), "node"},
+    {"land_surface_water_sediment~bedload__mass_flow_rate", "kg / s", "double", sizeof(double), "node"},
+    {"model__time_step", "d", "double", sizeof(double), "none"},
+    {"sea_surface_water_wave__azimuth_angle_of_opposite_of_phase_velocity", "radians", "double", sizeof(double), "none"},
+    {"sea_surface_water_wave__height", "meters", "double", sizeof(double), "none"},
+    {"sea_surface_water_wave__period", "seconds", "double", sizeof(double), "none"},
+    {"sea_water__depth", "meters", "double", sizeof(double), "node"},
+};
+
+
+#define VAR_COUNT (sizeof(variables) / sizeof(variables[0]))
+
+static const VarInfo*
+find_variable(const char *name) {
+    size_t i;
+    for (i = 0; i < VAR_COUNT; i++) {
+        if (strcmp(name, variables[i].name) == 0) {
+            return &variables[i];
+        }
+    }
+    return NULL;
+}
+
+
 #define return_on_error(stmt) { \
   const int status = (stmt); \
   if (status != BMI_SUCCESS) \
