@@ -64,14 +64,14 @@ get_component_name (Bmi *self, char * const name)
 
 #define INPUT_VAR_NAME_COUNT (6)
 static const char *input_var_names[INPUT_VAR_NAME_COUNT] = {
-    "sea_surface_water_wave__azimuth_angle_of_opposite_of_phase_velocity",
-    // "basin_outlet_water_sediment~bedload__mass_flow_rate",
-    "land_surface_water_sediment~bedload__mass_flow_rate",
-    "sea_surface_water_wave__period",
-    // "basin_outlet_water_sediment~suspended__mass_flow_rate",
-    "sea_surface_water_wave__height",
     "land_surface__elevation",
-    "model__time_step"
+    "land_surface_water_sediment~bedload__mass_flow_rate",
+    "model__time_step",
+    "sea_surface_water_wave__azimuth_angle_of_opposite_of_phase_velocity",
+    "sea_surface_water_wave__height",
+    "sea_surface_water_wave__period",
+    // "basin_outlet_water_sediment~bedload__mass_flow_rate",
+    // "basin_outlet_water_sediment~suspended__mass_flow_rate",
 };
 
 
@@ -97,11 +97,11 @@ get_input_var_names(Bmi *self, char **names)
 #define OUTPUT_VAR_NAME_COUNT (6)
 static const char *output_var_names[OUTPUT_VAR_NAME_COUNT] = {
     "basin_outlet~coastal_center__x_coordinate",
+    "basin_outlet~coastal_center__y_coordinate",
     "basin_outlet~coastal_water_sediment~bedload__mass_flow_rate",
     "land_surface__elevation",
+    "model__time_step",
     "sea_water__depth",
-    "basin_outlet~coastal_center__y_coordinate",
-    "model__time_step"
 };
 
 
