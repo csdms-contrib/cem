@@ -401,24 +401,6 @@ get_var_ndim(Bmi *self, const char *name, int *ndim)
 
 
 static int
-get_var_stride(Bmi *self, const char *name, int *stride)
-{
-    int id;
-
-    return_on_error(get_var_grid(self, name, &id));
-
-    if (id == 1) {
-        stride[0] = 1;
-    }
-    else if (id == 2) {
-        stride[0] = deltas_get_ny((CemModel*)self->data);
-        stride[1] = 1;
-    }
-
-    return BMI_SUCCESS;
-}
-
-static int
 get_var_location(Bmi *self, const char *name, char *const location)
 {
     const VarInfo *var = find_variable(name);
