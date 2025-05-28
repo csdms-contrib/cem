@@ -274,14 +274,6 @@ finalize(Bmi * self)
 
 
 static int
-get_grid_rank(Bmi *self, int id, int *rank)
-{
-    *rank = -1;
-    return BMI_FAILURE;
-}
-
-
-static int
 get_grid_size(Bmi *self, int id, int *size)
 {
     return BMI_FAILURE;
@@ -439,8 +431,8 @@ register_bmi_waves(Bmi *model)
     model->set_value = set_value;
     model->set_value_at_indices = NULL;
 
-    model->get_grid_rank = get_grid_rank;
     model->get_grid_size = get_grid_size;
+    model->get_grid_rank = NULL;
     model->get_grid_type = NULL;
     model->get_grid_shape = NULL;
     model->get_grid_spacing = NULL;
