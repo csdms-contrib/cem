@@ -387,20 +387,6 @@ get_var_nbytes(Bmi *self, const char *name, int *nbytes)
 
 
 static int
-get_var_ndim(Bmi *self, const char *name, int *ndim)
-{
-    int id, rank;
-
-    return_on_error(get_var_grid(self, name, &id));
-    return_on_error(get_grid_rank(self, id, &rank));
-
-    *ndim = rank;
-
-    return BMI_SUCCESS;
-}
-
-
-static int
 get_var_location(Bmi *self, const char *name, char *const location)
 {
     const VarInfo *var = find_variable(name);
