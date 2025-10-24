@@ -1,6 +1,8 @@
+#include <stdio.h>   // for printf
+#include <math.h>    // for sin, cos
 #include <stdlib.h>
 #include <string.h>
-
+#include "rocks.h"
 #include "conditions.h"
 #include "consts.h"
 #include "utils.h"

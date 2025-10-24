@@ -99,7 +99,7 @@ extern "C" {
 // time step to begin saving files
 #define START_SAVING_AT (0)
 // space between saved files
-#define SAVE_SPACING (365)
+#define SAVE_SPACING (30)
 
 // char savefilename[2048] = "CEM";
 // char readfilename[2048] = "CEM_3285.out";

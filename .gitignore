@@ -1,3 +1,23 @@
-# ignore _build folder
+# macOS
+.DS_Store
 
-/_build/
+# build & binaries
+_build/
+*.o
+*.a
+*.dylib
+cem
+
+# run outputs & images
+runs/
+**/runs/
+ShorePos_*.dat
+CEM_*.out
+*.gif
+*.png
+*.log
+
+# python
+__pycache__/
+*.pyc
+.venv/
