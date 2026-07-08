@@ -9,8 +9,8 @@ of a coastline due to gradients in alongshore sediment transport. A unique
 aspect of CEM is its ability to process an arbitrarily sinuous shoreline, 
 by dividing the plan-view domain into a 2-dimensional cell array, allowing the
 simulation of complex shoreline features including spits and capes.  The model
-is exploratory in nature, designed to simulate large-scale ($10^3$ to $10^6~m$) and
-long-term ($10^2$ to $10^5~yr$) shoreline evolution.
+is exploratory in nature, designed to simulate large-scale ($10^3$ to $10^6$ m) and
+long-term ($10^2$ to $10^5$ yr) shoreline evolution.
 
 Build and install CEM
 ---------------------
