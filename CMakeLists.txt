@@ -42,3 +42,4 @@ install(TARGETS bmi_cem DESTINATION lib)
 install(TARGETS bmi_cem-static DESTINATION lib)
 
 add_subdirectory(testing)
+include(CTest)
