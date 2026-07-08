@@ -12,29 +12,46 @@ simulation of complex shoreline features including spits and capes.  The model
 is exploratory in nature, designed to simulate large-scale (10^3 to 10^6 m) and
 long-term (10^2 to 10^5 yr) shoreline evolution.
 
-Build CEM
----------
+Build and install CEM
+---------------------
 
-First create a build directory and then use [cmake](http://cmake.org)
-to generate a makefile,
+CEM can be built from source on Linux, macOS, and Windows.
+Instructions are given below.
 
-    > mkdir _build
-    > cd _build
-    > cmake ..
+**Prerequisites:**
+* A C compiler
+* CMake
 
-Use the makefile to compile CEM,
+A convenient way to build and install CEM is within a
+[virtual environment](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html)
+set up through the [conda](https://docs.conda.io/projects/conda/en/latest/index.html) package manager.
+After cloning or downloading this repository,
+change into the repository directory
+and set up a conda environment with the included environment file:
+```sh
+conda env create --file environment.yml
+```
 
-    > make
+To build CEM from source with CMake, run
+```sh
+cmake -B _build --fresh
+cmake --build _build
+```
+The compiled model files live in the directory `_build`.
 
-Continuous Integration
-----------------------
+Run the tests with
+```sh
+ctest -V --test-dir _build
+```
 
-Continuous integration is handled by
-[Travis-CI](https://travis-ci.org/csdms-contrib/cem). Every push to this
-GitHub repository triggers a new build on Travis. Travis builds CEM on
-both Mac and Linux and runs a simple smoke test to see that things are
-working. The `.travis.yaml` file controls how Travis builds and runs
-tests.
+Install the model with
+```sh
+cmake --install _build --prefix PATH-TO-INSTALLATION
+```
+where `PATH-TO-INSTALLATION` is the base directory
+in which to install the model (`/usr/local` is the default).
+When using a conda environment,
+use the `$CONDA_PREFIX` environment variable.
 
 Build the old version of CEM
 ----------------------------
@@ -49,4 +66,3 @@ as it generates lots of output files,
     > mkdir _run
     > cd _run
     > cem.exe
-
