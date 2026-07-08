@@ -1,36 +1,35 @@
 [![Build Status](https://travis-ci.org/csdms-contrib/cem.svg?branch=master)](https://travis-ci.org/csdms-contrib/cem)
 
-The Coastline Evolution Model (CEM)
-===================================
+# The Coastline Evolution Model (CEM)
 
 The Coastline Evolution Model (or CEM) is a one-contour line model that focuses
 on sandy, wave-dominated shoreline evolution, simulating the plan-view evolution
 of a coastline due to gradients in alongshore sediment transport. A unique
-aspect of CEM is its ability to process an arbitrarily sinuous shoreline, 
+aspect of CEM is its ability to process an arbitrarily sinuous shoreline 
 by dividing the plan-view domain into a 2-dimensional cell array, allowing the
-simulation of complex shoreline features including spits and capes.  The model
+simulation of complex shoreline features including spits and capes. The model
 is exploratory in nature, designed to simulate large-scale ($10^3$ to $10^6$ m) and
 long-term ($10^2$ to $10^5$ yr) shoreline evolution.
 
-Build and install CEM
----------------------
+## Build and install CEM
 
-CEM can be built from source on Linux, macOS, and Windows.
+CEM can be built from source on Linux, macOS, and Windows
+with a C compiler and CMake.
 Instructions are given below.
 
-**Prerequisites:**
-* A C compiler
-* CMake
+---
 
-A convenient way to build and install CEM is within a
+**Note:**
+
+A convenient way to gather dependencies and build CEM is with a
 [virtual environment](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html)
 set up through the [conda](https://docs.conda.io/projects/conda/en/latest/index.html) package manager.
-After cloning or downloading this repository,
-change into the repository directory
-and set up a conda environment with the included environment file:
+Create a conda environment with the included environment file:
 ```sh
 conda env create --file environment.yml
 ```
+
+---
 
 To build CEM from source with CMake, run
 ```sh
@@ -53,8 +52,7 @@ in which to install the model (`/usr/local` is the default).
 When using a conda environment,
 use the `$CONDA_PREFIX` environment variable.
 
-Build the old version of CEM
-----------------------------
+## Build the old version of CEM
 
 Build the old version of CEM,
 
