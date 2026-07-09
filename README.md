@@ -49,5 +49,11 @@ cmake --install _build --prefix PATH-TO-INSTALLATION
 ```
 where `PATH-TO-INSTALLATION` is the base directory
 in which to install the model (`/usr/local` is the default).
-When using a conda environment,
-use the `$CONDA_PREFIX` environment variable.
+CEM is self-contained,
+so installing to a local directory,
+e.g., `_install`, is a convenient option.
+
+Run the model with
+```sh
+./_install/bin/cem --help
+```
