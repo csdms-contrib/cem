@@ -36,7 +36,6 @@ jobs:
           environment-file: environment.yml
           init-shell: >-
             bash
-            powershell
 
       - name: Configure CMake
         run: |
