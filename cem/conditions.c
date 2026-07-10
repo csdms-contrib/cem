@@ -1,8 +1,11 @@
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
+#include <math.h>
 
 #include "conditions.h"
 #include "consts.h"
+#include "rocks.h"
 #include "utils.h"
 
 static int *rock_line;
@@ -110,7 +113,7 @@ void InitBeach(double **percent_full_sand, double **percent_full_rock, char **al
             all_beach[INIT_ROCK][col] = 'y';
             topography[INIT_ROCK][col] = kCliffHeightSlow;
         }
-        
+
         /* Fill in first row of sand */
         percent_full_rock[beach_start][col] = 0.0;
         percent_full_sand[beach_start][col] = 1.0;
@@ -123,7 +126,6 @@ void InitBeach(double **percent_full_sand, double **percent_full_rock, char **al
         all_rock[INIT_BEACH][col] = 'n';
         all_beach[INIT_BEACH][col] = 'n';
         topography[INIT_BEACH][col] = 0;
-        
         int ocean_start = INIT_BEACH + 1;
         /* Fill in first row of ocean */
         percent_full_rock[beach_start][col] = 0.0;

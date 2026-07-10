@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 3.12)
 
 project (cem)
 
@@ -42,3 +42,4 @@ install(TARGETS bmi_cem DESTINATION lib)
 install(TARGETS bmi_cem-static DESTINATION lib)
 
 add_subdirectory(testing)
+include(CTest)

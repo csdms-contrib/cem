@@ -1,0 +1,12 @@
+# Build CEM from source with conda compilers.
+name: cem
+channels:
+  - conda-forge
+dependencies:
+  - python =3
+  - make
+  - cmake
+  - c-compiler
+  - cxx-compiler
+  - pkg-config
+  - glib
