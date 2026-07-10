@@ -38,8 +38,7 @@ jobs:
             bash
 
       - name: Configure CMake
-        run: |
-          cmake -B $BUILD_DIR --fresh
+        run: cmake -B $BUILD_DIR --fresh
 
       - name: Build
         run: cmake --build $BUILD_DIR --config ${{ matrix.build-type }}
