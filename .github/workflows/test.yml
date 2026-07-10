@@ -23,7 +23,7 @@ jobs:
 
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-latest, macos-latest]
         build-type: [Release]
 
     steps:
@@ -52,6 +52,5 @@ jobs:
 
       - name: Check
         run: |
-            find $INSTALL_DIR -type d,f
             $INSTALL_DIR/bin/cem --version
             $INSTALL_DIR/bin/cem --help
