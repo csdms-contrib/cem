@@ -48,7 +48,7 @@ jobs:
         run: ctest --test-dir $BUILD_DIR -C ${{ matrix.build-type }} --output-on-failure -VV
 
       - name: Install
-        run: cmake --install $BUILD_DIR --prefix $INSTALL_DIR
+        run: cmake --install $BUILD_DIR --config ${{ matrix.build-type }} --prefix $INSTALL_DIR
 
       - name: Check
         run: |
