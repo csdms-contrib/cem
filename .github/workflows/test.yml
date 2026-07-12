@@ -28,7 +28,7 @@ jobs:
         build-type: [Release]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: mamba-org/setup-micromamba@v3
         with:
