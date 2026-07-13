@@ -36,6 +36,7 @@ jobs:
           environment-file: environment.yml
           init-shell: >-
             bash
+          cache-environment: true
 
       - name: Configure CMake
         run: cmake -B $BUILD_DIR --fresh
