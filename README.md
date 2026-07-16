@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/csdms-contrib/cem.svg?branch=master)](https://travis-ci.org/csdms-contrib/cem)
+[![Build/Test](https://github.com/csdms-contrib/cem/actions/workflows/test.yml/badge.svg)](https://github.com/csdms-contrib/cem/actions/workflows/test.yml)
 
 # The Coastline Evolution Model (CEM)
 
